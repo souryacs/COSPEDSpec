@@ -1,0 +1,17 @@
+Version 1.0
+-----------
+
+Basic implementation of COSPEDSpec
+binary refinement of unresolves supertree using excess gene count information
+absolute value of extra gene count measure is used for refinement
+
+this implementation corresponds to the publication in ISBRA 2015
+
+Version 2.0
+-----------
+
+Improved implementation of COSPEDSpec
+here, normalized extra gene count (MNEGC criterion) is used for binary refinement
+also we have modified newick string representation, DFS based parent assignment, etc.
+
+this corresponds to the communicated manuscript in TCBB 2015
