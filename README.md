@@ -15,14 +15,27 @@ Output weighted supertree is generated in the NEWICK format.
 *********************************
 Dependencies
 *********************************
+
 COSPEDSpec is developed in Linux Systems (Ubuntu 14.04), using Python 2.7.
 
-If a system alreay has python installed and the package has version lower than 2.7, then there can be problems, as tested. So, in such case, corresponding python package upgrade is requested.
+User needs to install following before using this package:
 
-The executable is tested with different versions of Ubuntu.
-For systems having Ubuntu with lower versions, please notify in case of any errors. 
+1) Python 2.7 (available in Ubuntu, by default) 
 
-The executable does not require any libraries to be installed prior execution.
+Note: We have not tested the code on Python 3. 
+Any user having Python 3 environment need to check the correct execution of our code, and optionally needs to upgrade it accordingly.
+
+We plan to support Python 3 environment in some future release.
+
+2) Dendropy 3.12.0 ( available on the link: https://pythonhosted.org/DendroPy/ ) 
+
+Note: there is a new release of Dendropy 4.0 but we have used 3.12.0 for the implementation. We did not upgrade the code for Dendropy 4.0 support, so any user having this new version of Dendropy might need to check the functionalities of COSPEDBTree and possibly upgrade / replace / edit few dendrop[y related functions. So, we recommend users to use the earlier version of Dendropy, to avoid any conflict.
+
+Support for Dendropy 4 and corresponding update of code will be done in a future release.
+
+3) Numpy ( available on the link: http://www.numpy.org/ )
+
+User can install Numpy using pip (python software downloader tool) module, which contains the latest Numpy module in it. We found that Numpy module in the traditional Apt-Get repository is of lower version.
 
 *********************************    
 Execution 
