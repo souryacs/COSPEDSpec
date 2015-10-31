@@ -8,14 +8,14 @@ from UtilFunc import *
 ##-----------------------------------------------------
 """ this function adds an edge between a pair of clusters (of taxa) 
 it also updates the entries of reachability matrix """
-def Connect_ClusterPair(Reachability_Graph_Mat, nodeA_reach_mat_idx, nodeB_reach_mat_idx, edge_type, nodeA_clust_idx, nodeB_clust_idx):
-	if (edge_type == RELATION_R1):
+def Connect_ClusterPair(Reachability_Graph_Mat, nodeA_reach_mat_idx, nodeB_reach_mat_idx, reln_type, nodeA_clust_idx, nodeB_clust_idx):
+	if (reln_type == RELATION_R1):
 		# adjust the clusters
 		Cluster_Info_Dict[nodeA_clust_idx]._AddOutEdge(nodeB_clust_idx)
 		Cluster_Info_Dict[nodeB_clust_idx]._AddInEdge(nodeA_clust_idx)
 		# update the reachability matrix
 		Reachability_Graph_Mat[nodeA_reach_mat_idx][nodeB_reach_mat_idx] = 1
-	elif (edge_type == RELATION_R4):
+	elif (reln_type == RELATION_R4):
 		# adjust the clusters
 		Cluster_Info_Dict[nodeA_clust_idx]._AddNoEdge(nodeB_clust_idx)
 		Cluster_Info_Dict[nodeB_clust_idx]._AddNoEdge(nodeA_clust_idx)    
@@ -26,13 +26,13 @@ def Connect_ClusterPair(Reachability_Graph_Mat, nodeA_reach_mat_idx, nodeB_reach
 ##-----------------------------------------------------
 """ this function updates the transitive closure of the cluster of nodes
 on inclusion ogf a new edge between a pair of clusters """
-def TransClosUpd(Reachability_Graph_Mat, nodeA_reach_mat_idx, nodeB_reach_mat_idx, taxaA_label, taxaB_label, edge_type):
-	if (edge_type == RELATION_R1) or (edge_type == RELATION_R4):
+def TransClosUpd(Reachability_Graph_Mat, nodeA_reach_mat_idx, nodeB_reach_mat_idx, taxaA_label, taxaB_label, reln_type):
+	if (reln_type == RELATION_R1) or (reln_type == RELATION_R4):
 		src_reach_mat_idx = nodeA_reach_mat_idx
 		dest_reach_mat_idx = nodeB_reach_mat_idx
 		src_taxa_label = taxaA_label
 		dest_taxa_label = taxaB_label
-	elif (edge_type == RELATION_R2):
+	elif (reln_type == RELATION_R2):
 		src_reach_mat_idx = nodeB_reach_mat_idx
 		dest_reach_mat_idx = nodeA_reach_mat_idx
 		src_taxa_label = taxaB_label
@@ -43,7 +43,7 @@ def TransClosUpd(Reachability_Graph_Mat, nodeA_reach_mat_idx, nodeB_reach_mat_id
 	src_taxa_clust_idx = CURRENT_CLUST_IDX_LIST[src_reach_mat_idx]
 	dest_taxa_clust_idx = CURRENT_CLUST_IDX_LIST[dest_reach_mat_idx]
 		
-	if (edge_type == RELATION_R1) or (edge_type == RELATION_R2):
+	if (reln_type == RELATION_R1) or (reln_type == RELATION_R2):
 		# for A->B connection
 		# if D->A exists
 		# then establish D->B
@@ -81,7 +81,7 @@ def TransClosUpd(Reachability_Graph_Mat, nodeA_reach_mat_idx, nodeB_reach_mat_id
 			for y in Cluster_Info_Dict[dest_taxa_clust_idx]._GetOutEdgeList():
 				if (Reachability_Graph_Mat[CURRENT_CLUST_IDX_LIST.index(x)][CURRENT_CLUST_IDX_LIST.index(y)] == 0):
 					Connect_ClusterPair(Reachability_Graph_Mat, CURRENT_CLUST_IDX_LIST.index(x), CURRENT_CLUST_IDX_LIST.index(y), RELATION_R4, x, y)  
-		
+	
 	else:
 		# construct the out neighborhood of src_cluster
 		# it will contain the cluster itself and all the other clusters connected via out edges from this cluster
@@ -98,7 +98,7 @@ def TransClosUpd(Reachability_Graph_Mat, nodeA_reach_mat_idx, nodeB_reach_mat_id
 			for y in dest_clust_out_neighb:
 				if (Reachability_Graph_Mat[CURRENT_CLUST_IDX_LIST.index(x)][CURRENT_CLUST_IDX_LIST.index(y)] == 0):
 					Connect_ClusterPair(Reachability_Graph_Mat, CURRENT_CLUST_IDX_LIST.index(x), CURRENT_CLUST_IDX_LIST.index(y), RELATION_R4, x, y)  
-
+	
 ##-----------------------------------------------------
 """ this function merges two clusters 
 basically the cluster src_clust_idx will be merged to the dest_clust_idx
@@ -135,7 +135,7 @@ def Merge_Clusters(Reachability_Graph_Mat, dest_taxa_label, src_taxa_label, dest
 ##-----------------------------------------------------
 """ this function updates the reachability graph 
 on the basis of input edge type between input 2 taxa """
-def AdjustReachGraph(Reachability_Graph_Mat, taxaA_label, taxaB_label, edge_type):    
+def AdjustReachGraph(Reachability_Graph_Mat, taxaA_label, taxaB_label, reln_type):    
 
 	nodeA_clust_idx = Taxa_Info_Dict[taxaA_label]._Get_Taxa_Part_Clust_Idx()
 	nodeB_clust_idx = Taxa_Info_Dict[taxaB_label]._Get_Taxa_Part_Clust_Idx()
@@ -145,10 +145,10 @@ def AdjustReachGraph(Reachability_Graph_Mat, taxaA_label, taxaB_label, edge_type
 	nodeB_reach_mat_idx = CURRENT_CLUST_IDX_LIST.index(nodeB_clust_idx)
 
 	# establish the final edge connection between these two taxa
-	#Connect_TaxaPair(taxaA_label, taxaB_label, edge_type)
+	#Connect_TaxaPair(taxaA_label, taxaB_label, reln_type)
 
 	# update tge reachability matrix information
-	if (edge_type == RELATION_R3):      
+	if (reln_type == RELATION_R3):      
 		#-----------------------------
 		# keep the minimum cluster index intact
 		# merge two clusters
@@ -171,19 +171,19 @@ def AdjustReachGraph(Reachability_Graph_Mat, taxaA_label, taxaB_label, edge_type
 			# also remove the cluster key from the dictionary
 			Cluster_Info_Dict.pop(nodeB_clust_idx, None)    
 		#-----------------------------
-	elif (edge_type == RELATION_R1):
+	elif (reln_type == RELATION_R1):
 		# connect the pair of clusters, along with updating the reachability matrix
 		Connect_ClusterPair(Reachability_Graph_Mat, nodeA_reach_mat_idx, nodeB_reach_mat_idx, \
 			RELATION_R1, nodeA_clust_idx, nodeB_clust_idx)
 		# now perform the transitive closure on the derived reachability matrix  
 		TransClosUpd(Reachability_Graph_Mat, nodeA_reach_mat_idx, nodeB_reach_mat_idx, taxaA_label, taxaB_label, RELATION_R1)
-	elif (edge_type == RELATION_R2):
+	elif (reln_type == RELATION_R2):
 		# connect the pair of clusters, along with updating the reachability matrix
 		Connect_ClusterPair(Reachability_Graph_Mat, nodeB_reach_mat_idx, nodeA_reach_mat_idx, \
 			RELATION_R1, nodeB_clust_idx, nodeA_clust_idx)
 		# now perform the transitive closure on the derived reachability matrix  
 		TransClosUpd(Reachability_Graph_Mat, nodeA_reach_mat_idx, nodeB_reach_mat_idx, taxaA_label, taxaB_label, RELATION_R2)    
-	else:	#edge_type == RELATION_R4:
+	else:	#reln_type == RELATION_R4:
 		Connect_ClusterPair(Reachability_Graph_Mat, nodeA_reach_mat_idx, nodeB_reach_mat_idx, \
 			RELATION_R4, nodeA_clust_idx, nodeB_clust_idx)
 		# now perform the transitive closure on the derived reachability matrix  

@@ -21,7 +21,7 @@ def Right(idx):
 	return (2*idx+2)
 
 #------------------------------------------------------------------------
-# version 4 - latest - used for the final implementation
+# version 4 - 
 #-------------------------
 """
 def Lower_Score_Value(inp_queue, i, j):
@@ -137,48 +137,72 @@ def Lower_Score_Value(inp_queue, i, j):
 # this function compares two elements of the heap
 # returns 1 if element in the i'th index is lower than element in the j'th index
 # that is, j'th index has higher priority than i'th index
-"""
-def Lower_Score_Value(inp_queue, i, j):
-  if (inp_queue[i][3] < inp_queue[j][3]):
-    return 1
-  elif (inp_queue[i][3] == inp_queue[j][3]):
-    # following checks are performed in tie case of cost
-    if (((inp_queue[i][2] == RELATION_R1) or (inp_queue[i][2] == RELATION_R2)) and \
-	((inp_queue[j][2] == RELATION_R3) or (inp_queue[j][2] == RELATION_R4))):
-      return 0
-    elif (((inp_queue[j][2] == RELATION_R1) or (inp_queue[j][2] == RELATION_R2)) and \
-	((inp_queue[i][2] == RELATION_R3) or (inp_queue[i][2] == RELATION_R4))):
-      return 1
-    elif ((inp_queue[i][2] == RELATION_R4) and (inp_queue[j][2] == RELATION_R3)):
-      return 0
-    elif ((inp_queue[j][2] == RELATION_R4) and (inp_queue[i][2] == RELATION_R3)):
-      return 1
-    elif (TaxaPair_Reln_Dict[(inp_queue[i][0], inp_queue[i][1])]._GetConnPrVal(inp_queue[i][2])\
-	  < TaxaPair_Reln_Dict[(inp_queue[j][0], inp_queue[j][1])]._GetConnPrVal(inp_queue[j][2])):
-      # higher edge priority have greater priority
-      return 1
-    elif (TaxaPair_Reln_Dict[(inp_queue[i][0], inp_queue[i][1])]._GetConnPrVal(inp_queue[i][2])\
-	  > TaxaPair_Reln_Dict[(inp_queue[j][0], inp_queue[j][1])]._GetConnPrVal(inp_queue[j][2])):
-      # higher edge priority have greater priority
-      return 0    
-    elif (TaxaPair_Reln_Dict[(inp_queue[i][0], inp_queue[i][1])]._GetEdgeWeight(inp_queue[i][2])\
-	  < TaxaPair_Reln_Dict[(inp_queue[j][0], inp_queue[j][1])]._GetEdgeWeight(inp_queue[j][2])):
-      # higher edge frequency have greater priority - add - sourya
-      return 1      
-    elif (TaxaPair_Reln_Dict[(inp_queue[i][0], inp_queue[i][1])]._GetEdgeWeight(inp_queue[i][2])\
-	  > TaxaPair_Reln_Dict[(inp_queue[j][0], inp_queue[j][1])]._GetEdgeWeight(inp_queue[j][2])):
-      # higher edge frequency have greater priority - add - sourya
-      return 0          
-  return 0
-"""
-#------------------------------------------------------------------------
-# version 1 
-#-------------------------
 
+def Lower_Score_Value(inp_queue, i, j):
+	key1 = (inp_queue[i][0], inp_queue[i][1])
+	reln1 = inp_queue[i][2]
+	score1 = inp_queue[i][3]
+
+	key2 = (inp_queue[j][0], inp_queue[j][1])
+	reln2 = inp_queue[j][2]
+	score2 = inp_queue[j][3]
+
+	if (score1 > 0) or (score2 > 0):
+		if (score1 < score2):
+			return 1
+		elif (score1 > score2):
+			return 0
+		elif (score1 == score2):
+			# following checks are performed in tie case of cost
+			if (((reln1 == RELATION_R1) or (reln1 == RELATION_R2)) and ((reln2 == RELATION_R3) or (reln2 == RELATION_R4))):
+				return 0
+			elif (((reln2 == RELATION_R1) or (reln2 == RELATION_R2)) and ((reln1 == RELATION_R3) or (reln1 == RELATION_R4))):
+				return 1
+			elif ((reln1 == RELATION_R4) and (reln2 == RELATION_R3)):
+				return 0
+			elif ((reln2 == RELATION_R4) and (reln1 == RELATION_R3)):
+				return 1
+			elif (TaxaPair_Reln_Dict[key1]._GetConnPrVal(reln1) < TaxaPair_Reln_Dict[key2]._GetConnPrVal(reln2)):
+				# higher edge priority have greater priority
+				return 1
+			elif (TaxaPair_Reln_Dict[key1]._GetConnPrVal(reln1) > TaxaPair_Reln_Dict[key2]._GetConnPrVal(reln2)):
+				# higher edge priority have greater priority
+				return 0    
+			elif (TaxaPair_Reln_Dict[key1]._GetEdgeWeight(reln1) < TaxaPair_Reln_Dict[key2]._GetEdgeWeight(reln2)):
+				# higher edge frequency have greater priority - add - sourya
+				return 1      
+			elif (TaxaPair_Reln_Dict[key1]._GetEdgeWeight(reln1) > TaxaPair_Reln_Dict[key2]._GetEdgeWeight(reln2)):
+				# higher edge frequency have greater priority - add - sourya
+				return 0
+	else:
+		# here both scores are either zero or negative
+		if (TaxaPair_Reln_Dict[key1]._GetEdgeWeight(reln1) < TaxaPair_Reln_Dict[key2]._GetEdgeWeight(reln2)):
+			return 1      
+		elif (TaxaPair_Reln_Dict[key1]._GetEdgeWeight(reln1) > TaxaPair_Reln_Dict[key2]._GetEdgeWeight(reln2)):
+			return 0     
+		# these conditions are further added - sourya
+		elif (TaxaPair_Reln_Dict[key1]._GetConnPrVal(reln1) < TaxaPair_Reln_Dict[key2]._GetConnPrVal(reln2)):
+			return 1
+		elif (TaxaPair_Reln_Dict[key1]._GetConnPrVal(reln1) > TaxaPair_Reln_Dict[key2]._GetConnPrVal(reln2)):
+			return 0    
+		elif (((reln1 == RELATION_R1) or (reln1 == RELATION_R2)) and ((reln2 == RELATION_R3) or (reln2 == RELATION_R4))):
+			return 0
+		elif (((reln2 == RELATION_R1) or (reln2 == RELATION_R2)) and ((reln1 == RELATION_R3) or (reln1 == RELATION_R4))):
+			return 1
+		elif ((reln1 == RELATION_R4) and (reln2 == RELATION_R3)):
+			return 0
+		elif ((reln2 == RELATION_R4) and (reln1 == RELATION_R3)):
+			return 1
+
+	return 0
+
+#------------------------------------------------------------------------
+# version 1 ----- this was used - sourya
+#-------------------------
 # this function is used for cost based sorting of the inp_queue in the unweighted supertree
 # this function compares two elements of the heap
 # returns 1 if element in the i'th index is lower than element in the j'th index
-
+"""
 def Lower_Score_Value(inp_queue, i, j):
 	if (inp_queue[i][3] < inp_queue[j][3]):
 		return 1
@@ -212,8 +236,76 @@ def Lower_Score_Value(inp_queue, i, j):
 			return 0      
 		
 	return 0
-
+"""
 #------------------------------------------------------------------------
+
+##------------------------------------------------------------------------
+## version 1X - 15th Sep, 2015 
+##-------------------------
+
+## this function is used for cost based sorting of the inp_queue in the unweighted supertree
+## this function compares two elements of the heap
+## returns 1 if element in the i'th index is lower than element in the j'th index
+#def Lower_Score_Value(inp_queue, i, j):
+	#key1 = (inp_queue[i][0], inp_queue[i][1])
+	#reln1 = inp_queue[i][2]
+	#score1 = inp_queue[i][3]
+	#key2 = (inp_queue[j][0], inp_queue[j][1])
+	#reln2 = inp_queue[j][2]
+	#score2 = inp_queue[j][3]
+	
+	## case A - if both scores are strictly positive
+	#if (score1 > 0) or (score2 > 0):
+		#if (score1 < score2):
+			#return 1
+		#elif (score1 > score2):
+			#return 0
+		#else:	#if (score1 == score2):
+			## for tie case of cost
+			#if (TaxaPair_Reln_Dict[key1]._GetEdgeWeight(reln1) < TaxaPair_Reln_Dict[key2]._GetEdgeWeight(reln2)):
+				## higher edge frequency - greater priority
+				#return 1      
+			#elif (TaxaPair_Reln_Dict[key2]._GetEdgeWeight(reln2) <= TaxaPair_Reln_Dict[key1]._GetEdgeWeight(reln1)):
+				#return 0  
+			###------------------------------
+			### add - sourya
+			##elif (TaxaPair_Reln_Dict[key1]._GetConnPrVal(reln1) < TaxaPair_Reln_Dict[key2]._GetConnPrVal(reln2)):
+				### higher edge priority - greater priority
+				##return j
+			##elif (TaxaPair_Reln_Dict[key2]._GetConnPrVal(reln2) < TaxaPair_Reln_Dict[key1]._GetConnPrVal(reln1)):
+				##return i    
+			##elif ((reln1 == RELATION_R4) and (reln2 != RELATION_R4)):
+				### relation r4 has high priority
+				##return i
+			##elif ((reln2 == RELATION_R4) and (reln1 != RELATION_R4)):
+				##return j
+			##elif ((reln1 == RELATION_R3) and ((reln2 == RELATION_R1) or (reln2 == RELATION_R2))):
+				### relation r3 is set to low priority, compared to other directed edges
+				##return j     
+			##elif ((reln2 == RELATION_R3) and ((reln1 == RELATION_R1) or (reln1 == RELATION_R2))):
+				##return i
+			### end add - sourya
+			###------------------------------
+	#else:
+		## here one or both scores are either zero or negative
+		#if (TaxaPair_Reln_Dict[key1]._GetEdgeWeight(reln1) < TaxaPair_Reln_Dict[key2]._GetEdgeWeight(reln2)):
+			## higher edge frequency - greater priority
+			#return 1      
+		#elif (TaxaPair_Reln_Dict[key2]._GetEdgeWeight(reln2) <= TaxaPair_Reln_Dict[key1]._GetEdgeWeight(reln1)):
+			#return 0     
+		###------------------------------
+		### add - sourya
+		##elif (TaxaPair_Reln_Dict[key1]._GetConnPrVal(reln1) < TaxaPair_Reln_Dict[key2]._GetConnPrVal(reln2)):
+			### higher edge priority - greater priority
+			##return j
+		##elif (TaxaPair_Reln_Dict[key2]._GetConnPrVal(reln2) < TaxaPair_Reln_Dict[key1]._GetConnPrVal(reln1)):
+			##return i    
+		### end add - sourya
+		###------------------------------
+    
+	#return 0
+##-------------------------------------------------------------------------
+
   
 # this function exchanges two elements in the heap
 def Exchange_Elem(inp_queue, i, j):

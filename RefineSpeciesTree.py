@@ -73,7 +73,7 @@ def ResolveMultifurcation(Gene_TreeList, Curr_tree, clust_species_list, no_of_in
 				DistMat[j][i] = DistMat[i][j] = 0
 	# end add - sourya
 	#---------------------------------------
-	# comment - sourya
+	## comment - sourya
 	## add - sourya
 	#for i in range(no_of_clust - 1):
 		#for j in range(i+1, no_of_clust):
@@ -82,28 +82,32 @@ def ResolveMultifurcation(Gene_TreeList, Curr_tree, clust_species_list, no_of_in
 			## we have extracted the corresponding element by using [0] operator (extracting first element)
 			#curr_taxa_pair_list = []
 			#for k1 in range(len(clust_species_list[i])):
-	#for k2 in range(len(clust_species_list[j])):	  
-		#x1 = clust_species_list[i][k1]
-		#x2 = clust_species_list[j][k2]
-		#key1 = (x1, x2)
-		#key2 = (x2, x1)
-		##print 'key1: ', key1, ' key2: ', key2
-		#if key1 in TaxaPair_Reln_Dict:
-			##DistMat[j][i] = DistMat[i][j] = TaxaPair_Reln_Dict[key1]._GetXLSumGeneTrees()
-				#curr_taxa_pair_list.append(TaxaPair_Reln_Dict[key1]._GetNormalizedXLSumGeneTrees())
-		#else:
-			##DistMat[j][i] = DistMat[i][j] = TaxaPair_Reln_Dict[key2]._GetXLSumGeneTrees()
-			#curr_taxa_pair_list.append(TaxaPair_Reln_Dict[key2]._GetNormalizedXLSumGeneTrees())
+				#for k2 in range(len(clust_species_list[j])):	  
+					#x1 = clust_species_list[i][k1]
+					#x2 = clust_species_list[j][k2]
+					#key1 = (x1, x2)
+					#key2 = (x2, x1)
+					##print 'key1: ', key1, ' key2: ', key2
+					#if key1 in TaxaPair_Reln_Dict:
+						##DistMat[j][i] = DistMat[i][j] = TaxaPair_Reln_Dict[key1]._GetXLSumGeneTrees()
+						#curr_taxa_pair_list.append(TaxaPair_Reln_Dict[key1]._GetNormalizedXLSumGeneTrees())
+					#else:
+						##DistMat[j][i] = DistMat[i][j] = TaxaPair_Reln_Dict[key2]._GetXLSumGeneTrees()
+						#curr_taxa_pair_list.append(TaxaPair_Reln_Dict[key2]._GetNormalizedXLSumGeneTrees())
 			## average of this pairwise list is used as the XT approximation
-			#DistMat[j][i] = DistMat[i][j] = (sum(curr_taxa_pair_list) * 1.0) / len(curr_taxa_pair_list)
+			#if (len(curr_taxa_pair_list) > 0):
+				#DistMat[j][i] = DistMat[i][j] = (sum(curr_taxa_pair_list) * 1.0) / len(curr_taxa_pair_list)
+				##DistMat[j][i] = DistMat[i][j] = max(curr_taxa_pair_list)
+			#else:
+				#DistMat[j][i] = DistMat[i][j] = 0
 	## end add - sourya
-	# end comment - sourya
+	## end comment - sourya
 	#---------------------------------------
 					
 	# loop to execute the agglomerative clustering
 	while(no_of_clust > 2): 
 				
-		if (DEBUG_LEVEL > 2):
+		if (DEBUG_LEVEL >= 2):
 			fp = open(Output_Text_File, 'a')
 			fp.write('\n iteration start --- number of clusters: ' + str(no_of_clust))
 			fp.write('\n clust_species_list : ' + str(clust_species_list))
@@ -126,7 +130,7 @@ def ResolveMultifurcation(Gene_TreeList, Curr_tree, clust_species_list, no_of_in
 				Norm_DistMat[i][j] = ObtainNormalizedVal(DistMat[i][j], sum_list[i], sum_list[j])
 				Norm_DistMat[j][i] = Norm_DistMat[i][j]
 		
-		if (DEBUG_LEVEL > 2):
+		if (DEBUG_LEVEL >= 2):
 			fp = open(Output_Text_File, 'a')
 			fp.write('\n printing contents of sum_list --- ' + str(sum_list))
 			fp.close()
@@ -160,7 +164,7 @@ def ResolveMultifurcation(Gene_TreeList, Curr_tree, clust_species_list, no_of_in
 		for x in clust_species_list[min_idx_j]:
 			taxa_list.append(x)
 
-		if (DEBUG_LEVEL > 2):
+		if (DEBUG_LEVEL >= 2):
 			fp = open(Output_Text_File, 'a')
 			fp.write('\n min_idx_i ' + str(min_idx_i) + ' min_idx_j : ' + str(min_idx_j))
 			fp.write('\n min_idx_i species list ' + str(clust_species_list[min_idx_i]))
@@ -176,7 +180,7 @@ def ResolveMultifurcation(Gene_TreeList, Curr_tree, clust_species_list, no_of_in
 			first_cluster_mrca_node = Curr_tree.mrca(taxon_labels=clust_species_list[min_idx_i])
 			second_cluster_mrca_node = Curr_tree.mrca(taxon_labels=clust_species_list[min_idx_j])
 			all_taxa_mrca_node = Curr_tree.mrca(taxon_labels=taxa_list)
-			if (DEBUG_LEVEL > 2):
+			if (DEBUG_LEVEL >= 2):
 				fp = open(Output_Text_File, 'a')
 				fp.write('\n label of first_cluster_mrca_node: ' + str(Node_Label(first_cluster_mrca_node)))      
 				fp.write('\n label of second_cluster_mrca_node: ' + str(Node_Label(second_cluster_mrca_node)))
@@ -205,7 +209,7 @@ def ResolveMultifurcation(Gene_TreeList, Curr_tree, clust_species_list, no_of_in
 			first_cluster_leaf_node = Curr_tree.find_node_with_taxon_label(clust_species_list[min_idx_i][0])
 			second_cluster_mrca_node = Curr_tree.mrca(taxon_labels=clust_species_list[min_idx_j])
 			all_taxa_mrca_node = Curr_tree.mrca(taxon_labels=taxa_list)
-			if (DEBUG_LEVEL > 2):
+			if (DEBUG_LEVEL >= 2):
 				fp = open(Output_Text_File, 'a')
 				fp.write('\n first cluster is a leaf - its label: ' + str(Node_Label(first_cluster_leaf_node)))      
 				fp.write('\n label of second_cluster_mrca_node: ' + str(Node_Label(second_cluster_mrca_node)))
@@ -233,7 +237,7 @@ def ResolveMultifurcation(Gene_TreeList, Curr_tree, clust_species_list, no_of_in
 			first_cluster_mrca_node = Curr_tree.mrca(taxon_labels=clust_species_list[min_idx_i])
 			second_cluster_leaf_node = Curr_tree.find_node_with_taxon_label(clust_species_list[min_idx_j][0])
 			all_taxa_mrca_node = Curr_tree.mrca(taxon_labels=taxa_list)
-			if (DEBUG_LEVEL > 2):
+			if (DEBUG_LEVEL >= 2):
 				fp = open(Output_Text_File, 'a')
 				fp.write('\n label of first_cluster_mrca_node: ' + str(Node_Label(first_cluster_mrca_node)))      
 				fp.write('\n label of second_cluster_mrca_node: ' + str(Node_Label(second_cluster_leaf_node)))
@@ -262,7 +266,7 @@ def ResolveMultifurcation(Gene_TreeList, Curr_tree, clust_species_list, no_of_in
 			first_cluster_leaf_node = Curr_tree.find_node_with_taxon_label(clust_species_list[min_idx_i][0])
 			second_cluster_leaf_node = Curr_tree.find_node_with_taxon_label(clust_species_list[min_idx_j][0])
 			all_taxa_mrca_node = Curr_tree.mrca(taxon_labels=taxa_list)
-			if (DEBUG_LEVEL > 2):
+			if (DEBUG_LEVEL >= 2):
 				fp = open(Output_Text_File, 'a')
 				fp.write('\n first cluster is a leaf - its label: ' + str(Node_Label(first_cluster_leaf_node)))      
 				fp.write('\n second cluster is a leaf - its label: ' + str(Node_Label(second_cluster_leaf_node)))
@@ -287,7 +291,7 @@ def ResolveMultifurcation(Gene_TreeList, Curr_tree, clust_species_list, no_of_in
 			Curr_tree.update_splits(delete_outdegree_one=False)
 		
 		#---------------------------------------------------------      
-		if (DEBUG_LEVEL > 2):
+		if (DEBUG_LEVEL >= 2):
 			fp = open(Output_Text_File, 'a')
 			fp.write('\n label of newnode: ' + str(Node_Label(newnode)))
 			fp.write('\n label of all taxa mrca node (recomputed): ' + str(Node_Label(Curr_tree.mrca(taxon_labels=taxa_list))))      

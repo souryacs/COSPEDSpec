@@ -21,8 +21,8 @@ from UtilFunc import *
 this function checks whether the current relation (given as an input) is feasible to the input supertree configuration
 only the current relations in the supertree is used for conflict detection 
 """
-def Possible_Conflict_Curr_Reln(src_taxa_label, dest_taxa_label, Reachability_Graph_Mat, target_edge_type):
-	if (target_edge_type == RELATION_R2):
+def Possible_Conflict_Curr_Reln(src_taxa_label, dest_taxa_label, Reachability_Graph_Mat, target_reln, Output_Text_File):
+	if (target_reln == RELATION_R2):
 		src_taxa_clust_idx = Taxa_Info_Dict[dest_taxa_label]._Get_Taxa_Part_Clust_Idx()
 		dest_taxa_clust_idx = Taxa_Info_Dict[src_taxa_label]._Get_Taxa_Part_Clust_Idx()
 	else:
@@ -45,16 +45,29 @@ def Possible_Conflict_Curr_Reln(src_taxa_label, dest_taxa_label, Reachability_Gr
 	# case A - if the clusters are already related (depicted in the reachability matrix) then return 1
 	if (Reachability_Graph_Mat[reach_mat_dest_taxa_clust_idx][reach_mat_src_taxa_clust_idx] > 0) or \
 			(Reachability_Graph_Mat[reach_mat_src_taxa_clust_idx][reach_mat_dest_taxa_clust_idx] > 0):
+		if (DEBUG_LEVEL >= 2):
+			fp = open(Output_Text_File, 'a')
+			if (Reachability_Graph_Mat[reach_mat_src_taxa_clust_idx][reach_mat_dest_taxa_clust_idx] == 1):
+				fp.write('\n target_reln: ' + str(target_reln) + ' already related via relation r1')
+			elif (Reachability_Graph_Mat[reach_mat_src_taxa_clust_idx][reach_mat_dest_taxa_clust_idx] == 2):
+				fp.write('\n target_reln: ' + str(target_reln) + ' already related via relation r4')
+			elif (Reachability_Graph_Mat[reach_mat_dest_taxa_clust_idx][reach_mat_src_taxa_clust_idx] == 1):
+				fp.write('\n target_reln: ' + str(target_reln) + ' already related via relation r2')
+			fp.close()
 		return 1
 
 	#--------------------------------------------------------------------
 	# check for the transitive conflict
-	if (target_edge_type == RELATION_R2) or (target_edge_type == RELATION_R1):
+	if (target_reln == RELATION_R2) or (target_reln == RELATION_R1):
 		# if A->B is to be established
 		# and there exists D->A 
 		# then if B->D or B><D then return a conflict
 		for x in Cluster_Info_Dict[src_taxa_clust_idx]._GetInEdgeList():
 			if (Reachability_Graph_Mat[reach_mat_dest_taxa_clust_idx][CURRENT_CLUST_IDX_LIST.index(x)] > 0):
+				if (DEBUG_LEVEL >= 2):
+					fp = open(Output_Text_File, 'a')
+					fp.write('\n **** CASE 1 *** ')
+					fp.close()
 				return 1
 		
 		# if A->B is to be established
@@ -62,6 +75,10 @@ def Possible_Conflict_Curr_Reln(src_taxa_label, dest_taxa_label, Reachability_Gr
 		# then if E->A or E><A then return a conflict  
 		for x in Cluster_Info_Dict[dest_taxa_clust_idx]._GetOutEdgeList():
 			if (Reachability_Graph_Mat[CURRENT_CLUST_IDX_LIST.index(x)][reach_mat_src_taxa_clust_idx] > 0):
+				if (DEBUG_LEVEL >= 2):
+					fp = open(Output_Text_File, 'a')
+					fp.write('\n **** CASE 2 *** ')
+					fp.close()
 				return 1
 
 		# if A->B is to be established
@@ -70,6 +87,10 @@ def Possible_Conflict_Curr_Reln(src_taxa_label, dest_taxa_label, Reachability_Gr
 		for x in Cluster_Info_Dict[src_taxa_clust_idx]._GetInEdgeList():
 			for y in Cluster_Info_Dict[dest_taxa_clust_idx]._GetOutEdgeList():
 				if (x == y) or (Reachability_Graph_Mat[CURRENT_CLUST_IDX_LIST.index(y)][CURRENT_CLUST_IDX_LIST.index(x)] > 0):
+					if (DEBUG_LEVEL >= 2):
+						fp = open(Output_Text_File, 'a')
+						fp.write('\n **** CASE 3 *** ')
+						fp.close()
 					return 1
 
 		# if A->B is to be established
@@ -80,6 +101,10 @@ def Possible_Conflict_Curr_Reln(src_taxa_label, dest_taxa_label, Reachability_Gr
 			if (dest_taxa_clust_idx == x) \
 				or (Reachability_Graph_Mat[CURRENT_CLUST_IDX_LIST.index(x)][reach_mat_dest_taxa_clust_idx] == 1) \
 				or (Reachability_Graph_Mat[reach_mat_dest_taxa_clust_idx][CURRENT_CLUST_IDX_LIST.index(x)] == 1):
+				if (DEBUG_LEVEL >= 2):
+					fp = open(Output_Text_File, 'a')
+					fp.write('\n **** CASE 4 *** ')
+					fp.close()
 				return 1
 		
 		# if A->B is to be established
@@ -92,9 +117,13 @@ def Possible_Conflict_Curr_Reln(src_taxa_label, dest_taxa_label, Reachability_Gr
 				if (x == y) \
 					or (Reachability_Graph_Mat[CURRENT_CLUST_IDX_LIST.index(y)][CURRENT_CLUST_IDX_LIST.index(x)] == 1) \
 					or (Reachability_Graph_Mat[CURRENT_CLUST_IDX_LIST.index(x)][CURRENT_CLUST_IDX_LIST.index(y)] == 1):
+					if (DEBUG_LEVEL >= 2):
+						fp = open(Output_Text_File, 'a')
+						fp.write('\n **** CASE 5 *** ')
+						fp.close()
 					return 1
 
-	elif (target_edge_type == RELATION_R3):
+	elif (target_reln == RELATION_R3):
 		# if A=B is to be established
 		# and there exists B->D 
 		# then if D->A or D><A or D=A then return a conflict    
@@ -137,7 +166,7 @@ def Possible_Conflict_Curr_Reln(src_taxa_label, dest_taxa_label, Reachability_Gr
 				or (Reachability_Graph_Mat[CURRENT_CLUST_IDX_LIST.index(x)][reach_mat_dest_taxa_clust_idx] == 1):
 				return 1
 		
-	else:	#if (target_edge_type == RELATION_R4):
+	else:	#if (target_reln == RELATION_R4):
 		# construct the out neighborhood of src_cluster
 		# it will contain the cluster itself and all the other clusters connected via out edges from this cluster
 		src_clust_out_neighb = []
@@ -153,9 +182,32 @@ def Possible_Conflict_Curr_Reln(src_taxa_label, dest_taxa_label, Reachability_Gr
 		# are themselves related via any relationships other than NO EDGE then this connection is not possible
 		for x in src_clust_out_neighb:
 			for y in dest_clust_out_neighb:
-				if (x == y) or (Reachability_Graph_Mat[CURRENT_CLUST_IDX_LIST.index(y)][CURRENT_CLUST_IDX_LIST.index(x)] == 1) \
-					or (Reachability_Graph_Mat[CURRENT_CLUST_IDX_LIST.index(x)][CURRENT_CLUST_IDX_LIST.index(y)] == 1):
+				# comment - sourya
+				#if (x == y) or (Reachability_Graph_Mat[CURRENT_CLUST_IDX_LIST.index(y)][CURRENT_CLUST_IDX_LIST.index(x)] == 1) \
+					#or (Reachability_Graph_Mat[CURRENT_CLUST_IDX_LIST.index(x)][CURRENT_CLUST_IDX_LIST.index(y)] == 1):
+					#return 1
+				# add - sourya
+				if (x == y):
+					if (DEBUG_LEVEL >= 2):
+						fp = open(Output_Text_File, 'a')
+						fp.write('\n **** Same cluster --- with species list : ' + str(Cluster_Info_Dict[x]._GetSpeciesList()))
+						fp.close()
 					return 1
-		
+				if (Reachability_Graph_Mat[CURRENT_CLUST_IDX_LIST.index(y)][CURRENT_CLUST_IDX_LIST.index(x)] == 1):
+					if (DEBUG_LEVEL >= 2):
+						fp = open(Output_Text_File, 'a')
+						fp.write('\n **** Out edge from the cluster ( ' + str(Cluster_Info_Dict[y]._GetSpeciesList()) \
+							+ ' ) to the cluster ( ' + str(Cluster_Info_Dict[x]._GetSpeciesList()) + ' )')
+						fp.close()
+					return 1
+				if (Reachability_Graph_Mat[CURRENT_CLUST_IDX_LIST.index(x)][CURRENT_CLUST_IDX_LIST.index(y)] == 1):
+					if (DEBUG_LEVEL >= 2):
+						fp = open(Output_Text_File, 'a')
+						fp.write('\n **** Out edge from the cluster ( ' + str(Cluster_Info_Dict[x]._GetSpeciesList()) \
+							+ ' ) to the cluster ( ' + str(Cluster_Info_Dict[y]._GetSpeciesList()) + ' )')
+						fp.close()
+					return 1
+				# end add - sourya
+	
 	return 0    
     

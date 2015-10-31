@@ -120,50 +120,50 @@ def SolveMultipleParentC2Problem(Output_Text_File):
 				Cluster_Info_Dict[cx]._PrintClusterInfo(cx, Output_Text_File)
     
 
-##-----------------------------------------------------    
-# following code removes extra paranthesis (thus producing insignificant edges) 
-# from the tree expression contained in the string
-def Remove_Extra_Paranthesis(Final_Supertree_Str):
-	L = list(Final_Supertree_Str)
-	SL = []	# stack list
-	first_bracket_dict = dict()
+###-----------------------------------------------------    
+## following code removes extra paranthesis (thus producing insignificant edges) 
+## from the tree expression contained in the string
+#def Remove_Extra_Paranthesis(Final_Supertree_Str):
+	#L = list(Final_Supertree_Str)
+	#SL = []	# stack list
+	#first_bracket_dict = dict()
 
-	for i in range(len(L)):
-		if (L[i] == '('):
-			SL.append(i)
-		elif (L[i] == ')'):
-			first_bracket_idx = SL.pop()
-			first_bracket_dict.setdefault(first_bracket_idx, i)
+	#for i in range(len(L)):
+		#if (L[i] == '('):
+			#SL.append(i)
+		#elif (L[i] == ')'):
+			#first_bracket_idx = SL.pop()
+			#first_bracket_dict.setdefault(first_bracket_idx, i)
 
-	if 0:	#(DEBUG_LEVEL > 2):
-		print 'L : ', L
-		print 'first_bracket_dict: ', first_bracket_dict
+	#if 0:	#(DEBUG_LEVEL > 2):
+		#print 'L : ', L
+		#print 'first_bracket_dict: ', first_bracket_dict
 
-	for i in range(len(L) - 1):
-		if (L[i] == '(') and (L[i+1] == '('):
-			sb1 = first_bracket_dict[i]
-			sb2 = first_bracket_dict[i+1]
-			if (sb1 - sb2 == 1):
-				L.pop(i)
-				L.insert(i, '$')
-				L.pop(sb1)
-				L.insert(sb1, '$')
+	#for i in range(len(L) - 1):
+		#if (L[i] == '(') and (L[i+1] == '('):
+			#sb1 = first_bracket_dict[i]
+			#sb2 = first_bracket_dict[i+1]
+			#if (sb1 - sb2 == 1):
+				#L.pop(i)
+				#L.insert(i, '$')
+				#L.pop(sb1)
+				#L.insert(sb1, '$')
 
-	if 0:	#(DEBUG_LEVEL > 2):
-		print 'L : ', L
+	#if 0:	#(DEBUG_LEVEL > 2):
+		#print 'L : ', L
 
-	while (1):
-		if '$' in L:
-			L.remove('$')
-		else:
-			break
+	#while (1):
+		#if '$' in L:
+			#L.remove('$')
+		#else:
+			#break
 
-	if 0:	#(DEBUG_LEVEL > 2):
-		print 'L : ', L
+	#if 0:	#(DEBUG_LEVEL > 2):
+		#print 'L : ', L
 
-	# construct the string containing final supertree
-	outstr = ''.join(L)
-	return outstr
+	## construct the string containing final supertree
+	#outstr = ''.join(L)
+	#return outstr
         
 ##-----------------------------------------------------        
 ''' this function returns the root node for the final supertree 
@@ -188,8 +188,60 @@ def Extract_Node_Min_Indeg(no_of_clusters):
 	return min_indeg_node_idx
   
 ##-----------------------------------------------------
-# this function prints the tree in Newick format
-# sourya - this is the old function with cluster based species list printing in the newick format
+## original function - sourya
+##---------------------------------
+## this function prints the tree in Newick format
+## sourya - this is the old function with cluster based species list printing in the newick format
+#def PrintNewick_Original(root_clust_node_idx):
+	#if 0:
+		#print 'in function printnewick:   root_clust_node_idx: ', root_clust_node_idx
+		#print 'taxa set: ', Cluster_Info_Dict[root_clust_node_idx]._GetSpeciesList()  
+		#print 'out clust list: ', Cluster_Info_Dict[root_clust_node_idx]._GetOutEdgeList()
+
+	#Tree_Str_List = ''
+	## process the node provided it has not been explored yet
+	#if (Cluster_Info_Dict[root_clust_node_idx]._GetExploredStatus() == 0):  
+		## set the explored status of the current node to true
+		#Cluster_Info_Dict[root_clust_node_idx]._SetExploredStatus()
+		## get the out edge list of the current node which are not explored yet 
+		#outnodes = []
+		#for l in Cluster_Info_Dict[root_clust_node_idx]._GetOutEdgeList():
+			#if (Cluster_Info_Dict[l]._GetExploredStatus() == 0):
+				#outnodes.append(l)
+		#if (len(outnodes) == 0):
+			#spec_list = Cluster_Info_Dict[root_clust_node_idx]._GetSpeciesList()
+			#if (len(spec_list) > 1):
+				#Tree_Str_List = Tree_Str_List + '('
+			#Tree_Str_List = Tree_Str_List + ','.join("'" + item + "'" for item in spec_list)
+			#if (len(spec_list) > 1):
+				#Tree_Str_List = Tree_Str_List + ')'
+		#else:
+			#Tree_Str_List = Tree_Str_List + '('
+			#Tree_Str_List = Tree_Str_List + ','.join("'" + item + "'" for item in Cluster_Info_Dict[root_clust_node_idx]._GetSpeciesList())
+			#Tree_Str_List = Tree_Str_List + ','    
+			#Tree_Str_List = Tree_Str_List + '('
+			#for i in range(len(outnodes)):
+				#if (Cluster_Info_Dict[outnodes[i]]._GetExploredStatus() == 0):  
+					#Tree_Str_List = Tree_Str_List + PrintNewick(outnodes[i])
+					#if (i < (len(outnodes) - 1)):
+						## we check whether any subsequent node belonging to the outnodes list
+						## is left for traverse
+						#j = i + 1
+						#while (j < len(outnodes)):
+							#if (Cluster_Info_Dict[outnodes[j]]._GetExploredStatus() == 0):  
+								#break
+							#j = j + 1	      
+						## in this case, we append one comma
+						#if (j < len(outnodes)):
+							#Tree_Str_List = Tree_Str_List + ','      
+			
+			#Tree_Str_List = Tree_Str_List + ')'
+			#Tree_Str_List = Tree_Str_List + ')'
+		
+	#return Tree_Str_List    
+    
+## end original function - sourya
+#-------------------------------------------
 def PrintNewick(root_clust_node_idx):
 	if 0:
 		print 'in function printnewick:   root_clust_node_idx: ', root_clust_node_idx
@@ -203,9 +255,21 @@ def PrintNewick(root_clust_node_idx):
 		Cluster_Info_Dict[root_clust_node_idx]._SetExploredStatus()
 		# get the out edge list of the current node which are not explored yet 
 		outnodes = []
+		
+		# add - sourya
+		# if all the descendants of current cluster are leaves then we turn the flag on
+		flag_all_leaf_desc = True
+		# end add - sourya
+		
 		for l in Cluster_Info_Dict[root_clust_node_idx]._GetOutEdgeList():
 			if (Cluster_Info_Dict[l]._GetExploredStatus() == 0):
 				outnodes.append(l)
+				# add - sourya
+				if (len(Cluster_Info_Dict[l]._GetOutEdgeList()) > 0):
+					# this cluster is non leaf
+					flag_all_leaf_desc = False
+				# end add - sourya
+			
 		if (len(outnodes) == 0):
 			spec_list = Cluster_Info_Dict[root_clust_node_idx]._GetSpeciesList()
 			if (len(spec_list) > 1):
@@ -214,10 +278,16 @@ def PrintNewick(root_clust_node_idx):
 			if (len(spec_list) > 1):
 				Tree_Str_List = Tree_Str_List + ')'
 		else:
-			Tree_Str_List = Tree_Str_List + '('
+			
+			# comment - sourya
+			#Tree_Str_List = Tree_Str_List + '('
+			
 			Tree_Str_List = Tree_Str_List + ','.join("'" + item + "'" for item in Cluster_Info_Dict[root_clust_node_idx]._GetSpeciesList())
 			Tree_Str_List = Tree_Str_List + ','    
-			Tree_Str_List = Tree_Str_List + '('
+			
+			if (flag_all_leaf_desc == False):	# this condition add - sourya
+				Tree_Str_List = Tree_Str_List + '('
+			
 			for i in range(len(outnodes)):
 				if (Cluster_Info_Dict[outnodes[i]]._GetExploredStatus() == 0):  
 					Tree_Str_List = Tree_Str_List + PrintNewick(outnodes[i])
@@ -233,11 +303,14 @@ def PrintNewick(root_clust_node_idx):
 						if (j < len(outnodes)):
 							Tree_Str_List = Tree_Str_List + ','      
 			
-			Tree_Str_List = Tree_Str_List + ')'
-			Tree_Str_List = Tree_Str_List + ')'
+			if (flag_all_leaf_desc == False):	# this condition add - sourya
+				Tree_Str_List = Tree_Str_List + ')'
+				
+			# comment - sourya
+			#Tree_Str_List = Tree_Str_List + ')'
 		
 	return Tree_Str_List    
-    
+
 ##-----------------------------------------------------  
 ''' this function performs transitive reduction of a graph (transitive closure) and subsequently modifies the cluster of nodes
 in terms of the edge connectivity, to make it free of redunant edges '''
@@ -278,27 +351,47 @@ def Append_Cluster_Taxa_Label(target_clust_idx, target_taxa_label):
 #--------------------------------------------------------
 # this function defines relationship between a pair of nodes in a tree
 # the relationship is either ancestor / descendant, or siblings, or no relationship 
-def DefineLeafPairReln(xl_val, node1, node2, edge_type):
+def DefineLeafPairReln(xl_val, mrca_node_level, node1, node2, reln_type):
+	node1_level = node1.level()
+	node2_level = node2.level()
+	
 	key1 = (node1.taxon.label, node2.taxon.label)
 	key2 = (node2.taxon.label, node1.taxon.label)
+	
 	if key1 in TaxaPair_Reln_Dict:
 		TaxaPair_Reln_Dict[key1]._AddSupportingTree()
 		TaxaPair_Reln_Dict[key1]._AddXLVal(xl_val)
-		TaxaPair_Reln_Dict[key1]._AddEdgeCount(edge_type)
+		TaxaPair_Reln_Dict[key1]._AddEdgeCount(reln_type)
+		if (reln_type == RELATION_R4):
+			if (node1_level < node2_level):
+				TaxaPair_Reln_Dict[key1]._IncrLevelDiffInfoCount(0, (node2_level - node1_level))
+			elif (node1_level > node2_level):
+				TaxaPair_Reln_Dict[key1]._IncrLevelDiffInfoCount(1, (node1_level - node2_level))
+			else:
+				TaxaPair_Reln_Dict[key1]._IncrLevelDiffInfoCount(2, 0)
 	elif key2 in TaxaPair_Reln_Dict:
 		TaxaPair_Reln_Dict[key2]._AddSupportingTree()
 		TaxaPair_Reln_Dict[key2]._AddXLVal(xl_val)
-		if (edge_type == RELATION_R3) or (edge_type == RELATION_R4):
-			TaxaPair_Reln_Dict[key2]._AddEdgeCount(edge_type)
-		elif (edge_type == RELATION_R1):
-			TaxaPair_Reln_Dict[key2]._AddEdgeCount(RELATION_R2)
-		else:
-			TaxaPair_Reln_Dict[key2]._AddEdgeCount(RELATION_R1)
+		TaxaPair_Reln_Dict[key2]._AddEdgeCount(Complementary_Reln(reln_type))
+		if (reln_type == RELATION_R4):
+			if (node1_level < node2_level):
+				TaxaPair_Reln_Dict[key2]._IncrLevelDiffInfoCount(1, (node2_level - node1_level))
+			elif (node1_level > node2_level):
+				TaxaPair_Reln_Dict[key2]._IncrLevelDiffInfoCount(0, (node1_level - node2_level))
+			else:
+				TaxaPair_Reln_Dict[key2]._IncrLevelDiffInfoCount(2, 0)
 	else:
 		TaxaPair_Reln_Dict.setdefault(key1, Reln_TaxaPair())
 		TaxaPair_Reln_Dict[key1]._AddSupportingTree()
 		TaxaPair_Reln_Dict[key1]._AddXLVal(xl_val)
-		TaxaPair_Reln_Dict[key1]._AddEdgeCount(edge_type)
+		TaxaPair_Reln_Dict[key1]._AddEdgeCount(reln_type)
+		if (reln_type == RELATION_R4):
+			if (node1_level < node2_level):
+				TaxaPair_Reln_Dict[key1]._IncrLevelDiffInfoCount(0, (node2_level - node1_level))
+			elif (node1_level > node2_level):
+				TaxaPair_Reln_Dict[key1]._IncrLevelDiffInfoCount(1, (node1_level - node2_level))
+			else:
+				TaxaPair_Reln_Dict[key1]._IncrLevelDiffInfoCount(2, 0)
 			
 	return
 
@@ -307,11 +400,12 @@ def DefineLeafPairReln(xl_val, node1, node2, edge_type):
 # that is provided as an input argument to this function
 def DeriveCoupletRelations(Curr_tree):
   
-	# add - sourya
 	Curr_tree_taxa_count = len(Curr_tree.infer_taxa().labels())
 
 	# traverse the internal nodes of the tree in postorder fashion
 	for curr_node in Curr_tree.postorder_internal_node_iter():        
+		# this is the level value associated with this node
+		curr_node_level = curr_node.level()
 		# compute the XL value associated with this node
 		#xl_val = (len(curr_node.leaf_nodes()) - 2)
 		xl_val = ((len(curr_node.leaf_nodes()) - 2) * 1.0 ) / Curr_tree_taxa_count
@@ -329,7 +423,7 @@ def DeriveCoupletRelations(Curr_tree):
 		if (len(curr_node_child_leaf_nodes) > 1):
 			for i in range(len(curr_node_child_leaf_nodes) - 1):
 				for j in range(i+1, len(curr_node_child_leaf_nodes)):
-					DefineLeafPairReln(xl_val, curr_node_child_leaf_nodes[i], curr_node_child_leaf_nodes[j], RELATION_R3)
+					DefineLeafPairReln(xl_val, curr_node_level, curr_node_child_leaf_nodes[i], curr_node_child_leaf_nodes[j], RELATION_R3)
 		
 		# one leaf node (direct descendant) and another leaf node (under one internal node)
 		# will be related by ancestor / descendant relations
@@ -337,7 +431,7 @@ def DeriveCoupletRelations(Curr_tree):
 			for p in curr_node_child_leaf_nodes:
 				for q in curr_node_child_internal_nodes:
 					for r in q.leaf_nodes():
-						DefineLeafPairReln(xl_val, p, r, RELATION_R1)
+						DefineLeafPairReln(xl_val, curr_node_level, p, r, RELATION_R1)
 		
 		# finally a pair of leaf nodes which are descendant of internal nodes will be related by RELATION_R4 relation
 		if (len(curr_node_child_internal_nodes) > 1):
@@ -345,7 +439,7 @@ def DeriveCoupletRelations(Curr_tree):
 				for j in range(i+1, len(curr_node_child_internal_nodes)):
 					for p in curr_node_child_internal_nodes[i].leaf_nodes():
 						for q in curr_node_child_internal_nodes[j].leaf_nodes():
-							DefineLeafPairReln(xl_val, p, q, RELATION_R4)
+							DefineLeafPairReln(xl_val, curr_node_level, p, q, RELATION_R4)
 
 ##-----------------------------------------------------
 # this function reads the input tree list file
@@ -428,3 +522,11 @@ def Find_MRCA(Inp_Tree, spec_list):
 			
 	return None
 
+#----------------------------------------
+def Complementary_Reln(inp_reln):
+  if (inp_reln == RELATION_R3) or (inp_reln == RELATION_R4):
+    return inp_reln
+  elif (inp_reln == RELATION_R1):
+    return RELATION_R2
+  else:
+    return RELATION_R1

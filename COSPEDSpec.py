@@ -68,7 +68,7 @@ def parse_options():
 				type="int", \
 				action="store", \
 				dest="no_of_queues", \
-				default=2, \
+				default=1, \
 				help="1 - only a single max priority queue is used for storing the score metrics \
 				2 - two separate queues are used to store the conflicting and non conflicting taxa pairs and corresponding score metrics (default)")
 		
@@ -189,19 +189,9 @@ def main():
 		for i in range(len(COMPLETE_INPUT_TAXA_LIST)):
 			fp.write('\n COMPLETE_INPUT_TAXA_LIST idx : ' + str(i) + ' element: ' + str(COMPLETE_INPUT_TAXA_LIST[i]))
 
-	if (DEBUG_LEVEL > 2):
-		for l in Taxa_Info_Dict:
-			fp.write('\n taxa index in COMPLETE_INPUT_TAXA_LIST: ' + str(COMPLETE_INPUT_TAXA_LIST.index(l)))
-
 	# close the output text file
 	fp.close()
 
-	# we print the original connection status for all the tree nodes
-	if 0:	#(DEBUG_LEVEL > 2):
-		for l in Taxa_Info_Dict:
-			#print 'printing information for the Taxa_Info_Dict key ', l
-			Taxa_Info_Dict[l]._PrintOriginalTaxaInfo(l, Output_Text_File)      
-				
 	data_read_timestamp = time.time()	# note the timestamp
 		
 	#------------------------------------------------------------
@@ -210,6 +200,18 @@ def main():
 	from the input treelist 
 	"""  
 	for l in TaxaPair_Reln_Dict:
+		"""
+		first set the priority values of this couplet
+		"""
+		TaxaPair_Reln_Dict[l]._SetConnPrVal()
+		"""
+		**************************
+		---- add - sourya
+		this function checks whether R4 relation is the predominant / consensus
+		in such a case, it applies level count analysis to redistribute the frequency measures
+		"""
+		TaxaPair_Reln_Dict[l]._AdjustFreq(l, Output_Text_File)
+		
 		""" 
 		calculate the support score and priority measures for individual couplets
 		and for individual relations
@@ -218,7 +220,7 @@ def main():
 		single_edge_exist: if TRUE, means that only one type of relation is supported (with respect to input trees) between this couplet
 		detection of it during setting the priority values of different relations
 		"""
-		single_edge_exist_list = TaxaPair_Reln_Dict[l]._SetConnPrVal(True)
+		single_edge_exist_list = TaxaPair_Reln_Dict[l]._CheckNonConflictingCouplet()
 		single_edge_exist = single_edge_exist_list[0]
 		edge_type = single_edge_exist_list[1]
 
@@ -296,9 +298,9 @@ def main():
 
 	# this information is printed to know the maximum possible iterations that the while loops will undergo
 	if (DEBUG_LEVEL > 1):
-		fp.write('\n =========== max connection pair ============= : ' + str((len(Cost_List_Taxa_Pair_Single_Reln) + len(Cost_List_Taxa_Pair_Multi_Reln))))      
-		fp.write('\n len Cost_List_Taxa_Pair_Single_Reln: ' + str(len(Cost_List_Taxa_Pair_Single_Reln)))
-		fp.write('\n len Cost_List_Taxa_Pair_Multi_Reln : ' + str(len(Cost_List_Taxa_Pair_Multi_Reln)))
+		if (NO_OF_QUEUES == 2):
+			fp.write('\n length of non-conflicting priority queue: ' + str(len(Cost_List_Taxa_Pair_Single_Reln)))
+		fp.write('\n length of conflicting priority queue : ' + str(len(Cost_List_Taxa_Pair_Multi_Reln)))
 
 	fp.close()
 	#------------------------------------------------------------
@@ -370,7 +372,7 @@ def main():
 
 	#------------------------------------------------------------
 	# print the cluster information 
-	if (DEBUG_LEVEL > 2):
+	if (DEBUG_LEVEL >= 2):
 		fp = open(Output_Text_File, 'a')
 		fp.write('\n **** total number of clusters: ' + str(len(CURRENT_CLUST_IDX_LIST)))
 		fp.write('\n CURRENT_CLUST_IDX_LIST contents: ')
@@ -441,6 +443,11 @@ def main():
 	fp.write('\n --- after update splits -- supertree : ' + Supertree_without_branch_len.as_newick_string())
 	fp.close()
 	# end add - sourya
+	
+	supertree_filename = dir_of_curr_exec + '/' + 'supertree.tre'
+	outfile = open(supertree_filename, 'w')
+	outfile.write(Supertree_without_branch_len.as_newick_string())
+	outfile.close()
 
 	#--------------------------------------------------------------
 	fp = open(Output_Text_File, 'a')
@@ -473,7 +480,8 @@ def main():
 	outfile.close()
 
 	# we write the time associated with the execution of this method
-	fp = open(Output_Text_File, 'a')
+	time_info_filename = dir_of_curr_exec + '/' + 'timing_info.txt'
+	fp = open(time_info_filename, 'w')
 	fp.write('\n \n\n ===============>>>>>>>>>>>>>>> TIME TAKEN BY THE METHOD (in seconds) ')
 	fp.write('\n \n reading the data: ' + str(data_read_timestamp - start_timestamp) + \
 	'\n initialization of the structure: ' + str(data_initialize_timestamp - data_read_timestamp) + \
@@ -483,7 +491,7 @@ def main():
 				str(cluster_of_node_refine_species_timestamp1 - reachability_graph_form_timestamp) + \
 	'\n newick string formation for non branch length trees: ' + \
 				str(data_process_timestamp - cluster_of_node_refine_species_timestamp1) + \
-	'\n refining tree for producing strict binary supertree: ' + \
+	'\n refining tree for producing strict binary species tree: ' + \
 				str(binary_refinement_timestamp - data_process_timestamp))
 	fp.write('\n \n Total time taken (in seconds) : ' + str(binary_refinement_timestamp - start_timestamp))
 	fp.close()
