@@ -131,7 +131,7 @@ def Lower_Score_Value(inp_queue, i, j):
   return 0
 """
 #------------------------------------------------------------------------
-# version 2
+# version 2 - this is the latest - sourya - 1st nov 2015
 #-------------------------
 # this function is used for cost based sorting of the inp_queue in the unweighted supertree
 # this function compares two elements of the heap
