@@ -144,9 +144,6 @@ def AdjustReachGraph(Reachability_Graph_Mat, taxaA_label, taxaB_label, reln_type
 	nodeA_reach_mat_idx = CURRENT_CLUST_IDX_LIST.index(nodeA_clust_idx)
 	nodeB_reach_mat_idx = CURRENT_CLUST_IDX_LIST.index(nodeB_clust_idx)
 
-	# establish the final edge connection between these two taxa
-	#Connect_TaxaPair(taxaA_label, taxaB_label, reln_type)
-
 	# update tge reachability matrix information
 	if (reln_type == RELATION_R3):      
 		#-----------------------------
