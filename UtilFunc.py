@@ -242,6 +242,7 @@ def Extract_Node_Min_Indeg(no_of_clusters):
     
 ## end original function - sourya
 #-------------------------------------------
+
 def PrintNewick(root_clust_node_idx):
 	if 0:
 		print 'in function printnewick:   root_clust_node_idx: ', root_clust_node_idx
@@ -351,9 +352,9 @@ def Append_Cluster_Taxa_Label(target_clust_idx, target_taxa_label):
 #--------------------------------------------------------
 # this function defines relationship between a pair of nodes in a tree
 # the relationship is either ancestor / descendant, or siblings, or no relationship 
-def DefineLeafPairReln(xl_val, mrca_node_level, node1, node2, reln_type):
-	node1_level = node1.level()
-	node2_level = node2.level()
+def DefineLeafPairReln(xl_val, node1, node2, reln_type):
+	#node1_level = node1.level()
+	#node2_level = node2.level()
 	
 	key1 = (node1.taxon.label, node2.taxon.label)
 	key2 = (node2.taxon.label, node1.taxon.label)
@@ -362,36 +363,51 @@ def DefineLeafPairReln(xl_val, mrca_node_level, node1, node2, reln_type):
 		TaxaPair_Reln_Dict[key1]._AddSupportingTree()
 		TaxaPair_Reln_Dict[key1]._AddXLVal(xl_val)
 		TaxaPair_Reln_Dict[key1]._AddEdgeCount(reln_type)
-		if (reln_type == RELATION_R4):
-			if (node1_level < node2_level):
-				TaxaPair_Reln_Dict[key1]._IncrLevelDiffInfoCount(0, (node2_level - node1_level))
-			elif (node1_level > node2_level):
-				TaxaPair_Reln_Dict[key1]._IncrLevelDiffInfoCount(1, (node1_level - node2_level))
-			else:
-				TaxaPair_Reln_Dict[key1]._IncrLevelDiffInfoCount(2, 0)
+		#if (node1_level < node2_level):
+			#if (reln_type == RELATION_R4):
+				#TaxaPair_Reln_Dict[key1]._IncrLevelDiffInfoCount(0, (node2_level - node1_level))
+			##TaxaPair_Reln_Dict[key1]._IncrAllRelnLevelDiffInfoCount(0, (node2_level - node1_level))
+		#elif (node1_level > node2_level):
+			#if (reln_type == RELATION_R4):
+				#TaxaPair_Reln_Dict[key1]._IncrLevelDiffInfoCount(1, (node1_level - node2_level))
+			##TaxaPair_Reln_Dict[key1]._IncrAllRelnLevelDiffInfoCount(1, (node1_level - node2_level))
+		#else:
+			#if (reln_type == RELATION_R4):
+				#TaxaPair_Reln_Dict[key1]._IncrLevelDiffInfoCount(2, 0)
+			##TaxaPair_Reln_Dict[key1]._IncrAllRelnLevelDiffInfoCount(2, 0)
 	elif key2 in TaxaPair_Reln_Dict:
 		TaxaPair_Reln_Dict[key2]._AddSupportingTree()
 		TaxaPair_Reln_Dict[key2]._AddXLVal(xl_val)
 		TaxaPair_Reln_Dict[key2]._AddEdgeCount(Complementary_Reln(reln_type))
-		if (reln_type == RELATION_R4):
-			if (node1_level < node2_level):
-				TaxaPair_Reln_Dict[key2]._IncrLevelDiffInfoCount(1, (node2_level - node1_level))
-			elif (node1_level > node2_level):
-				TaxaPair_Reln_Dict[key2]._IncrLevelDiffInfoCount(0, (node1_level - node2_level))
-			else:
-				TaxaPair_Reln_Dict[key2]._IncrLevelDiffInfoCount(2, 0)
+		#if (node1_level < node2_level):
+			#if (reln_type == RELATION_R4):
+				#TaxaPair_Reln_Dict[key2]._IncrLevelDiffInfoCount(1, (node2_level - node1_level))
+			##TaxaPair_Reln_Dict[key2]._IncrAllRelnLevelDiffInfoCount(1, (node2_level - node1_level))
+		#elif (node1_level > node2_level):
+			#if (reln_type == RELATION_R4):
+				#TaxaPair_Reln_Dict[key2]._IncrLevelDiffInfoCount(0, (node1_level - node2_level))
+			##TaxaPair_Reln_Dict[key2]._IncrAllRelnLevelDiffInfoCount(0, (node1_level - node2_level))
+		#else:
+			#if (reln_type == RELATION_R4):
+				#TaxaPair_Reln_Dict[key2]._IncrLevelDiffInfoCount(2, 0)
+			##TaxaPair_Reln_Dict[key2]._IncrAllRelnLevelDiffInfoCount(2, 0)
 	else:
 		TaxaPair_Reln_Dict.setdefault(key1, Reln_TaxaPair())
 		TaxaPair_Reln_Dict[key1]._AddSupportingTree()
 		TaxaPair_Reln_Dict[key1]._AddXLVal(xl_val)
 		TaxaPair_Reln_Dict[key1]._AddEdgeCount(reln_type)
-		if (reln_type == RELATION_R4):
-			if (node1_level < node2_level):
-				TaxaPair_Reln_Dict[key1]._IncrLevelDiffInfoCount(0, (node2_level - node1_level))
-			elif (node1_level > node2_level):
-				TaxaPair_Reln_Dict[key1]._IncrLevelDiffInfoCount(1, (node1_level - node2_level))
-			else:
-				TaxaPair_Reln_Dict[key1]._IncrLevelDiffInfoCount(2, 0)
+		#if (node1_level < node2_level):
+			#if (reln_type == RELATION_R4):
+				#TaxaPair_Reln_Dict[key1]._IncrLevelDiffInfoCount(0, (node2_level - node1_level))
+			##TaxaPair_Reln_Dict[key1]._IncrAllRelnLevelDiffInfoCount(0, (node2_level - node1_level))
+		#elif (node1_level > node2_level):
+			#if (reln_type == RELATION_R4):
+				#TaxaPair_Reln_Dict[key1]._IncrLevelDiffInfoCount(1, (node1_level - node2_level))
+			##TaxaPair_Reln_Dict[key1]._IncrAllRelnLevelDiffInfoCount(1, (node1_level - node2_level))
+		#else:
+			#if (reln_type == RELATION_R4):
+				#TaxaPair_Reln_Dict[key1]._IncrLevelDiffInfoCount(2, 0)
+			##TaxaPair_Reln_Dict[key1]._IncrAllRelnLevelDiffInfoCount(2, 0)
 			
 	return
 
@@ -405,7 +421,7 @@ def DeriveCoupletRelations(Curr_tree):
 	# traverse the internal nodes of the tree in postorder fashion
 	for curr_node in Curr_tree.postorder_internal_node_iter():        
 		# this is the level value associated with this node
-		curr_node_level = curr_node.level()
+		#curr_node_level = curr_node.level()
 		# compute the XL value associated with this node
 		#xl_val = (len(curr_node.leaf_nodes()) - 2)
 		xl_val = ((len(curr_node.leaf_nodes()) - 2) * 1.0 ) / Curr_tree_taxa_count
@@ -423,7 +439,7 @@ def DeriveCoupletRelations(Curr_tree):
 		if (len(curr_node_child_leaf_nodes) > 1):
 			for i in range(len(curr_node_child_leaf_nodes) - 1):
 				for j in range(i+1, len(curr_node_child_leaf_nodes)):
-					DefineLeafPairReln(xl_val, curr_node_level, curr_node_child_leaf_nodes[i], curr_node_child_leaf_nodes[j], RELATION_R3)
+					DefineLeafPairReln(xl_val, curr_node_child_leaf_nodes[i], curr_node_child_leaf_nodes[j], RELATION_R3)
 		
 		# one leaf node (direct descendant) and another leaf node (under one internal node)
 		# will be related by ancestor / descendant relations
@@ -431,7 +447,7 @@ def DeriveCoupletRelations(Curr_tree):
 			for p in curr_node_child_leaf_nodes:
 				for q in curr_node_child_internal_nodes:
 					for r in q.leaf_nodes():
-						DefineLeafPairReln(xl_val, curr_node_level, p, r, RELATION_R1)
+						DefineLeafPairReln(xl_val, p, r, RELATION_R1)
 		
 		# finally a pair of leaf nodes which are descendant of internal nodes will be related by RELATION_R4 relation
 		if (len(curr_node_child_internal_nodes) > 1):
@@ -439,7 +455,7 @@ def DeriveCoupletRelations(Curr_tree):
 				for j in range(i+1, len(curr_node_child_internal_nodes)):
 					for p in curr_node_child_internal_nodes[i].leaf_nodes():
 						for q in curr_node_child_internal_nodes[j].leaf_nodes():
-							DefineLeafPairReln(xl_val, curr_node_level, p, q, RELATION_R4)
+							DefineLeafPairReln(xl_val, p, q, RELATION_R4)
 
 ##-----------------------------------------------------
 # this function reads the input tree list file
