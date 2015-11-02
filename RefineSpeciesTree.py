@@ -33,6 +33,199 @@ def PrintMatrixContent(N, TaxaList, inp_data, inp_str, textfile):
 
 #-------------------------------------------
 """
+this function finds a single minimum from the input matrix
+"""
+def Find_Unique_Min(Norm_DistMat, no_of_clust, clust_species_list):
+	# initialize
+	min_val = Norm_DistMat[0][1]
+	min_idx_i = 0
+	min_idx_j = 1
+	# traverse through the matrix elements
+	for i in range(no_of_clust - 1):
+		for j in range(i+1, no_of_clust):
+			if (i == j):
+				continue
+			if (Norm_DistMat[i][j] < min_val):
+				min_val = Norm_DistMat[i][j]
+				min_idx_i = i
+				min_idx_j = j
+			elif (Norm_DistMat[i][j] == min_val):
+				# here we prioritize the cluster pair having minimum number of species
+				if (len(clust_species_list[i]) + len(clust_species_list[j])) < (len(clust_species_list[min_idx_i]) + len(clust_species_list[min_idx_j])):
+					min_idx_i = i
+					min_idx_j = j
+	
+	return min_idx_i, min_idx_j
+
+##-------------------------------------------
+#"""
+#this function finds two minimum from the input matrix
+#"""
+#def Find_Two_Distinct_Min(Norm_DistMat, no_of_clust, clust_species_list):
+	
+	## initialize minimum values
+	#min_val_1 = Norm_DistMat[0][1]
+	#min_idx_i_1 = 0
+	#min_idx_j_1 = 1
+	
+	#min_val_2 = -1
+	#min_idx_i_2 = -1
+	#min_idx_j_2 = -1
+	
+	## traverse through the matrix elements
+	#for i in range(no_of_clust - 1):
+		#for j in range(i+1, no_of_clust):
+			#if (i == j):
+				#continue
+			#if (Norm_DistMat[i][j] < min_val_1):
+				## assign the second minimum
+				#min_val_2 = min_val_1
+				#min_idx_i_2 = min_idx_i_1
+				#min_idx_j_2 = min_idx_j_1
+				## re set the first minimum
+				#min_val_1 = Norm_DistMat[i][j]
+				#min_idx_i_1 = i
+				#min_idx_j_1 = j
+			#elif (Norm_DistMat[i][j] > min_val_1):
+				#if (min_idx_i_2 >= 0):
+					#if (Norm_DistMat[i][j] < min_val_2):
+						#min_val_2 = Norm_DistMat[i][j]
+						#min_idx_i_2 = i
+						#min_idx_j_2 = j
+	
+	#return min_idx_i_1, min_idx_j_1, min_idx_i_2, min_idx_j_2
+
+##-------------------------------------------
+#"""
+#this function checks for similar indices
+#"""
+#def Check_Overlap(i1, j1, i2, j2):
+	#overlap_occur = 0
+	#common_idx = 0
+	#other_idx1 = 0
+	#other_idx2 = 0
+	#if (i2 == i1):
+		#overlap_occur = 1
+		#common_idx = i2
+		#other_idx1 = j1
+		#other_idx2 = j2
+	#elif (i2 == j1):
+		#overlap_occur = 1
+		#common_idx = i2
+		#other_idx1 = i1
+		#other_idx2 = j2
+	#elif (j2 == i1):
+		#overlap_occur = 1
+		#common_idx = j2
+		#other_idx1 = j1
+		#other_idx2 = i2
+	#elif (j2 == j1):
+		#overlap_occur = 1
+		#common_idx = j2
+		#other_idx1 = i1
+		#other_idx2 = i2
+	
+	#return overlap_occur, common_idx, other_idx1, other_idx2
+
+##-------------------------------------------
+#"""
+#this function checks the clustering case
+#whether clusters in x and y indices will be merged
+#or whether clusters in x and z indices will be merged
+#"""
+#def FindMinIdxOverlap(x, y, z, clust_species_list):
+	## this is the score when x and y are clustered and z is placed as outgroup
+	#xy_cluster_score = 0
+	#xy_cluster_score_count = 0
+
+	## this is the score when x and z are clustered and y is placed as outgroup
+	#xz_cluster_score = 0
+	#xz_cluster_score_count = 0
+	
+	## find the % R1 level score for R1(z,x) relation
+	#elem_found = False
+	#for k1 in range(len(clust_species_list[z])):
+		#for k2 in range(len(clust_species_list[x])):  
+			#s1 = clust_species_list[z][k1]
+			#s2 = clust_species_list[x][k2]
+			#key1 = (s1, s2)
+			#key2 = (s2, s1)
+			#if key1 in TaxaPair_Reln_Dict:
+				#elem_found = True
+				#l = TaxaPair_Reln_Dict[key1]._GetAllRelnLevelDiffVal()
+				#xy_cluster_score = xy_cluster_score + (l[0] * 1.0) / (l[0] + l[1])
+				#xy_cluster_score_count = xy_cluster_score_count + 1
+				#break
+			#elif key2 in TaxaPair_Reln_Dict:
+				#elem_found = True
+				#l = TaxaPair_Reln_Dict[key2]._GetAllRelnLevelDiffVal()
+				#xy_cluster_score = xy_cluster_score + (l[1] * 1.0) / (l[0] + l[1])
+				#xy_cluster_score_count = xy_cluster_score_count + 1
+				#break
+		#if (elem_found == True):
+			#break
+			
+	## find the % R1 level score for R1(y,x) relation
+	#elem_found = False
+	#for k1 in range(len(clust_species_list[y])):
+		#for k2 in range(len(clust_species_list[x])):  
+			#s1 = clust_species_list[y][k1]
+			#s2 = clust_species_list[x][k2]
+			#key1 = (s1, s2)
+			#key2 = (s2, s1)
+			#if key1 in TaxaPair_Reln_Dict:
+				#elem_found = True
+				#l = TaxaPair_Reln_Dict[key1]._GetAllRelnLevelDiffVal()
+				#xz_cluster_score = xz_cluster_score + (l[0] * 1.0) / (l[0] + l[1])
+				#xz_cluster_score_count = xz_cluster_score_count + 1
+				#break
+			#elif key2 in TaxaPair_Reln_Dict:
+				#elem_found = True
+				#l = TaxaPair_Reln_Dict[key2]._GetAllRelnLevelDiffVal()
+				#xz_cluster_score = xz_cluster_score + (l[1] * 1.0) / (l[0] + l[1])
+				#xz_cluster_score_count = xz_cluster_score_count + 1
+				#break
+		#if (elem_found == True):
+			#break
+	
+	## find the % R1/R2 level score for R1(y,z) relation
+	#elem_found = False
+	#for k1 in range(len(clust_species_list[y])):
+		#for k2 in range(len(clust_species_list[z])):  
+			#s1 = clust_species_list[y][k1]
+			#s2 = clust_species_list[z][k2]
+			#key1 = (s1, s2)
+			#key2 = (s2, s1)
+			#if key1 in TaxaPair_Reln_Dict:
+				#elem_found = True
+				#l = TaxaPair_Reln_Dict[key1]._GetAllRelnLevelDiffVal()
+				#xz_cluster_score = xz_cluster_score + (l[0] * 1.0) / (l[0] + l[1])
+				#xy_cluster_score = xy_cluster_score + (l[1] * 1.0) / (l[0] + l[1])
+				#xy_cluster_score_count = xy_cluster_score_count + 1
+				#xz_cluster_score_count = xz_cluster_score_count + 1
+				#break
+			#elif key2 in TaxaPair_Reln_Dict:
+				#elem_found = True
+				#l = TaxaPair_Reln_Dict[key2]._GetAllRelnLevelDiffVal()
+				#xz_cluster_score = xz_cluster_score + (l[1] * 1.0) / (l[0] + l[1])
+				#xy_cluster_score = xy_cluster_score + (l[0] * 1.0) / (l[0] + l[1])
+				#xy_cluster_score_count = xy_cluster_score_count + 1
+				#xz_cluster_score_count = xz_cluster_score_count + 1
+				#break
+		#if (elem_found == True):
+			#break
+	
+	#if (xy_cluster_score_count > 1):
+		#xy_cluster_score = (xy_cluster_score * 1.0) / xy_cluster_score_count
+	#if (xz_cluster_score_count > 1):
+		#xz_cluster_score = (xz_cluster_score * 1.0) / xz_cluster_score_count
+
+	#if (xy_cluster_score >= xz_cluster_score):
+		#return y
+	#return z
+
+#-------------------------------------------
+"""
 this function processes one internal node (basically the children list)
 to resolve multifurcation
 """
@@ -58,18 +251,27 @@ def ResolveMultifurcation(Gene_TreeList, Curr_tree, clust_species_list, no_of_in
 			# here both clust_species_list[i] and clust_species_list[j]
 			# are one element lists (according to their construction)
 			# we have extracted the corresponding element by using [0] operator (extracting first element)
-			x1 = clust_species_list[i][0]
-			x2 = clust_species_list[j][0]
-			key1 = (x1, x2)
-			key2 = (x2, x1)
-			#print 'key1: ', key1, ' key2: ', key2
-			if key1 in TaxaPair_Reln_Dict:
-				#DistMat[j][i] = DistMat[i][j] = TaxaPair_Reln_Dict[key1]._GetXLSumGeneTrees()
-				DistMat[j][i] = DistMat[i][j] = TaxaPair_Reln_Dict[key1]._GetNormalizedXLSumGeneTrees()
-			elif key2 in TaxaPair_Reln_Dict:
-				#DistMat[j][i] = DistMat[i][j] = TaxaPair_Reln_Dict[key2]._GetXLSumGeneTrees()
-				DistMat[j][i] = DistMat[i][j] = TaxaPair_Reln_Dict[key2]._GetNormalizedXLSumGeneTrees()
-			else:
+			elem_found = False
+			for k1 in range(len(clust_species_list[i])):
+				for k2 in range(len(clust_species_list[j])):  
+					x1 = clust_species_list[i][k1]
+					x2 = clust_species_list[j][k2]
+					key1 = (x1, x2)
+					key2 = (x2, x1)
+					#print 'key1: ', key1, ' key2: ', key2
+					if key1 in TaxaPair_Reln_Dict:
+						elem_found = True
+						#DistMat[j][i] = DistMat[i][j] = TaxaPair_Reln_Dict[key1]._GetXLSumGeneTrees()
+						DistMat[j][i] = DistMat[i][j] = TaxaPair_Reln_Dict[key1]._GetNormalizedXLSumGeneTrees()
+						break
+					elif key2 in TaxaPair_Reln_Dict:
+						elem_found = True
+						#DistMat[j][i] = DistMat[i][j] = TaxaPair_Reln_Dict[key2]._GetXLSumGeneTrees()
+						DistMat[j][i] = DistMat[i][j] = TaxaPair_Reln_Dict[key2]._GetNormalizedXLSumGeneTrees()
+						break
+				if (elem_found == True):
+					break
+			if (elem_found == False):
 				DistMat[j][i] = DistMat[i][j] = 0
 	# end add - sourya
 	#---------------------------------------
@@ -112,7 +314,7 @@ def ResolveMultifurcation(Gene_TreeList, Curr_tree, clust_species_list, no_of_in
 			fp.write('\n iteration start --- number of clusters: ' + str(no_of_clust))
 			fp.write('\n clust_species_list : ' + str(clust_species_list))
 			fp.close()
-			PrintMatrixContent(no_of_clust, clust_species_list, DistMat, 'DistMat', Output_Text_File)
+			#PrintMatrixContent(no_of_clust, clust_species_list, DistMat, 'DistMat', Output_Text_File)
 		
 		# allocate one new square matrix which will contain the 
 		# normalized matrix elements (w.r.t the sum of sum of rows and columns)
@@ -131,31 +333,59 @@ def ResolveMultifurcation(Gene_TreeList, Curr_tree, clust_species_list, no_of_in
 				Norm_DistMat[j][i] = Norm_DistMat[i][j]
 		
 		if (DEBUG_LEVEL >= 2):
-			fp = open(Output_Text_File, 'a')
-			fp.write('\n printing contents of sum_list --- ' + str(sum_list))
-			fp.close()
+			#fp = open(Output_Text_File, 'a')
+			#fp.write('\n printing contents of sum_list --- ' + str(sum_list))
+			#fp.close()
 			PrintMatrixContent(no_of_clust, clust_species_list, Norm_DistMat, 'Norm_DistMat', Output_Text_File)
 		
 		# add - sourya
 		# now we have to find the minimum among these elements 
 		# present in the matrix Norm_DistMat
-		min_val = Norm_DistMat[0][1]
-		min_idx_i = 0
-		min_idx_j = 1
-		for i in range(no_of_clust - 1):
-			for j in range(i+1, no_of_clust):
-				if (i == j):
-					continue
-				if (Norm_DistMat[i][j] < min_val):
-					min_val = Norm_DistMat[i][j]
-					min_idx_i = i
-					min_idx_j = j
-				elif (Norm_DistMat[i][j] == min_val):
-					# here we prioritize the cluster pair having minimum number of species
-					if (len(clust_species_list[i]) + len(clust_species_list[j])) < (len(clust_species_list[min_idx_i]) + len(clust_species_list[min_idx_j])):
-						min_idx_i = i
-						min_idx_j = j
+		#----------------------------------------
+		# comment - sourya
+		min_idx_i, min_idx_j = Find_Unique_Min(Norm_DistMat, no_of_clust, clust_species_list)
+		#----------------------------------------
+		## new add - sourya
+		#min_idx_i_1, min_idx_j_1, min_idx_i_2, min_idx_j_2 = Find_Two_Distinct_Min(Norm_DistMat, no_of_clust, clust_species_list)
+		#if (DEBUG_LEVEL >= 2):
+			#fp = open(Output_Text_File, 'a')
+			#fp.write('\n min_idx_i_1 ' + str(min_idx_i_1) + ' min_idx_j_1 : ' + str(min_idx_j_1) + \
+				#' min_idx_i_2 ' + str(min_idx_i_2) + ' min_idx_j_2 : ' + str(min_idx_j_2))
+			#fp.close()
+		
+		## check the overlapping cluster
+		#overlap_occur, common_idx, other_idx1, other_idx2 = Check_Overlap(min_idx_i_1, min_idx_j_1, min_idx_i_2, min_idx_j_2)
+		#if (DEBUG_LEVEL >= 2):
+			#fp = open(Output_Text_File, 'a')
+			#if (overlap_occur == 0):
+				#fp.write('\n Overlapping does not occur')
+			#else:
+				#fp.write('\n Overlapping - common cluster idx : ' + str(common_idx) + ' species list: ' + str(clust_species_list[common_idx]))
+				#fp.write('\n Other cluster idx : ' + str(other_idx1) + ' species list: ' + str(clust_species_list[other_idx1]))
+				#fp.write('\n Other cluster idx : ' + str(other_idx2) + ' species list: ' + str(clust_species_list[other_idx2]))
+			#fp.close()
+		
+		#if (overlap_occur == 0):
+			#min_idx_i = min_idx_i_1
+			#min_idx_j = min_idx_j_1
+		#else:
+			#min_idx_i = common_idx
+			#min_idx_j = FindMinIdxOverlap(common_idx, other_idx1, other_idx2, clust_species_list)
+			#"""
+			#this swap operation is important - sourya
+			#as the operations below assume a upper triangualr matrix operation
+			#"""
+			#if (min_idx_i > min_idx_j):
+				#temp = min_idx_i
+				#min_idx_i = min_idx_j
+				#min_idx_j = temp
+			#if (DEBUG_LEVEL >= 2):
+				#fp = open(Output_Text_File, 'a')
+				#fp.write('\n Selected min_idx_j : ' + str(min_idx_j) + ' species list: ' + str(clust_species_list[min_idx_j]))
+				#fp.close()
 		# end add - sourya
+		#----------------------------------------
+		
 
 		# note down the taxa list in these two indices of the clust_species_list
 		taxa_list = []
@@ -316,7 +546,13 @@ def ResolveMultifurcation(Gene_TreeList, Curr_tree, clust_species_list, no_of_in
 		# now fill the elements of the new added row and column
 		for k in range(no_of_clust):
 			# for any index k, the number of extra lineage is the maximum of these three quantities
+			# comment - sourya
 			DistMat[k][no_of_clust] = max(DistMat[k][min_idx_i], DistMat[k][min_idx_j], DistMat[min_idx_i][min_idx_j])
+			# add - sourya
+			#maxval = max(DistMat[k][min_idx_i], DistMat[k][min_idx_j], DistMat[min_idx_i][min_idx_j])
+			#minval = min(DistMat[k][min_idx_i], DistMat[k][min_idx_j], DistMat[min_idx_i][min_idx_j])
+			#DistMat[k][no_of_clust] = min(DistMat[k][min_idx_i], DistMat[k][min_idx_j])
+			# end add - sourya
 			DistMat[no_of_clust][k] = DistMat[k][no_of_clust]
 		
 		# now remove the rows and columns corresponding to min_idx_i and min_idx_j
