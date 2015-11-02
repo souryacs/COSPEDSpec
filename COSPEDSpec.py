@@ -64,13 +64,13 @@ def parse_options():
 				help="1 - input file format is NEWICK (default) \
 				2 - input file format is NEXUS")
 					
-	parser.add_option("-q", "--queues", \
-				type="int", \
-				action="store", \
-				dest="no_of_queues", \
-				default=1, \
-				help="1 - only a single max priority queue is used for storing the score metrics \
-				2 - two separate queues are used to store the conflicting and non conflicting taxa pairs and corresponding score metrics (default)")
+	#parser.add_option("-q", "--queues", \
+				#type="int", \
+				#action="store", \
+				#dest="no_of_queues", \
+				#default=1, \
+				#help="1 - only a single max priority queue is used for storing the score metrics \
+				#2 - two separate queues are used to store the conflicting and non conflicting taxa pairs and corresponding score metrics (default)")
 		
 	opts, args = parser.parse_args()
 	return opts, args
@@ -87,7 +87,7 @@ def main():
 	else:
 		INPUT_FILE_FORMAT = 'nexus'
 	INPUT_FILENAME = opts.INP_FILENAME
-	NO_OF_QUEUES = opts.no_of_queues  
+	NO_OF_QUEUES = 1	#opts.no_of_queues  
 	OUTPUT_FILENAME = opts.OUT_FILENAME
 
 	global Output_Text_File
@@ -210,7 +210,8 @@ def main():
 		this function checks whether R4 relation is the predominant / consensus
 		in such a case, it applies level count analysis to redistribute the frequency measures
 		"""
-		TaxaPair_Reln_Dict[l]._AdjustFreq(l, Output_Text_File)
+		# comment - sourya
+		#TaxaPair_Reln_Dict[l]._AdjustFreq(l, Output_Text_File)
 		
 		""" 
 		calculate the support score and priority measures for individual couplets
