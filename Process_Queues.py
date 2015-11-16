@@ -8,8 +8,6 @@ import ReachGraph_Update
 from ReachGraph_Update import *
 import Conflict_Detect
 from Conflict_Detect import *
-import UtilFunc
-from UtilFunc import *
 
 #-------------------------------------------------------
 """ 
@@ -48,14 +46,6 @@ def Proc_Queue(Reachability_Graph_Mat, Single_Reln_no_Conflict_Queue_process, Ou
 								' reln type: ' + str(reln_type) + ' conn score: ' + str(conn_score))
 			fp.close()
 		
-		#-----------------------------
-		#"""
-		#add - sourya - debug 
-		#"""
-		#if (conn_score <= 0):
-			#break
-		#-----------------------------
-		
 		""" 
 		if the current support score based relation does not induce a conflict to the existing configuration of the final supertree
 		then include the current relation (and resolve corresponding couplet) in it 
@@ -68,7 +58,7 @@ def Proc_Queue(Reachability_Graph_Mat, Single_Reln_no_Conflict_Queue_process, Ou
 			not that it is already present in the supertree 
 			valid connection is found - append this connection to the final formed tree 
 			"""
-			if (DEBUG_LEVEL > 0):
+			if (DEBUG_LEVEL >= 2):
 				fp = open(Output_Text_File, 'a')    
 				if (Single_Reln_no_Conflict_Queue_process == 1):
 					queue_str = 'NON CONFLICTING QUEUE (higher priority)'

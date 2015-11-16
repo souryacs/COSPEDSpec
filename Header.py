@@ -9,6 +9,8 @@ from cStringIO import StringIO
 from optparse import OptionParser
 import math
 import sys
+import networkx as nx
+import matplotlib.pyplot as plt
 
 # we define custom relation types
 RELATION_R3 = 0	# relation r3
@@ -58,16 +60,30 @@ CURRENT_CLUST_IDX_LIST = []
 
 # this is the debug level
 # set for printing the necessary information
-DEBUG_LEVEL = 0
+DEBUG_LEVEL = 2
 
-# this text file stores all the printing output
-Output_Text_File = 'complete_output_description.txt'
+#FREQ_COUNT_PERCENT_THR_R4 = 0.55
+#FREQ_COUNT_PERCENT_THR_R1R2 = 0.45
+#PERCENT_R1R2_LEV_COUNT = 0.8
 
-FREQ_COUNT_PERCENT_THR_R4 = 0.55
-FREQ_COUNT_PERCENT_THR_R1R2 = 0.45
-PERCENT_R1R2_LEV_COUNT = 0.8
+MAJORITY_CONSENSUS_RATIO = 0.6
+LEVEL_COUNT_VAL_CONSENSUS_RATIO = 0.7
 
-##-----------------------------------------------------
+# variables used to denote whether we use traditional NJ method
+# or use a variant of it, namely the agglomerative clustering
+TRADITIONAL_NJ = 1
+AGGLO_CLUST = 2
+
+"""
+this is a list of couplets which are siblings
+according to their R3 consensus relation
+"""
+Sibling_Couplet_List = []
+
+# error indicator 
+KEY_ABSENCE_INDICATOR = 2
+
+#-----------------------------------------------------
 """ 
 this class defines a taxon
 """
@@ -129,7 +145,8 @@ class Reln_TaxaPair(object):
 		""" 
 		For this couplet, it stores the extra gene count with respect to all the gene trees
 		"""
-		self.XL_sum_gene_trees = 0
+		# modified - sourya
+		self.XL_sum_gene_trees = []	#0
 		
 		"""
 		for a couplet xy, and for a relation r3, following array has 3 elements:
@@ -137,34 +154,89 @@ class Reln_TaxaPair(object):
 		2) count when level of x > level of y (relation r2 similar)
 		3) count when level of x = level of y (relation r3 similar)
 		"""
-		#self.R4_Reln_Level_Diff_Info_Count = [0] * 3
-		#self.R4_Reln_Level_Diff_Val_Count = [0] * 3
+		self.ALL_Reln_Level_Diff_Info_Count = [0] * 3
+		self.ALL_Reln_Level_Diff_Val_Count = [0] * 3
 		
-		#self.ALL_Reln_Level_Diff_Info_Count = [0] * 3
-		#self.ALL_Reln_Level_Diff_Val_Count = [0] * 3
+	def _NormalizeR1R2LevelDiff(self):
+		for i in range(3):
+			self.ALL_Reln_Level_Diff_Val_Count[i] = (self.ALL_Reln_Level_Diff_Val_Count[i] * 1.0) / self.supporting_trees
 		
-	#def _GetAllRelnLevelDiffCount(self):
-		#return self.ALL_Reln_Level_Diff_Info_Count
+	def _GetR1R2LevelDiff(self):
+		return (self.ALL_Reln_Level_Diff_Val_Count[0] - self.ALL_Reln_Level_Diff_Val_Count[1])
 		
-	#def _GetAllRelnLevelDiffVal(self):
-		#return self.ALL_Reln_Level_Diff_Val_Count
+	def _GetR1R2AbsLevelDiff(self):
+		return math.fabs(self.ALL_Reln_Level_Diff_Val_Count[0] - self.ALL_Reln_Level_Diff_Val_Count[1])
+	
+	def _CheckR3RelnLevelConsensus(self):
+		if (self.ALL_Reln_Level_Diff_Info_Count[2] > (self.ALL_Reln_Level_Diff_Info_Count[0] + self.ALL_Reln_Level_Diff_Info_Count[1])):
+			return 1
+		return 0
+	
+	def _CheckR1RelnLevelConsensus(self):
+		r1_lev_count = self.ALL_Reln_Level_Diff_Info_Count[0]
+		r2_lev_count = self.ALL_Reln_Level_Diff_Info_Count[1]
+		r4_lev_count = self.ALL_Reln_Level_Diff_Info_Count[2]
+		sum_level_count = sum(self.ALL_Reln_Level_Diff_Info_Count)
+		r1_lev_val = self.ALL_Reln_Level_Diff_Val_Count[0]
+		r2_lev_val = self.ALL_Reln_Level_Diff_Val_Count[1]
+		sum_level_val = r1_lev_val + r2_lev_val
+
+		if (r1_lev_count >= (MAJORITY_CONSENSUS_RATIO * sum_level_count)) and \
+			(r1_lev_val >= (LEVEL_COUNT_VAL_CONSENSUS_RATIO * sum_level_val)):
+			return 1
+		return 0
+	
+	def _CheckR2RelnLevelConsensus(self):
+		r1_lev_count = self.ALL_Reln_Level_Diff_Info_Count[0]
+		r2_lev_count = self.ALL_Reln_Level_Diff_Info_Count[1]
+		r4_lev_count = self.ALL_Reln_Level_Diff_Info_Count[2]
+		sum_level_count = sum(self.ALL_Reln_Level_Diff_Info_Count)
+		r1_lev_val = self.ALL_Reln_Level_Diff_Val_Count[0]
+		r2_lev_val = self.ALL_Reln_Level_Diff_Val_Count[1]
+		sum_level_val = r1_lev_val + r2_lev_val
+
+		if (r2_lev_count >= (MAJORITY_CONSENSUS_RATIO * sum_level_count)) and \
+			(r2_lev_val >= (LEVEL_COUNT_VAL_CONSENSUS_RATIO * sum_level_val)):
+			return 1
+		return 0
+	
+	# this function is modified - sourya
+	def _CheckHigherR2RelnLevelValue(self):
+		if (self.ALL_Reln_Level_Diff_Val_Count[1] > self.ALL_Reln_Level_Diff_Val_Count[0]) \
+			and (self.ALL_Reln_Level_Diff_Info_Count[1] > self.ALL_Reln_Level_Diff_Info_Count[0]):
+			return 1
+		return 0
+
+	# this function is modified - sourya
+	def _CheckHigherR1RelnLevelValue(self):
+		if (self.ALL_Reln_Level_Diff_Val_Count[0] > self.ALL_Reln_Level_Diff_Val_Count[1]) \
+			and (self.ALL_Reln_Level_Diff_Info_Count[0] > self.ALL_Reln_Level_Diff_Info_Count[1]):
+			return 1
+		return 0
+	
+	def _GetAllRelnLevelDiffCount(self):
+		return self.ALL_Reln_Level_Diff_Info_Count
 		
-	#def _IncrAllRelnLevelDiffInfoCount(self, idx, val):
-		#self.ALL_Reln_Level_Diff_Info_Count[idx] = self.ALL_Reln_Level_Diff_Info_Count[idx] + 1
-		#self.ALL_Reln_Level_Diff_Val_Count[idx] = self.ALL_Reln_Level_Diff_Val_Count[idx] + val
+	def _GetAllRelnLevelDiffVal(self):
+		return self.ALL_Reln_Level_Diff_Val_Count
 		
-	#def _IncrLevelDiffInfoCount(self, idx, val):
-		#self.R4_Reln_Level_Diff_Info_Count[idx] = self.R4_Reln_Level_Diff_Info_Count[idx] + 1
-		#self.R4_Reln_Level_Diff_Val_Count[idx] = self.R4_Reln_Level_Diff_Val_Count[idx] + val
+	def _IncrAllRelnLevelDiffInfoCount(self, idx, val):
+		self.ALL_Reln_Level_Diff_Info_Count[idx] = self.ALL_Reln_Level_Diff_Info_Count[idx] + 1
+		self.ALL_Reln_Level_Diff_Val_Count[idx] = self.ALL_Reln_Level_Diff_Val_Count[idx] + val
 		
 	def _AddXLVal(self, XL_val):
-		self.XL_sum_gene_trees = self.XL_sum_gene_trees + XL_val
+		#self.XL_sum_gene_trees = self.XL_sum_gene_trees + XL_val
+		self.XL_sum_gene_trees.append(XL_val)	# modified - sourya
 		
 	def _GetXLSumGeneTrees(self):
-		return self.XL_sum_gene_trees
+		#return self.XL_sum_gene_trees
+		return sum(self.XL_sum_gene_trees)	# modified - sourya
 
 	def _GetNormalizedXLSumGeneTrees(self):
-		return (self.XL_sum_gene_trees * 1.0) / self.supporting_trees
+		#return (self.XL_sum_gene_trees * 1.0) / self.supporting_trees
+		#return (sum(self.XL_sum_gene_trees) * 1.0) / self.supporting_trees	# modified - sourya
+		#return numpy.median(numpy.array(self.XL_sum_gene_trees)) # modified - sourya
+		return min(numpy.median(numpy.array(self.XL_sum_gene_trees)), ((sum(self.XL_sum_gene_trees) * 1.0) / self.supporting_trees))	# modified - sourya
 		
 	def _AddSupportingTree(self):
 		self.supporting_trees = self.supporting_trees + 1
@@ -189,13 +261,17 @@ class Reln_TaxaPair(object):
 		fp.write('\n relations [type/count/priority_reln/score]: ')
 		for i in range(4):
 			fp.write('\n [' + str(i) + '/' + str(self.freq_count[i]) + '/' + str(self.priority_reln[i]) + '/' + str(self.support_score[i]) + ']')
-		fp.write('\n Sum of extra lineage : ' + str(self.XL_sum_gene_trees))
+		#fp.write('\n Sum of extra lineage **** : ' + str(self.XL_sum_gene_trees))
+		# add - sourya
+		fp.write('\n AVERAGE Sum of extra lineage **** : ' + str(sum(self.XL_sum_gene_trees) / len(self.XL_sum_gene_trees)))
+		fp.write('\n MEDIAN Sum of extra lineage **** : ' + str(numpy.median(numpy.array(self.XL_sum_gene_trees))))
+		# end add - sourya
 		fp.write('\n No of supporting trees : ' + str(self.supporting_trees))
 		fp.write('\n Normalized XL sum : ' + str(self._GetNormalizedXLSumGeneTrees()))
 		#fp.write('\n R4 relation based Level diff info count (r1/r2/r3): ' + str(self.R4_Reln_Level_Diff_Info_Count))
 		#fp.write('\n R4 relation based Level diff Val count (r1/r2/r3): ' + str(self.R4_Reln_Level_Diff_Val_Count))
-		#fp.write('\n ALL relation based Level diff info count (r1/r2/r3): ' + str(self.ALL_Reln_Level_Diff_Info_Count))
-		#fp.write('\n ALL relation based Level diff Val count (r1/r2/r3): ' + str(self.ALL_Reln_Level_Diff_Val_Count))
+		fp.write('\n ALL relation based Level diff info count (r1/r2/r3): ' + str(self.ALL_Reln_Level_Diff_Info_Count))
+		fp.write('\n ALL relation based Level diff Val count (r1/r2/r3): ' + str(self.ALL_Reln_Level_Diff_Val_Count))
 		fp.close()
 					
 	# this function computes the support score metric value associated with individual pair of taxa 
@@ -203,130 +279,11 @@ class Reln_TaxaPair(object):
 		for reln_type in range(4):
 			# assign the score metric for this edge type
 			self.support_score[reln_type] = self.freq_count[reln_type] * self.priority_reln[reln_type]
-			#self.support_score[reln_type] = self.freq_count[reln_type]	# sourya - debug
 			
 	# this function returns the connection priority value for input relation 
 	def _GetConnPrVal(self, reln_type):
 		return self.priority_reln[reln_type]
 	
-	#"""
-	#this function checks whether R4 relation is the predominant / consensus
-	#in such a case, it applies level count analysis to redistribute the frequency measures
-	#"""
-	#def _AdjustFreq(self, key, Output_Text_File):
-		##fp = open(Output_Text_File, 'a')    
-		##fp.write('\n taxa pair key: ' + str(key))
-		#max_freq = max(self.freq_count)
-		#if (self.freq_count[RELATION_R4] == max_freq):
-			## here R4 is the consensus relation
-			#if (DEBUG_LEVEL >= 2):
-				#fp = open(Output_Text_File, 'a')
-				#fp.write('\n Couplet key: ' + str(key))
-				#fp.write('\n consensus relation: ' + str(RELATION_R4))
-				#fp.close()
-			##------------------------------------------------
-			#if (self.priority_reln[RELATION_R4] <= 0):
-				#if (DEBUG_LEVEL >= 2):
-					#fp = open(Output_Text_File, 'a')
-					#fp.write('\n this relation is not a majority consensus relation - here R4 priority is <= 0 ')
-					#fp.close()
-				#""" 
-				#current relation has priority less than or equal to zero
-				#so this relation is although consensus, it is not majority consensus
-				#now we have to check the R4_Reln_Level_Diff_Info_Count values
-				#"""
-				#if (self.R4_Reln_Level_Diff_Info_Count[0] > (self.R4_Reln_Level_Diff_Info_Count[1] + self.R4_Reln_Level_Diff_Info_Count[2])) \
-					#or (self.R4_Reln_Level_Diff_Info_Count[1] > (self.R4_Reln_Level_Diff_Info_Count[0] + self.R4_Reln_Level_Diff_Info_Count[2])):
-					#if (DEBUG_LEVEL >= 2):
-						#fp = open(Output_Text_File, 'a')
-						#fp.write('\n ---- Current couplet frequency distribution before modification --- ')
-						#fp.close()
-						#self._PrintRelnInfo(key, Output_Text_File)
-					#"""
-					#level count corresponding to the relation r1 / r2 is predominant
-					#so move the r4 relation instance to both r1 and r2 relation instances
-					#"""
-					#self.freq_count[RELATION_R1] = self.freq_count[RELATION_R1] + self.R4_Reln_Level_Diff_Info_Count[0]
-					#self.freq_count[RELATION_R2] = self.freq_count[RELATION_R2] + self.R4_Reln_Level_Diff_Info_Count[1]
-					#self.freq_count[RELATION_R4] = self.freq_count[RELATION_R4] - self.R4_Reln_Level_Diff_Info_Count[0] - self.R4_Reln_Level_Diff_Info_Count[1]
-					## recompute the priority
-					#self._SetConnPrVal()
-					#if (DEBUG_LEVEL >= 2):
-						#fp = open(Output_Text_File, 'a')
-						#fp.write('\n ---- Current couplet frequency distribution after modification --- ')
-						#fp.close()
-						#self._PrintRelnInfo(key, Output_Text_File)
-			#else:
-				#total_freq = sum(self.freq_count)
-				#r1_freq = self.freq_count[RELATION_R1]
-				#r2_freq = self.freq_count[RELATION_R2]
-				#r3_freq = self.freq_count[RELATION_R3]
-				#r4_freq = self.freq_count[RELATION_R4]
-				
-				#r1_lev_count = self.R4_Reln_Level_Diff_Info_Count[0]
-				#r2_lev_count = self.R4_Reln_Level_Diff_Info_Count[1]
-				#r4_lev_count = self.R4_Reln_Level_Diff_Info_Count[2]
-				
-				#sum_level_diff_val = sum(self.R4_Reln_Level_Diff_Val_Count)
-				#r1_level_diff_val = self.R4_Reln_Level_Diff_Val_Count[0]
-				#r2_level_diff_val = self.R4_Reln_Level_Diff_Val_Count[1]
-				
-				## R4 is a consensus relation but its priority is not that high
-				#if (r4_freq <= (FREQ_COUNT_PERCENT_THR_R4 * total_freq)):
-					#if (DEBUG_LEVEL >= 2):
-						#fp = open(Output_Text_File, 'a')
-						#fp.write('\n ---- R4 is a majority consensus relation but with low priority --- ')
-						#fp.close()
-					## case 1 - count of R1 is quite close
-					#if (r1_freq >= (FREQ_COUNT_PERCENT_THR_R1R2 * total_freq)):	# and (r2_freq == 0) and (r3_freq == 0):
-						## also the couplet exhibits R1 relation like clade for most of the gene trees
-						#if (r1_lev_count > (r2_lev_count + r4_lev_count)) and (r1_level_diff_val >= PERCENT_R1R2_LEV_COUNT * sum_level_diff_val):
-						##if (r1_level_diff_val >= PERCENT_R1R2_LEV_COUNT * sum_level_diff_val):
-							## further condition
-							#if ((r1_freq + r1_lev_count - r2_lev_count - r4_lev_count) > r4_freq):
-								#if (DEBUG_LEVEL >= 2):
-									#fp = open(Output_Text_File, 'a')
-									#fp.write('\n ---- Current couplet frequency distribution before modification --- ')
-									#fp.close()
-									#self._PrintRelnInfo(key, Output_Text_File)
-								
-								#self.freq_count[RELATION_R1] = r1_freq + r1_lev_count
-								#self.freq_count[RELATION_R2] = r2_freq + r2_lev_count
-								#self.freq_count[RELATION_R4] = r4_freq - r1_lev_count - r2_lev_count
-								## recompute the priority
-								#self._SetConnPrVal()
-								
-								#if (DEBUG_LEVEL >= 2):
-									#fp = open(Output_Text_File, 'a')
-									#fp.write('\n ---- Current couplet frequency distribution after modification --- ')
-									#fp.close()
-									#self._PrintRelnInfo(key, Output_Text_File)
-
-					## case 2 - count of R2 is quite close
-					#if (r2_freq >= (FREQ_COUNT_PERCENT_THR_R1R2 * total_freq)):	# and (r1_freq == 0) and (r3_freq == 0):
-						## also the couplet exhibits R1 relation like clade for most of the gene trees
-						#if (r2_lev_count > (r1_lev_count + r4_lev_count)) and (r2_level_diff_val >= PERCENT_R1R2_LEV_COUNT * sum_level_diff_val):
-						##if (r2_level_diff_val >= PERCENT_R1R2_LEV_COUNT * sum_level_diff_val):
-							## further condition
-							#if ((r2_freq + r2_lev_count - r1_lev_count - r4_lev_count) > r4_freq):
-								#if (DEBUG_LEVEL >= 2):
-									#fp = open(Output_Text_File, 'a')
-									#fp.write('\n ---- Current couplet frequency distribution before modification --- ')
-									#fp.close()
-									#self._PrintRelnInfo(key, Output_Text_File)
-								
-								#self.freq_count[RELATION_R1] = r1_freq + self.R4_Reln_Level_Diff_Info_Count[0]
-								#self.freq_count[RELATION_R2] = r2_freq + r2_lev_count
-								#self.freq_count[RELATION_R4] = r4_freq - r1_lev_count - r2_lev_count
-								## recompute the priority
-								#self._SetConnPrVal()
-								
-								#if (DEBUG_LEVEL >= 2):
-									#fp = open(Output_Text_File, 'a')
-									#fp.write('\n ---- Current couplet frequency distribution after modification --- ')
-									#fp.close()
-									#self._PrintRelnInfo(key, Output_Text_File)
-								
 	""" 
 	this function calculates connection priority value for each of the relation types, 
 	"""
@@ -390,6 +347,9 @@ class Cluster_node(object):
 	# returns the constituent species list of this cluster
 	def _GetSpeciesList(self):
 		return self.Species_List
+	
+	def _GetCardinality(self):
+		return len(self.Species_List)
 				
 	# append one species information in this cluster
 	def _Append_taxa(self, inp_taxa):

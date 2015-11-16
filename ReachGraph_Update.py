@@ -2,12 +2,14 @@
 
 import Header
 from Header import *
-import UtilFunc
-from UtilFunc import *
+import Cluster_Manage
+from Cluster_Manage import *
 
-##-----------------------------------------------------
-""" this function adds an edge between a pair of clusters (of taxa) 
-it also updates the entries of reachability matrix """
+#-----------------------------------------------------
+""" 
+this function adds an edge between a pair of clusters (of taxa) 
+it also updates the entries of reachability matrix 
+"""
 def Connect_ClusterPair(Reachability_Graph_Mat, nodeA_reach_mat_idx, nodeB_reach_mat_idx, reln_type, nodeA_clust_idx, nodeB_clust_idx):
 	if (reln_type == RELATION_R1):
 		# adjust the clusters
@@ -23,7 +25,7 @@ def Connect_ClusterPair(Reachability_Graph_Mat, nodeA_reach_mat_idx, nodeB_reach
 		Reachability_Graph_Mat[nodeA_reach_mat_idx][nodeB_reach_mat_idx] = 2
 		Reachability_Graph_Mat[nodeB_reach_mat_idx][nodeA_reach_mat_idx] = 2
         
-##-----------------------------------------------------
+#-----------------------------------------------------
 """ this function updates the transitive closure of the cluster of nodes
 on inclusion ogf a new edge between a pair of clusters """
 def TransClosUpd(Reachability_Graph_Mat, nodeA_reach_mat_idx, nodeB_reach_mat_idx, taxaA_label, taxaB_label, reln_type):
@@ -49,14 +51,16 @@ def TransClosUpd(Reachability_Graph_Mat, nodeA_reach_mat_idx, nodeB_reach_mat_id
 		# then establish D->B
 		for x in Cluster_Info_Dict[src_taxa_clust_idx]._GetInEdgeList():
 			if (Reachability_Graph_Mat[CURRENT_CLUST_IDX_LIST.index(x)][dest_reach_mat_idx] == 0):
-				Connect_ClusterPair(Reachability_Graph_Mat, CURRENT_CLUST_IDX_LIST.index(x), dest_reach_mat_idx, RELATION_R1, x, dest_taxa_clust_idx)
+				Connect_ClusterPair(Reachability_Graph_Mat, CURRENT_CLUST_IDX_LIST.index(x), \
+					dest_reach_mat_idx, RELATION_R1, x, dest_taxa_clust_idx)
 		
 		# for A->B connection
 		# if B->E exists
 		# then establish A->E
 		for x in Cluster_Info_Dict[dest_taxa_clust_idx]._GetOutEdgeList():
 			if (Reachability_Graph_Mat[src_reach_mat_idx][CURRENT_CLUST_IDX_LIST.index(x)] == 0):
-				Connect_ClusterPair(Reachability_Graph_Mat, src_reach_mat_idx, CURRENT_CLUST_IDX_LIST.index(x), RELATION_R1, src_taxa_clust_idx, x)
+				Connect_ClusterPair(Reachability_Graph_Mat, src_reach_mat_idx, \
+					CURRENT_CLUST_IDX_LIST.index(x), RELATION_R1, src_taxa_clust_idx, x)
 
 		# for A->B connection
 		# if D->A and B->E exists
@@ -64,14 +68,16 @@ def TransClosUpd(Reachability_Graph_Mat, nodeA_reach_mat_idx, nodeB_reach_mat_id
 		for x in Cluster_Info_Dict[src_taxa_clust_idx]._GetInEdgeList():
 			for y in Cluster_Info_Dict[dest_taxa_clust_idx]._GetOutEdgeList():
 				if (Reachability_Graph_Mat[CURRENT_CLUST_IDX_LIST.index(x)][CURRENT_CLUST_IDX_LIST.index(y)] == 0):  
-					Connect_ClusterPair(Reachability_Graph_Mat, CURRENT_CLUST_IDX_LIST.index(x), CURRENT_CLUST_IDX_LIST.index(y), RELATION_R1, x, y)  
+					Connect_ClusterPair(Reachability_Graph_Mat, \
+						CURRENT_CLUST_IDX_LIST.index(x), CURRENT_CLUST_IDX_LIST.index(y), RELATION_R1, x, y)  
 
 		# for A->B connection
 		# if D><A exists
 		# then establish D><B
 		for x in Cluster_Info_Dict[src_taxa_clust_idx]._GetNoEdgeList():
 			if (Reachability_Graph_Mat[CURRENT_CLUST_IDX_LIST.index(x)][dest_reach_mat_idx] == 0):
-				Connect_ClusterPair(Reachability_Graph_Mat, CURRENT_CLUST_IDX_LIST.index(x), dest_reach_mat_idx, RELATION_R4, x, dest_taxa_clust_idx)
+				Connect_ClusterPair(Reachability_Graph_Mat, CURRENT_CLUST_IDX_LIST.index(x), \
+					dest_reach_mat_idx, RELATION_R4, x, dest_taxa_clust_idx)
 				
 		# for A->B connection
 		# if D><A exists
@@ -80,7 +86,8 @@ def TransClosUpd(Reachability_Graph_Mat, nodeA_reach_mat_idx, nodeB_reach_mat_id
 		for x in Cluster_Info_Dict[src_taxa_clust_idx]._GetNoEdgeList():
 			for y in Cluster_Info_Dict[dest_taxa_clust_idx]._GetOutEdgeList():
 				if (Reachability_Graph_Mat[CURRENT_CLUST_IDX_LIST.index(x)][CURRENT_CLUST_IDX_LIST.index(y)] == 0):
-					Connect_ClusterPair(Reachability_Graph_Mat, CURRENT_CLUST_IDX_LIST.index(x), CURRENT_CLUST_IDX_LIST.index(y), RELATION_R4, x, y)  
+					Connect_ClusterPair(Reachability_Graph_Mat, CURRENT_CLUST_IDX_LIST.index(x), \
+						CURRENT_CLUST_IDX_LIST.index(y), RELATION_R4, x, y)  
 	
 	else:
 		# construct the out neighborhood of src_cluster
@@ -97,9 +104,10 @@ def TransClosUpd(Reachability_Graph_Mat, nodeA_reach_mat_idx, nodeB_reach_mat_id
 		for x in src_clust_out_neighb:
 			for y in dest_clust_out_neighb:
 				if (Reachability_Graph_Mat[CURRENT_CLUST_IDX_LIST.index(x)][CURRENT_CLUST_IDX_LIST.index(y)] == 0):
-					Connect_ClusterPair(Reachability_Graph_Mat, CURRENT_CLUST_IDX_LIST.index(x), CURRENT_CLUST_IDX_LIST.index(y), RELATION_R4, x, y)  
+					Connect_ClusterPair(Reachability_Graph_Mat, CURRENT_CLUST_IDX_LIST.index(x), \
+						CURRENT_CLUST_IDX_LIST.index(y), RELATION_R4, x, y)  
 	
-##-----------------------------------------------------
+#-----------------------------------------------------
 """ this function merges two clusters 
 basically the cluster src_clust_idx will be merged to the dest_clust_idx
 so all the entries concerning src_clust_idx will now point to the dest_clust_idx"""
@@ -132,7 +140,7 @@ def Merge_Clusters(Reachability_Graph_Mat, dest_taxa_label, src_taxa_label, dest
 	for tax in Cluster_Info_Dict[src_clust_idx]._GetSpeciesList():
 		Append_Cluster_Taxa_Label(dest_clust_idx, tax)
 		
-##-----------------------------------------------------
+#-----------------------------------------------------
 """ this function updates the reachability graph 
 on the basis of input edge type between input 2 taxa """
 def AdjustReachGraph(Reachability_Graph_Mat, taxaA_label, taxaB_label, reln_type):    

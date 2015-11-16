@@ -36,6 +36,8 @@ import UtilFunc
 from UtilFunc import *
 import RefineSpeciesTree
 from RefineSpeciesTree import *
+import Cluster_Manage
+from Cluster_Manage import *
 
 ##-----------------------------------------------------
 # this function is useful to parse various options for input data processing
@@ -63,19 +65,11 @@ def parse_options():
 				default=1, \
 				help="1 - input file format is NEWICK (default) \
 				2 - input file format is NEXUS")
-					
-	#parser.add_option("-q", "--queues", \
-				#type="int", \
-				#action="store", \
-				#dest="no_of_queues", \
-				#default=1, \
-				#help="1 - only a single max priority queue is used for storing the score metrics \
-				#2 - two separate queues are used to store the conflicting and non conflicting taxa pairs and corresponding score metrics (default)")
 		
 	opts, args = parser.parse_args()
 	return opts, args
   
-##-----------------------------------------------------
+#-----------------------------------------------------
 # main function
 def main():  
 	opts, args = parse_options()
@@ -89,8 +83,8 @@ def main():
 	INPUT_FILENAME = opts.INP_FILENAME
 	NO_OF_QUEUES = 1	#opts.no_of_queues  
 	OUTPUT_FILENAME = opts.OUT_FILENAME
-
-	global Output_Text_File
+	
+	NJ_RULE_USED = AGGLO_CLUST	#TRADITIONAL_NJ
 
 	if (INPUT_FILENAME == ""):
 		print '******** THERE IS NO INPUT FILE SPECIFIED - RETURN **********'
@@ -201,17 +195,17 @@ def main():
 	"""  
 	for l in TaxaPair_Reln_Dict:
 		"""
+		add - sourya
+		here we first normalize the R1 and R2 relation based level difference count
+		computed for individual gene trees
+		"""
+		TaxaPair_Reln_Dict[l]._NormalizeR1R2LevelDiff()
+		# end add - sourya
+		
+		"""
 		first set the priority values of this couplet
 		"""
 		TaxaPair_Reln_Dict[l]._SetConnPrVal()
-		"""
-		**************************
-		---- add - sourya
-		this function checks whether R4 relation is the predominant / consensus
-		in such a case, it applies level count analysis to redistribute the frequency measures
-		"""
-		# comment - sourya
-		#TaxaPair_Reln_Dict[l]._AdjustFreq(l, Output_Text_File)
 		
 		""" 
 		calculate the support score and priority measures for individual couplets
@@ -362,6 +356,18 @@ def main():
 	"""
 	CompressDirectedGraph(Reachability_Graph_Mat)
 
+	# print the cluster information 
+	if (DEBUG_LEVEL > 2):
+		fp = open(Output_Text_File, 'a')
+		fp.write('\n **** total number of clusters: ' + str(len(CURRENT_CLUST_IDX_LIST)))
+		fp.write('\n CURRENT_CLUST_IDX_LIST contents: ')
+		fp.write(str(CURRENT_CLUST_IDX_LIST))
+		fp.write('\n ========== cluster information after transitive reduction =============')
+		fp.close()
+		for i in Cluster_Info_Dict:
+			#print 'printing the information for cluster node: ', i
+			Cluster_Info_Dict[i]._PrintClusterInfo(i, Output_Text_File)
+
 	#------------------------------------------------------------
 	""" 
 	*** addition: new to COSPEDSpec ****
@@ -378,7 +384,7 @@ def main():
 		fp.write('\n **** total number of clusters: ' + str(len(CURRENT_CLUST_IDX_LIST)))
 		fp.write('\n CURRENT_CLUST_IDX_LIST contents: ')
 		fp.write(str(CURRENT_CLUST_IDX_LIST))    
-		fp.write('\n ========== cluster information after transitive reduction =============')
+		fp.write('\n ========== cluster information after multiple parent problem =============')
 		fp.close()
 		for i in Cluster_Info_Dict:
 			#print 'printing the information for cluster node: ', i
@@ -459,10 +465,11 @@ def main():
 	this function removes all multifurcating clusters and produces binary tree 
 	it also solves the problem C3, as mentioned in the manuscript
 	"""
-	Refine_Supertree_Binary_Form(Gene_TreeList, Supertree_without_branch_len, Output_Text_File)
+	Refine_Supertree_Binary_Form(Supertree_without_branch_len, Output_Text_File, NJ_RULE_USED)
 
 	fp = open(Output_Text_File, 'a')
-	fp.write('\n --- after binary refinement --- output tree without branch length (in newick format): ' + Supertree_without_branch_len.as_newick_string())    
+	fp.write('\n --- after binary refinement --- output tree without branch length (in newick format): ' + \
+		Supertree_without_branch_len.as_newick_string())    
 	fp.close()
 
 	# final timestamp

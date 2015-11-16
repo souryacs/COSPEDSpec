@@ -2,8 +2,6 @@
 
 import Header
 from Header import *
-import UtilFunc
-from UtilFunc import *
   
 #------------------------------------------------------
 """ this code section implements the max priority queue """
@@ -306,7 +304,6 @@ def Lower_Score_Value(inp_queue, i, j):
 	#return 0
 ##-------------------------------------------------------------------------
 
-  
 # this function exchanges two elements in the heap
 def Exchange_Elem(inp_queue, i, j):
 	temp_key = inp_queue[i][0]
