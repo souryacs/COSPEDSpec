@@ -135,11 +135,11 @@ def Merge_Clusters(Reachability_Graph_Mat, dest_taxa_label, src_taxa_label, dest
 		#Cluster_Info_Dict[src_clust_idx]._RemoveNoEdge(x)
 		if (Reachability_Graph_Mat[CURRENT_CLUST_IDX_LIST.index(x)][dest_clust_reach_mat_idx] == 0):
 			Connect_ClusterPair(Reachability_Graph_Mat, CURRENT_CLUST_IDX_LIST.index(x), dest_clust_reach_mat_idx, RELATION_R4, x, dest_clust_idx)      
-					
+	
 	# then adjust the taxa in the other cluster
 	for tax in Cluster_Info_Dict[src_clust_idx]._GetSpeciesList():
 		Append_Cluster_Taxa_Label(dest_clust_idx, tax)
-		
+	
 #-----------------------------------------------------
 """ this function updates the reachability graph 
 on the basis of input edge type between input 2 taxa """

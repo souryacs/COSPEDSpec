@@ -1,14 +1,139 @@
-import Header
-from Header import *
-
 """
 this document contains functions to manage the taxa clusters
 regarding their connectivity, cost, and update operations
 """
 
+import Header
+from Header import *
+import UtilFunc
+from UtilFunc import *
+
+##-----------------------------------------------------
+"""
+this function generates an out edge from the first cluster to the second cluster
+"""
+def ConnectClustPairOutEdge(Reachability_Graph_Mat, clust1, clust2):
+	Cluster_Info_Dict[clust1]._AddOutEdge(clust2)
+	Cluster_Info_Dict[clust2]._AddInEdge(clust1)
+	reach_clust1_idx = CURRENT_CLUST_IDX_LIST.index(clust1)
+	reach_clust2_idx = CURRENT_CLUST_IDX_LIST.index(clust2)
+	Reachability_Graph_Mat[reach_clust1_idx][reach_clust2_idx] = 1
+	return
+
+
+##-----------------------------------------------------
+"""
+this function finds whether there is a hidden R1 / R2 relation between this pair of clusters
+which was originally related via R4 (no edge)
+the return value is an integer. It can have following values.
+@ 0: no edge will be established
+@ 1: there will be a directed out edge from the clust1_key to the clust2_key
+@ 2: there will be a directed out edge from the clust2_key to the clust1_key
+@ 3: there will be a directed out edge from the parent(s) of clust1_key to the clust2_key
+@ 4: there will be a directed out edge from the parent(s) of clust2_key to the clust1_key
+"""
+def FindClusterReln(clust1_key, clust2_key):
+	for t1 in Cluster_Info_Dict[clust1_key]._GetSpeciesList():
+		for t2 in Cluster_Info_Dict[clust2_key]._GetSpeciesList():
+			key1 = (t1, t2)
+			key2 = (t2, t1)
+			if key1 in TaxaPair_Reln_Dict:
+				r1_freq = TaxaPair_Reln_Dict[key1]._GetEdgeWeight(RELATION_R1)
+				r2_freq = TaxaPair_Reln_Dict[key1]._GetEdgeWeight(RELATION_R2)
+				r4_freq = TaxaPair_Reln_Dict[key1]._GetEdgeWeight(RELATION_R4)
+				pseudo_r1_freq = TaxaPair_Reln_Dict[key1]._GetFreqPseudoR1(0)
+				pseudo_r2_freq = TaxaPair_Reln_Dict[key1]._GetFreqPseudoR1(1)
+				r4_prior = TaxaPair_Reln_Dict[key1]._GetConnPrVal(RELATION_R4)
+				"""
+				R1 relation freq + Pseudo R1 reln freq - Pseudo R2 reln freq > R4 reln freq
+				return 1 / 3
+				"""
+				if ((r1_freq + pseudo_r1_freq - pseudo_r2_freq) > (r4_freq - pseudo_r1_freq)):
+					
+					# there is a R1 relation from the first to second cluster
+					if (len(Cluster_Info_Dict[clust2_key]._GetSpeciesList()) == 1):
+						return 1
+					if (Cluster_Info_Dict[clust2_key]._Get_Outdegree() == 0):
+						return 1
+					return 3
+					
+					# comment - sourya
+					#if 0:	#(r4_prior <= 0):
+						#return 1
+					#else:
+						#return 3
+						
+				"""
+				R2 relation freq + Pseudo R2 reln freq - Pseudo R1 reln freq > R4 reln freq
+				return 2
+				"""
+				if ((r2_freq + pseudo_r2_freq - pseudo_r1_freq) > (r4_freq - pseudo_r2_freq)):
+
+					# there is a R2 relation from the first to second cluster
+					if (len(Cluster_Info_Dict[clust1_key]._GetSpeciesList()) == 1):
+						return 2
+					if (Cluster_Info_Dict[clust1_key]._Get_Outdegree() == 0):
+						return 2
+					return 4
+					
+					# comment - sourya
+					#if 0:	#(r4_prior <= 0):
+						#return 2
+					#else:
+						#return 4
+
+			elif key2 in TaxaPair_Reln_Dict:
+				r1_freq = TaxaPair_Reln_Dict[key2]._GetEdgeWeight(RELATION_R1)
+				r2_freq = TaxaPair_Reln_Dict[key2]._GetEdgeWeight(RELATION_R2)
+				r4_freq = TaxaPair_Reln_Dict[key2]._GetEdgeWeight(RELATION_R4)
+				pseudo_r1_freq = TaxaPair_Reln_Dict[key2]._GetFreqPseudoR1(0)
+				pseudo_r2_freq = TaxaPair_Reln_Dict[key2]._GetFreqPseudoR1(1)
+				r4_prior = TaxaPair_Reln_Dict[key2]._GetConnPrVal(RELATION_R4)
+				"""
+				R1 relation freq + Pseudo R1 reln freq - Pseudo R2 reln freq > R4 reln freq
+				return 2
+				"""
+				if ((r1_freq + pseudo_r1_freq - pseudo_r2_freq) > (r4_freq - pseudo_r1_freq)):
+
+					# there is a R2 relation from the first to second cluster
+					if (len(Cluster_Info_Dict[clust1_key]._GetSpeciesList()) == 1):
+						return 2
+					if (Cluster_Info_Dict[clust1_key]._Get_Outdegree() == 0):
+						return 2
+					return 4
+					
+					# comment - sourya
+					#if 0:	#(r4_prior <= 0):
+						#return 2
+					#else:
+						#return 4
+
+
+				"""
+				R2 relation freq + Pseudo R2 reln freq - Pseudo R1 reln freq > R4 reln freq
+				return 1
+				"""
+				if ((r2_freq + pseudo_r2_freq - pseudo_r1_freq) > (r4_freq - pseudo_r2_freq)):
+					
+					# there is a R1 relation from the first to second cluster
+					if (len(Cluster_Info_Dict[clust2_key]._GetSpeciesList()) == 1):
+						return 1
+					if (Cluster_Info_Dict[clust2_key]._Get_Outdegree() == 0):
+						return 1
+					return 3
+					
+					# comment - sourya
+					#if 0:	#(r4_prior <= 0):
+						#return 1
+					#else:
+						#return 3
+
+	return 0
+
+
 ##-----------------------------------------------------
 # this function computes the score (ancestor relation) from clust1 to clust2
-def ComputeScore(clust1, clust2, Output_Text_File):
+def ComputeScore(clust1, clust2, Output_Text_File, MPP_SOLVE_METRIC, DIST_MAT_TYPE):
   
 	if (DEBUG_LEVEL > 2):
 		fp = open(Output_Text_File, 'a')
@@ -16,44 +141,42 @@ def ComputeScore(clust1, clust2, Output_Text_File):
 			+ ' cluster 2 taxa set ' + str(Cluster_Info_Dict[clust2]._GetSpeciesList()))
 		
 	score_val = 0
+	couplet_count = 0
+	
 	for t1 in Cluster_Info_Dict[clust1]._GetSpeciesList():
 		for t2 in Cluster_Info_Dict[clust2]._GetSpeciesList():
 			key1 = (t1, t2)
 			key2 = (t2, t1)
 			if key1 in TaxaPair_Reln_Dict:
-				# comment - sourya
-				# previously the priority metric based scoring was employed to determine the scoring 
-				# among two taxa clusters
-				score_val = score_val + TaxaPair_Reln_Dict[key1]._GetConnPrVal(RELATION_R1)
-				# add - sourya
-				# now we employ frequency based scoring mechanism, to satisfy maximum agreement property
-				#score_val = score_val + TaxaPair_Reln_Dict[key1]._GetEdgeWeight(RELATION_R1)
-				# end add - sourya
+				couplet_count = couplet_count + 1
+				# modified - sourya - using normalization by the number of support trees
+				if (MPP_SOLVE_METRIC == 1):
+					score_val = score_val + (TaxaPair_Reln_Dict[key1]._GetConnPrVal(RELATION_R1) * 1.0) / TaxaPair_Reln_Dict[key1]._GetNoSupportTrees()
+				else:
+					score_val = score_val + TaxaPair_Reln_Dict[key1]._GetNormalizedXLSumGeneTrees(DIST_MAT_TYPE)
 			elif key2 in TaxaPair_Reln_Dict:
-				# comment - sourya
-				# previously the priority metric based scoring was employed to determine the scoring 
-				# among two taxa clusters	
-				score_val = score_val + TaxaPair_Reln_Dict[key2]._GetConnPrVal(RELATION_R2)
-				# add - sourya
-				# now we employ frequency based scoring mechanism, to satisfy maximum agreement property
-				#score_val = score_val + TaxaPair_Reln_Dict[key2]._GetEdgeWeight(RELATION_R2)
-				# end add - sourya
+				couplet_count = couplet_count + 1
+				# modified - sourya - using normalization by the number of support trees
+				if (MPP_SOLVE_METRIC == 1):
+					score_val = score_val + (TaxaPair_Reln_Dict[key2]._GetConnPrVal(RELATION_R2) * 1.0) / TaxaPair_Reln_Dict[key2]._GetNoSupportTrees()
+				else:
+					score_val = score_val + TaxaPair_Reln_Dict[key2]._GetNormalizedXLSumGeneTrees(DIST_MAT_TYPE)
 			else:
 				if (DEBUG_LEVEL > 2):
 					fp.write('\n score compute -- key pair ' + str(t1) + ',' + str(t2) + ' does not exist ')
 
 	if (DEBUG_LEVEL > 2):
-		fp.write('\n pairwise score of this cluster pair is : ' + str(score_val))
+		fp.write('\n pairwise score of this cluster pair is : ' + str((score_val * 1.0) / couplet_count))
 		fp.close()
 		
-	return score_val
+	return (score_val * 1.0) / couplet_count
 
 
 #-----------------------------------------------------    
 """ this function solves multiple parenting problem (C2)
 by uniquely selecting one particular parent
 the selection is carried out using a scoring mechanism """
-def SolveMultipleParentC2Problem(Output_Text_File):
+def SolveMultipleParentC2Problem(Output_Text_File, MPP_SOLVE_METRIC, DIST_MAT_TYPE):
 	for cx in Cluster_Info_Dict:
 		
 		if (DEBUG_LEVEL > 2):
@@ -77,7 +200,7 @@ def SolveMultipleParentC2Problem(Output_Text_File):
 				scoring_dict.setdefault(cz, 0)
 			# now for each of the in clusters, compute the score 
 			for cz in Cluster_Info_Dict[cx]._GetInEdgeList():
-				scoring_dict[cz] = ComputeScore(cz, cx, Output_Text_File)
+				scoring_dict[cz] = ComputeScore(cz, cx, Output_Text_File, MPP_SOLVE_METRIC, DIST_MAT_TYPE)
 			
 			# open the output file
 			if (DEBUG_LEVEL > 2):
@@ -110,13 +233,23 @@ def SolveMultipleParentC2Problem(Output_Text_File):
 			if (DEBUG_LEVEL > 2):
 				fp.close()
 
-			# after sorting the scoring list, now remove all except the last element from the 
-			# cx cluster in edge lists
-			for i in range(len(Scoring_List) - 1):
-				target_delete_clust_idx = Scoring_List[i][0]
-				Cluster_Info_Dict[cx]._RemoveInEdge(target_delete_clust_idx)
-				Cluster_Info_Dict[target_delete_clust_idx]._RemoveOutEdge(cx)
-		
+			if (MPP_SOLVE_METRIC == 1):
+				# for the priority measure 
+				# after sorting the scoring list, now remove all except the last element from the 
+				# cx cluster in edge lists
+				for i in range(len(Scoring_List) - 1):
+					target_delete_clust_idx = Scoring_List[i][0]
+					Cluster_Info_Dict[cx]._RemoveInEdge(target_delete_clust_idx)
+					Cluster_Info_Dict[target_delete_clust_idx]._RemoveOutEdge(cx)
+			else:
+				# for the XL based measure
+				# after sorting the scoring list, now remove all except the first element from the 
+				# cx cluster in edge lists
+				for i in range(1, len(Scoring_List)):
+					target_delete_clust_idx = Scoring_List[i][0]
+					Cluster_Info_Dict[cx]._RemoveInEdge(target_delete_clust_idx)
+					Cluster_Info_Dict[target_delete_clust_idx]._RemoveOutEdge(cx)
+			
 			if (DEBUG_LEVEL > 2):
 				fp = open(Output_Text_File, 'a')
 				fp.write('\n ***** Examining cluster with more than one indegree -- after in edge list fixing: ')
@@ -152,19 +285,24 @@ in terms of the edge connectivity, to make it free of redunant edges
 '''
 def CompressDirectedGraph(Reachability_Graph_Mat):
 	no_of_clusters = len(CURRENT_CLUST_IDX_LIST)
+	
 	# transitive reduction
 	for j in range(no_of_clusters):
 		for i in range(no_of_clusters):
+			# A->B case
 			if (Reachability_Graph_Mat[i][j] == 1):
 				for k in range(no_of_clusters):
+					# A->C and B->C case
 					if (Reachability_Graph_Mat[j][k] == 1) and (Reachability_Graph_Mat[i][k] == 1):
-						Reachability_Graph_Mat[i][k] = 0
+						# comment - sourya - check
+						#Reachability_Graph_Mat[i][k] = 0
+						
 						# remove the edge from the cluster node directory
 						clust_i = CURRENT_CLUST_IDX_LIST[i]
 						clust_k = CURRENT_CLUST_IDX_LIST[k]
 						Cluster_Info_Dict[clust_i]._RemoveOutEdge(clust_k)
 						Cluster_Info_Dict[clust_k]._RemoveInEdge(clust_i)
-    
+
 #-----------------------------------------------------
 """ this function creates one new cluster with the given index value
 also, it inserts one specified taxa in that cluster """
@@ -183,4 +321,3 @@ def Append_Cluster_Taxa_Label(target_clust_idx, target_taxa_label):
 		Cluster_Info_Dict[target_clust_idx]._Append_taxa(target_taxa_label)
 		# mention the cluster index in the taxa information
 		Taxa_Info_Dict[target_taxa_label]._Set_Clust_Idx_taxa_Part(target_clust_idx)  
-	

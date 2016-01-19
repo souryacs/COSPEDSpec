@@ -5,12 +5,12 @@ from dendropy import Tree, Taxon, TaxonSet, Node
 import numpy
 import time
 import os
-from cStringIO import StringIO
+#from cStringIO import StringIO
 from optparse import OptionParser
 import math
 import sys
-import networkx as nx
-import matplotlib.pyplot as plt
+#import networkx as nx
+import matplotlib.pyplot as plt	# add - debug - sourya
 
 # we define custom relation types
 RELATION_R3 = 0	# relation r3
@@ -62,10 +62,6 @@ CURRENT_CLUST_IDX_LIST = []
 # set for printing the necessary information
 DEBUG_LEVEL = 2
 
-#FREQ_COUNT_PERCENT_THR_R4 = 0.55
-#FREQ_COUNT_PERCENT_THR_R1R2 = 0.45
-#PERCENT_R1R2_LEV_COUNT = 0.8
-
 MAJORITY_CONSENSUS_RATIO = 0.6
 LEVEL_COUNT_VAL_CONSENSUS_RATIO = 0.7
 
@@ -81,7 +77,12 @@ according to their R3 consensus relation
 Sibling_Couplet_List = []
 
 # error indicator 
-KEY_ABSENCE_INDICATOR = 2
+KEY_ABSENCE_INDICATOR = 3
+
+# add - sourya
+MODE_PERCENT = 0.5
+
+MODE_BIN_COUNT = 40
 
 #-----------------------------------------------------
 """ 
@@ -157,62 +158,150 @@ class Reln_TaxaPair(object):
 		self.ALL_Reln_Level_Diff_Info_Count = [0] * 3
 		self.ALL_Reln_Level_Diff_Val_Count = [0] * 3
 		
+		"""
+		this is a variable containing the binned average of the XL values
+		of very high frequency
+		initially the value is set as -1, to signify that the computation is not done
+		once the computation (for a couplet) is done, the value is subsequently used and returned
+		"""
+		self.binned_avg_XL = -1
+		
+		"""
+		this is a list containing the number of instances
+		when R4 relation is actually a pseudo R1 relation
+		"""
+		self.freq_R4_pseudo_R1R2 = [0] * 2
+		
+	def _AddFreqPseudoR1(self, idx, r=1):
+		# modified - sourya
+		self.freq_R4_pseudo_R1R2[idx] = self.freq_R4_pseudo_R1R2[idx] + r
+		
+	def _GetFreqPseudoR1(self, idx):
+		return self.freq_R4_pseudo_R1R2[idx]
+		
 	def _NormalizeR1R2LevelDiff(self):
 		for i in range(3):
 			self.ALL_Reln_Level_Diff_Val_Count[i] = (self.ALL_Reln_Level_Diff_Val_Count[i] * 1.0) / self.supporting_trees
 		
-	def _GetR1R2LevelDiff(self):
-		return (self.ALL_Reln_Level_Diff_Val_Count[0] - self.ALL_Reln_Level_Diff_Val_Count[1])
+	"""
+	this function checks whether a couplet has R4 as its consensus relation
+	and frequencies of different relations can be swapped
+	"""
+	def _CheckSwapFreq(self):
+		if (self._CheckTargetRelnConsensus(RELATION_R4)):
+			# R4 is its consensus relation
+			if (((self.freq_count[RELATION_R1] + self.freq_R4_pseudo_R1R2[0] - self.freq_R4_pseudo_R1R2[1]) \
+				> (self.freq_count[RELATION_R4] - self.freq_R4_pseudo_R1R2[0])) \
+					and (self._CheckTargetRelnLevelConsensus(RELATION_R1, 1) == 1)):
+				"""
+				here R1 can be established as a consensus relation
+				interchange the frequencies
+				"""
+				self.freq_count[RELATION_R1] = self.freq_count[RELATION_R1] + self.freq_R4_pseudo_R1R2[0]
+				self.freq_count[RELATION_R4] = self.freq_count[RELATION_R4] - self.freq_R4_pseudo_R1R2[0]
+				
+			if (((self.freq_count[RELATION_R2] + self.freq_R4_pseudo_R1R2[1] - self.freq_R4_pseudo_R1R2[0]) \
+				> (self.freq_count[RELATION_R4] - self.freq_R4_pseudo_R1R2[1])) \
+					and (self._CheckTargetRelnLevelConsensus(RELATION_R2, 1) == 1)):
+				"""
+				here R2 can be established as a consensus relation
+				interchange the frequencies
+				"""
+				self.freq_count[RELATION_R2] = self.freq_count[RELATION_R2] + self.freq_R4_pseudo_R1R2[1]
+				self.freq_count[RELATION_R4] = self.freq_count[RELATION_R4] - self.freq_R4_pseudo_R1R2[1]
+				
+	"""
+	this function computes the level difference (relation based) count 
+	# parameters:
+	@src_reln: corresponds to the level of relation from which the subtraction will take place
+	@dest_reln: if between 0 and 2, corresponds to the subtracted relation
+	if it is -1, all relations except the src_reln will be subtracted
+	@abs_comp: if true, will compute the absolute value of the subtracted quantity
+	@norm: if true, will normalize the subtracted value with the number of supporting trees
+	"""
+	def _GetRelnLevelDiff(self, src_reln, dest_reln, abs_comp, norm):
+		reln_array = [RELATION_R1, RELATION_R2, RELATION_R3]
+		src_reln_idx = reln_array.index(src_reln)
+
+		target_val = self.ALL_Reln_Level_Diff_Info_Count[src_reln_idx]
 		
-	def _GetR1R2AbsLevelDiff(self):
-		return math.fabs(self.ALL_Reln_Level_Diff_Val_Count[0] - self.ALL_Reln_Level_Diff_Val_Count[1])
+		if (dest_reln == -1):
+			# all relations will be subtracted
+			for dest_reln_idx in range(3):
+				if (dest_reln_idx == src_reln_idx):
+					continue
+				target_val = target_val - self.ALL_Reln_Level_Diff_Info_Count[dest_reln_idx]
+		else:
+			dest_reln_idx = reln_array.index(dest_reln)
+			target_val = target_val - self.ALL_Reln_Level_Diff_Info_Count[dest_reln_idx]
+			
+		if (abs_comp == True):
+			target_val = math.fabs(target_val)
+			
+		if (norm == True):
+			target_val = (target_val * 1.0) / self.supporting_trees
+			
+		return target_val
+		
 	
-	def _CheckR3RelnLevelConsensus(self):
-		if (self.ALL_Reln_Level_Diff_Info_Count[2] > (self.ALL_Reln_Level_Diff_Info_Count[0] + self.ALL_Reln_Level_Diff_Info_Count[1])):
-			return 1
-		return 0
+	def _GetR1R2LevelDiff(self, abs_comp):
+		target_val = self.ALL_Reln_Level_Diff_Val_Count[0] - self.ALL_Reln_Level_Diff_Val_Count[1]
+		if (abs_comp == True):
+			target_val = math.fabs(target_val)
+		return target_val
+
+	"""
+	this function checks whether the input relation type is a consensus relation
+	among this couplet
+	"""
+	def _CheckTargetRelnConsensus(self, inp_reln_type):
+		if (self.freq_count[inp_reln_type] == max(self.freq_count)):
+			return True
+		return False
+		## comment - sourya
+		#for reln_type in range(4):
+			#if (reln_type == inp_reln_type):
+				#continue
+			#if (self.freq_count[inp_reln_type] < self.freq_count[reln_type]):
+				#return False
+			## add - sourya
+			#if (self.freq_count[inp_reln_type] == self.freq_count[reln_type]) and (inp_reln_type == RELATION_R4) and (reln_type != RELATION_R4):
+				#return False
+			## end add - sourya
+		#return True
 	
-	def _CheckR1RelnLevelConsensus(self):
-		r1_lev_count = self.ALL_Reln_Level_Diff_Info_Count[0]
-		r2_lev_count = self.ALL_Reln_Level_Diff_Info_Count[1]
-		r4_lev_count = self.ALL_Reln_Level_Diff_Info_Count[2]
+	def _CheckTargetRelnLevelConsensus(self, src_reln, only_cons=0):
+		reln_array = [RELATION_R1, RELATION_R2, RELATION_R3]
+		src_reln_idx = reln_array.index(src_reln)
 		sum_level_count = sum(self.ALL_Reln_Level_Diff_Info_Count)
-		r1_lev_val = self.ALL_Reln_Level_Diff_Val_Count[0]
-		r2_lev_val = self.ALL_Reln_Level_Diff_Val_Count[1]
-		sum_level_val = r1_lev_val + r2_lev_val
-
-		if (r1_lev_count >= (MAJORITY_CONSENSUS_RATIO * sum_level_count)) and \
-			(r1_lev_val >= (LEVEL_COUNT_VAL_CONSENSUS_RATIO * sum_level_val)):
-			return 1
+		sum_level_val = sum(self.ALL_Reln_Level_Diff_Val_Count)
+		if (src_reln_idx == 0) or (src_reln_idx == 1):
+			if (only_cons == 0):
+				if (self.ALL_Reln_Level_Diff_Info_Count[src_reln_idx] >= (MAJORITY_CONSENSUS_RATIO * sum_level_count)) and \
+					(self.ALL_Reln_Level_Diff_Val_Count[src_reln_idx] >= (LEVEL_COUNT_VAL_CONSENSUS_RATIO * sum_level_val)):
+					return 1
+			else:
+				if (self.ALL_Reln_Level_Diff_Info_Count[src_reln_idx] > (0.5 * sum_level_count)) and \
+					(self.ALL_Reln_Level_Diff_Val_Count[src_reln_idx] > (0.5 * sum_level_val)):
+					return 1
+		else:
+			if (self.ALL_Reln_Level_Diff_Info_Count[2] > (self.ALL_Reln_Level_Diff_Info_Count[0] + self.ALL_Reln_Level_Diff_Info_Count[1])):
+				return 1
+			
 		return 0
 	
-	def _CheckR2RelnLevelConsensus(self):
-		r1_lev_count = self.ALL_Reln_Level_Diff_Info_Count[0]
-		r2_lev_count = self.ALL_Reln_Level_Diff_Info_Count[1]
-		r4_lev_count = self.ALL_Reln_Level_Diff_Info_Count[2]
-		sum_level_count = sum(self.ALL_Reln_Level_Diff_Info_Count)
-		r1_lev_val = self.ALL_Reln_Level_Diff_Val_Count[0]
-		r2_lev_val = self.ALL_Reln_Level_Diff_Val_Count[1]
-		sum_level_val = r1_lev_val + r2_lev_val
-
-		if (r2_lev_count >= (MAJORITY_CONSENSUS_RATIO * sum_level_count)) and \
-			(r2_lev_val >= (LEVEL_COUNT_VAL_CONSENSUS_RATIO * sum_level_val)):
-			return 1
-		return 0
+	def _CheckHigherTargetRelnLevelValue(self, src_reln):
+		reln_array = [RELATION_R1, RELATION_R2, RELATION_R3]
+		src_reln_idx = reln_array.index(src_reln)
+		for idx in range(3):
+			if (idx == src_reln_idx):
+				continue
+			if (self.ALL_Reln_Level_Diff_Info_Count[src_reln_idx] < self.ALL_Reln_Level_Diff_Info_Count[idx]):
+				return 0
+			if (self.ALL_Reln_Level_Diff_Val_Count[src_reln_idx] < self.ALL_Reln_Level_Diff_Val_Count[idx]):
+				return 0
 	
-	# this function is modified - sourya
-	def _CheckHigherR2RelnLevelValue(self):
-		if (self.ALL_Reln_Level_Diff_Val_Count[1] > self.ALL_Reln_Level_Diff_Val_Count[0]) \
-			and (self.ALL_Reln_Level_Diff_Info_Count[1] > self.ALL_Reln_Level_Diff_Info_Count[0]):
-			return 1
-		return 0
-
-	# this function is modified - sourya
-	def _CheckHigherR1RelnLevelValue(self):
-		if (self.ALL_Reln_Level_Diff_Val_Count[0] > self.ALL_Reln_Level_Diff_Val_Count[1]) \
-			and (self.ALL_Reln_Level_Diff_Info_Count[0] > self.ALL_Reln_Level_Diff_Info_Count[1]):
-			return 1
-		return 0
+		return 1
 	
 	def _GetAllRelnLevelDiffCount(self):
 		return self.ALL_Reln_Level_Diff_Info_Count
@@ -231,16 +320,87 @@ class Reln_TaxaPair(object):
 	def _GetXLSumGeneTrees(self):
 		#return self.XL_sum_gene_trees
 		return sum(self.XL_sum_gene_trees)	# modified - sourya
-
-	def _GetNormalizedXLSumGeneTrees(self):
+	
+	def _GetAvgXLGeneTrees(self):
 		#return (self.XL_sum_gene_trees * 1.0) / self.supporting_trees
-		#return (sum(self.XL_sum_gene_trees) * 1.0) / self.supporting_trees	# modified - sourya
-		#return numpy.median(numpy.array(self.XL_sum_gene_trees)) # modified - sourya
-		return min(numpy.median(numpy.array(self.XL_sum_gene_trees)), ((sum(self.XL_sum_gene_trees) * 1.0) / self.supporting_trees))	# modified - sourya
+		return (sum(self.XL_sum_gene_trees) * 1.0) / self.supporting_trees	# modified - sourya
+	
+	def _GetMedianXLGeneTrees(self):
+		return numpy.median(numpy.array(self.XL_sum_gene_trees)) # modified - sourya
+
+	def _GetNormalizedXLSumGeneTrees(self, dist_type):
+		if (dist_type == 1):
+			return self._GetAvgXLGeneTrees()
+		elif (dist_type == 2):
+			return self._GetMedianXLGeneTrees()
+		elif (dist_type == 3):
+			return self._GetMultiModeXLVal()
+		elif (dist_type == 4):
+			return min(self._GetAvgXLGeneTrees(), self._GetMedianXLGeneTrees())
+		elif (dist_type == 5):
+			return min(self._GetAvgXLGeneTrees(), self._GetMedianXLGeneTrees(), self._GetMultiModeXLVal())
+		elif (dist_type == 6):
+			return min(self._GetMedianXLGeneTrees(), self._GetMultiModeXLVal())
 		
+	#------------------------------------------
+	def _GetMultiModeXLVal(self, Output_Text_File=None):
+		if (self.binned_avg_XL == -1):
+			
+			Bin_Width = (1.0 / MODE_BIN_COUNT)
+			len_list = [0] * MODE_BIN_COUNT
+			
+			if Output_Text_File is not None:
+				fp = open(Output_Text_File, 'a') 
+			
+			# sort the XL list
+			self.XL_sum_gene_trees.sort()
+			
+			for j in range(len(self.XL_sum_gene_trees)):
+				curr_xl_val = self.XL_sum_gene_trees[j]
+				bin_idx = int(curr_xl_val / Bin_Width)
+				if (bin_idx == MODE_BIN_COUNT):
+					bin_idx = bin_idx - 1
+				len_list[bin_idx] = len_list[bin_idx] + 1
+			
+			if Output_Text_File is not None:
+				for i in range(MODE_BIN_COUNT):
+					fp.write('\n bin idx: ' + str(i) + ' len:  ' + str(len_list[i]))
+			
+			# this is the maximum length of a particular bin
+			# corresponding to max frequency
+			max_freq = max(len_list)
+			
+			if Output_Text_File is not None:
+				fp.write('\n Max freq: ' + str(max_freq))
+			
+			num = 0
+			denom = 0
+			for i in range(MODE_BIN_COUNT):
+				if (len_list[i] >= (MODE_PERCENT * max_freq)):
+					list_start_idx = sum(len_list[:i])
+					list_end_idx = list_start_idx + len_list[i] - 1
+					value_sum = sum(self.XL_sum_gene_trees[list_start_idx:(list_end_idx+1)])
+					num = num + value_sum
+					denom = denom + len_list[i]
+					if Output_Text_File is not None:
+						fp.write('\n Included bin idx: ' + str(i) + ' starting point: ' + str(list_start_idx) \
+							+ 'ending point: ' + str(list_end_idx) + ' sum: ' + str(value_sum))
+			
+			self.binned_avg_XL = (num / denom)
+			
+			if Output_Text_File is not None:
+				fp.write('\n Final binned average XL: ' + str(self.binned_avg_XL))
+				fp.close()
+			
+		return self.binned_avg_XL
+	
+	#------------------------------------------
 	def _AddSupportingTree(self):
 		self.supporting_trees = self.supporting_trees + 1
-				
+	
+	def _GetNoSupportTrees(self):
+		return self.supporting_trees
+	
 	def _GetEdgeWeight(self, reln_type):
 		return self.freq_count[reln_type]      
 		
@@ -251,8 +411,12 @@ class Reln_TaxaPair(object):
 		self.support_score[reln_type] = self.support_score[reln_type] + incr_cost
 
 	# this function adds one frequency count (with a given input relation type)
-	def _AddEdgeCount(self, reln_type):
-		self.freq_count[reln_type] = self.freq_count[reln_type] + 1
+	def _AddEdgeCount(self, reln_type, r=1):
+		# modified - sourya
+		if (reln_type == RELATION_R3):
+			self.freq_count[reln_type] = self.freq_count[reln_type] + (2 * r)
+		else:
+			self.freq_count[reln_type] = self.freq_count[reln_type] + r
 		
 	# this function prints the relationship information
 	def _PrintRelnInfo(self, key, Output_Text_File):
@@ -263,17 +427,19 @@ class Reln_TaxaPair(object):
 			fp.write('\n [' + str(i) + '/' + str(self.freq_count[i]) + '/' + str(self.priority_reln[i]) + '/' + str(self.support_score[i]) + ']')
 		#fp.write('\n Sum of extra lineage **** : ' + str(self.XL_sum_gene_trees))
 		# add - sourya
-		fp.write('\n AVERAGE Sum of extra lineage **** : ' + str(sum(self.XL_sum_gene_trees) / len(self.XL_sum_gene_trees)))
-		fp.write('\n MEDIAN Sum of extra lineage **** : ' + str(numpy.median(numpy.array(self.XL_sum_gene_trees))))
+		#fp.write('\n XL list **** : ' + str(self.XL_sum_gene_trees))
+		fp.write('\n AVERAGE Sum of extra lineage **** : ' + str(self._GetAvgXLGeneTrees()))
+		fp.write('\n MEDIAN Sum of extra lineage **** : ' + str(self._GetMedianXLGeneTrees()))
+		fp.write('\n Mode Sum of extra lineage **** : ' + str(self._GetMultiModeXLVal()))
 		# end add - sourya
 		fp.write('\n No of supporting trees : ' + str(self.supporting_trees))
-		fp.write('\n Normalized XL sum : ' + str(self._GetNormalizedXLSumGeneTrees()))
-		#fp.write('\n R4 relation based Level diff info count (r1/r2/r3): ' + str(self.R4_Reln_Level_Diff_Info_Count))
-		#fp.write('\n R4 relation based Level diff Val count (r1/r2/r3): ' + str(self.R4_Reln_Level_Diff_Val_Count))
+		#fp.write('\n Normalized XL sum : ' + str(self._GetNormalizedXLSumGeneTrees()))
 		fp.write('\n ALL relation based Level diff info count (r1/r2/r3): ' + str(self.ALL_Reln_Level_Diff_Info_Count))
 		fp.write('\n ALL relation based Level diff Val count (r1/r2/r3): ' + str(self.ALL_Reln_Level_Diff_Val_Count))
+		fp.write('\n R4 relation pseudo (R1/R2) count: ' + str(self.freq_R4_pseudo_R1R2))
 		fp.close()
-					
+		#self._GetMultiModeXLVal(Output_Text_File)
+	
 	# this function computes the support score metric value associated with individual pair of taxa 
 	def _SetCostMetric(self):      
 		for reln_type in range(4):
@@ -285,7 +451,7 @@ class Reln_TaxaPair(object):
 		return self.priority_reln[reln_type]
 	
 	""" 
-	this function calculates connection priority value for each of the relation types, 
+	this function calculates connection priority value for each of the relation types
 	"""
 	def _SetConnPrVal(self):
 		# this is the sum of frequencies for all the relation types
@@ -363,11 +529,11 @@ class Cluster_node(object):
 	# it returns the final cluster node connectivity (tree shape) -- out edges
 	def _Get_Outdegree(self):
 		return len(self.out_edge_list)
-			
+	
 	# it returns the out edge -- of the cluster node to the other nodes (clique formation)
 	def _GetOutEdgeList(self):
 		return self.out_edge_list
-		
+	
 	# it returns the in edge -- of the cluster node to the other nodes (clique formation)
 	def _GetInEdgeList(self):
 		return self.in_edge_list    
@@ -375,7 +541,7 @@ class Cluster_node(object):
 	# it returns the in edge -- of the cluster node to the other nodes (clique formation)
 	def _GetNoEdgeList(self):
 		return self.no_edge_list    
-		
+	
 	# it adds one out edge information to both the original connectivity (clique) and the final connectivity (tree shape)
 	def _AddOutEdge(self, dest_clust_idx):
 		if dest_clust_idx not in self.out_edge_list:

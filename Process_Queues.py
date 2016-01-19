@@ -45,12 +45,13 @@ def Proc_Queue(Reachability_Graph_Mat, Single_Reln_no_Conflict_Queue_process, Ou
 			fp.write(' current extracted max element: ' + str(src_taxa_label) + ' and ' + str(dest_taxa_label) + \
 								' reln type: ' + str(reln_type) + ' conn score: ' + str(conn_score))
 			fp.close()
-		
+
 		""" 
 		if the current support score based relation does not induce a conflict to the existing configuration of the final supertree
 		then include the current relation (and resolve corresponding couplet) in it 
 		"""
-		conflict_detection = Possible_Conflict_Curr_Reln(src_taxa_label, dest_taxa_label, Reachability_Graph_Mat, reln_type, Output_Text_File)
+		conflict_detection = Possible_Conflict_Curr_Reln(src_taxa_label, dest_taxa_label, \
+			Reachability_Graph_Mat, reln_type, Output_Text_File, conn_score)
 		
 		if (conflict_detection == 0):
 			""" 
@@ -66,7 +67,7 @@ def Proc_Queue(Reachability_Graph_Mat, Single_Reln_no_Conflict_Queue_process, Ou
 					queue_str = 'CONFLICTING QUEUE (lower priority)'
 				fp.write('\n ==>>>>>>>>> NEW CONN --- ' + str(queue_str) + 'nodes to be connected: ' + str(src_taxa_label) + ' and ' + str(dest_taxa_label) + \
 							' nodes indices: ' + str(COMPLETE_INPUT_TAXA_LIST.index(src_taxa_label)) + ' and ' + str(COMPLETE_INPUT_TAXA_LIST.index(dest_taxa_label)) + \
-							' edge type: ' + str(reln_type) + ' conn score: ' + str(conn_score))
+							' relation type: ' + str(reln_type) + ' conn score: ' + str(conn_score))
 				fp.close()
 			
 			# also update the reachability graph information

@@ -73,22 +73,23 @@ def PrintNewick(root_clust_node_idx):
 		# get the out edge list of the current node which are not explored yet 
 		outnodes = []
 		
-		# add - sourya
-		# if all the descendants of current cluster are leaves then we turn the flag on
-		flag_all_leaf_desc = True
-		# end add - sourya
+		## add - sourya
+		## if all the descendants of current cluster are leaves then we turn the flag on
+		#flag_all_leaf_desc = True
+		## end add - sourya
 		
 		for l in Cluster_Info_Dict[root_clust_node_idx]._GetOutEdgeList():
 			if (Cluster_Info_Dict[l]._GetExploredStatus() == 0):
 				outnodes.append(l)
-				# add - sourya
-				if (len(Cluster_Info_Dict[l]._GetOutEdgeList()) > 0):
-					# this cluster is non leaf
-					flag_all_leaf_desc = False
-				# end add - sourya
-			
+				## add - sourya
+				#if (len(Cluster_Info_Dict[l]._GetOutEdgeList()) > 0):
+					## this cluster is non leaf
+					#flag_all_leaf_desc = False
+				## end add - sourya
+		
+		spec_list = Cluster_Info_Dict[root_clust_node_idx]._GetSpeciesList()
+		
 		if (len(outnodes) == 0):
-			spec_list = Cluster_Info_Dict[root_clust_node_idx]._GetSpeciesList()
 			if (len(spec_list) > 1):
 				Tree_Str_List = Tree_Str_List + '('
 			Tree_Str_List = Tree_Str_List + ','.join("'" + item + "'" for item in spec_list)
@@ -97,12 +98,14 @@ def PrintNewick(root_clust_node_idx):
 		else:
 			
 			# comment - sourya
-			#Tree_Str_List = Tree_Str_List + '('
+			if 1:	#(len(spec_list) > 1):	# condition add - sourya
+				Tree_Str_List = Tree_Str_List + '('
+			# end comment - sourya
 			
-			Tree_Str_List = Tree_Str_List + ','.join("'" + item + "'" for item in Cluster_Info_Dict[root_clust_node_idx]._GetSpeciesList())
+			Tree_Str_List = Tree_Str_List + ','.join("'" + item + "'" for item in spec_list)
 			Tree_Str_List = Tree_Str_List + ','    
 			
-			if (flag_all_leaf_desc == False):	# this condition add - sourya
+			if 1:	#(flag_all_leaf_desc == False):	# this condition add - sourya
 				Tree_Str_List = Tree_Str_List + '('
 			
 			for i in range(len(outnodes)):
@@ -120,18 +123,20 @@ def PrintNewick(root_clust_node_idx):
 						if (j < len(outnodes)):
 							Tree_Str_List = Tree_Str_List + ','      
 			
-			if (flag_all_leaf_desc == False):	# this condition add - sourya
+			if 1:	#(flag_all_leaf_desc == False):	# this condition add - sourya
 				Tree_Str_List = Tree_Str_List + ')'
 				
 			# comment - sourya
-			#Tree_Str_List = Tree_Str_List + ')'
+			if 1:	#(len(spec_list) > 1):	# condition add - sourya
+				Tree_Str_List = Tree_Str_List + ')'
+			# end comment - sourya
 		
 	return Tree_Str_List    
 
 #--------------------------------------------------------
 # this function defines relationship between a pair of nodes in a tree
 # the relationship is either ancestor / descendant, or siblings, or no relationship 
-def DefineLeafPairReln(xl_val, node1, node2, reln_type, Curr_tree_taxa_count):	# extra parameter add - sourya
+def DefineLeafPairReln(xl_val, ratio_val, lca_level, node1, node2, reln_type, Curr_tree_taxa_count):	# extra parameter add - sourya
 	node1_level = node1.level()
 	node2_level = node2.level()
 	
@@ -141,90 +146,73 @@ def DefineLeafPairReln(xl_val, node1, node2, reln_type, Curr_tree_taxa_count):	#
 	if key1 in TaxaPair_Reln_Dict:
 		TaxaPair_Reln_Dict[key1]._AddSupportingTree()
 		TaxaPair_Reln_Dict[key1]._AddXLVal(xl_val)
-		TaxaPair_Reln_Dict[key1]._AddEdgeCount(reln_type)
+		TaxaPair_Reln_Dict[key1]._AddEdgeCount(reln_type, ratio_val)	#sourya
 		if (node1_level < node2_level):
-			#if (reln_type == RELATION_R4):
-				#TaxaPair_Reln_Dict[key1]._IncrLevelDiffInfoCount(0, (node2_level - node1_level))
-			# comment - sourya
-			#TaxaPair_Reln_Dict[key1]._IncrAllRelnLevelDiffInfoCount(0, (node2_level - node1_level))
-			# add - sourya
 			TaxaPair_Reln_Dict[key1]._IncrAllRelnLevelDiffInfoCount(0, ((node2_level - node1_level) * 1.0) / Curr_tree_taxa_count)
-			# end add - sourya
 		elif (node1_level > node2_level):
-			#if (reln_type == RELATION_R4):
-				#TaxaPair_Reln_Dict[key1]._IncrLevelDiffInfoCount(1, (node1_level - node2_level))
-			# comment - sourya
-			#TaxaPair_Reln_Dict[key1]._IncrAllRelnLevelDiffInfoCount(1, (node1_level - node2_level))
-			# add - sourya
 			TaxaPair_Reln_Dict[key1]._IncrAllRelnLevelDiffInfoCount(1, ((node1_level - node2_level) * 1.0) / Curr_tree_taxa_count)
-			# end add - sourya
 		else:
-			#if (reln_type == RELATION_R4):
-				#TaxaPair_Reln_Dict[key1]._IncrLevelDiffInfoCount(2, 0)
 			TaxaPair_Reln_Dict[key1]._IncrAllRelnLevelDiffInfoCount(2, 0)
+		#-----------------------
+		# add - sourya
+		if (reln_type == RELATION_R4):
+			if ((node1_level - lca_level) == 2) and ((node2_level - lca_level) > 2):
+				TaxaPair_Reln_Dict[key1]._AddFreqPseudoR1(0, ratio_val)	#sourya
+			elif ((node1_level - lca_level) > 2) and ((node2_level - lca_level) == 2):
+				TaxaPair_Reln_Dict[key1]._AddFreqPseudoR1(1, ratio_val)	#sourya
+		#-----------------------
 	elif key2 in TaxaPair_Reln_Dict:
 		TaxaPair_Reln_Dict[key2]._AddSupportingTree()
 		TaxaPair_Reln_Dict[key2]._AddXLVal(xl_val)
-		TaxaPair_Reln_Dict[key2]._AddEdgeCount(Complementary_Reln(reln_type))
+		TaxaPair_Reln_Dict[key2]._AddEdgeCount(Complementary_Reln(reln_type), ratio_val)	#sourya
 		if (node1_level < node2_level):
-			#if (reln_type == RELATION_R4):
-				#TaxaPair_Reln_Dict[key2]._IncrLevelDiffInfoCount(1, (node2_level - node1_level))
-			# comment - sourya
-			#TaxaPair_Reln_Dict[key2]._IncrAllRelnLevelDiffInfoCount(1, (node2_level - node1_level))
-			# add - sourya
 			TaxaPair_Reln_Dict[key2]._IncrAllRelnLevelDiffInfoCount(1, ((node2_level - node1_level) * 1.0) / Curr_tree_taxa_count)
-			# end add - sourya
 		elif (node1_level > node2_level):
-			#if (reln_type == RELATION_R4):
-				#TaxaPair_Reln_Dict[key2]._IncrLevelDiffInfoCount(0, (node1_level - node2_level))
-			# comment - sourya
-			#TaxaPair_Reln_Dict[key2]._IncrAllRelnLevelDiffInfoCount(0, (node1_level - node2_level))
-			# add - sourya
 			TaxaPair_Reln_Dict[key2]._IncrAllRelnLevelDiffInfoCount(0, ((node1_level - node2_level) * 1.0) / Curr_tree_taxa_count)
-			# end add - sourya
 		else:
-			#if (reln_type == RELATION_R4):
-				#TaxaPair_Reln_Dict[key2]._IncrLevelDiffInfoCount(2, 0)
 			TaxaPair_Reln_Dict[key2]._IncrAllRelnLevelDiffInfoCount(2, 0)
+		#-----------------------
+		# add - sourya
+		if (reln_type == RELATION_R4):
+			if ((node1_level - lca_level) == 2) and ((node2_level - lca_level) > 2):
+				TaxaPair_Reln_Dict[key2]._AddFreqPseudoR1(1, ratio_val)	#sourya
+			elif ((node1_level - lca_level) > 2) and ((node2_level - lca_level) == 2):
+				TaxaPair_Reln_Dict[key2]._AddFreqPseudoR1(0, ratio_val)	#sourya
+		#-----------------------
 	else:
 		TaxaPair_Reln_Dict.setdefault(key1, Reln_TaxaPair())
 		TaxaPair_Reln_Dict[key1]._AddSupportingTree()
 		TaxaPair_Reln_Dict[key1]._AddXLVal(xl_val)
-		TaxaPair_Reln_Dict[key1]._AddEdgeCount(reln_type)
+		TaxaPair_Reln_Dict[key1]._AddEdgeCount(reln_type, ratio_val)	#sourya
 		if (node1_level < node2_level):
-			#if (reln_type == RELATION_R4):
-				#TaxaPair_Reln_Dict[key1]._IncrLevelDiffInfoCount(0, (node2_level - node1_level))
-			# comment - sourya
-			#TaxaPair_Reln_Dict[key1]._IncrAllRelnLevelDiffInfoCount(0, (node2_level - node1_level))
-			# add - sourya
 			TaxaPair_Reln_Dict[key1]._IncrAllRelnLevelDiffInfoCount(0, ((node2_level - node1_level) * 1.0) / Curr_tree_taxa_count)
-			# end add - sourya
 		elif (node1_level > node2_level):
-			#if (reln_type == RELATION_R4):
-				#TaxaPair_Reln_Dict[key1]._IncrLevelDiffInfoCount(1, (node1_level - node2_level))
-			# comment - sourya
-			#TaxaPair_Reln_Dict[key1]._IncrAllRelnLevelDiffInfoCount(1, (node1_level - node2_level))
-			# add - sourya
 			TaxaPair_Reln_Dict[key1]._IncrAllRelnLevelDiffInfoCount(1, ((node1_level - node2_level) * 1.0) / Curr_tree_taxa_count)
-			# end add - sourya
 		else:
-			#if (reln_type == RELATION_R4):
-				#TaxaPair_Reln_Dict[key1]._IncrLevelDiffInfoCount(2, 0)
 			TaxaPair_Reln_Dict[key1]._IncrAllRelnLevelDiffInfoCount(2, 0)
+		#-----------------------
+		# add - sourya
+		if (reln_type == RELATION_R4):
+			if ((node1_level - lca_level) == 2) and ((node2_level - lca_level) > 2):
+				TaxaPair_Reln_Dict[key1]._AddFreqPseudoR1(0, ratio_val)	#sourya
+			elif ((node1_level - lca_level) > 2) and ((node2_level - lca_level) == 2):
+				TaxaPair_Reln_Dict[key1]._AddFreqPseudoR1(1, ratio_val)	#sourya
+		#-----------------------
 			
 	return
 
 #--------------------------------------------------------
 # this function derives coupket relations belonging to one tree
 # that is provided as an input argument to this function
-def DeriveCoupletRelations(Curr_tree):
+def DeriveCoupletRelations(Curr_tree, Total_Taxa_Count):
   
 	Curr_tree_taxa_count = len(Curr_tree.infer_taxa().labels())
+	ratio_val = (Curr_tree_taxa_count * 1.0) / Total_Taxa_Count
 
 	# traverse the internal nodes of the tree in postorder fashion
 	for curr_node in Curr_tree.postorder_internal_node_iter():        
 		# this is the level value associated with this node
-		#curr_node_level = curr_node.level()
+		curr_node_level = curr_node.level()
 		# compute the XL value associated with this node
 		#xl_val = (len(curr_node.leaf_nodes()) - 2)
 		xl_val = ((len(curr_node.leaf_nodes()) - 2) * 1.0 ) / Curr_tree_taxa_count
@@ -242,7 +230,8 @@ def DeriveCoupletRelations(Curr_tree):
 		if (len(curr_node_child_leaf_nodes) > 1):
 			for i in range(len(curr_node_child_leaf_nodes) - 1):
 				for j in range(i+1, len(curr_node_child_leaf_nodes)):
-					DefineLeafPairReln(xl_val, curr_node_child_leaf_nodes[i], curr_node_child_leaf_nodes[j], RELATION_R3, Curr_tree_taxa_count)
+					DefineLeafPairReln(xl_val, ratio_val, curr_node_level, curr_node_child_leaf_nodes[i], curr_node_child_leaf_nodes[j], \
+						RELATION_R3, Curr_tree_taxa_count)
 		
 		# one leaf node (direct descendant) and another leaf node (under one internal node)
 		# will be related by ancestor / descendant relations
@@ -250,7 +239,7 @@ def DeriveCoupletRelations(Curr_tree):
 			for p in curr_node_child_leaf_nodes:
 				for q in curr_node_child_internal_nodes:
 					for r in q.leaf_nodes():
-						DefineLeafPairReln(xl_val, p, r, RELATION_R1, Curr_tree_taxa_count)
+						DefineLeafPairReln(xl_val, ratio_val, curr_node_level, p, r, RELATION_R1, Curr_tree_taxa_count)
 		
 		# finally a pair of leaf nodes which are descendant of internal nodes will be related by RELATION_R4 relation
 		if (len(curr_node_child_internal_nodes) > 1):
@@ -258,7 +247,7 @@ def DeriveCoupletRelations(Curr_tree):
 				for j in range(i+1, len(curr_node_child_internal_nodes)):
 					for p in curr_node_child_internal_nodes[i].leaf_nodes():
 						for q in curr_node_child_internal_nodes[j].leaf_nodes():
-							DefineLeafPairReln(xl_val, p, q, RELATION_R4, Curr_tree_taxa_count)
+							DefineLeafPairReln(xl_val, ratio_val, curr_node_level, p, q, RELATION_R4, Curr_tree_taxa_count)
 
 ##-----------------------------------------------------
 # this function reads the input tree list file

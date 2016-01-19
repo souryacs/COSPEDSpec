@@ -15,7 +15,7 @@ from Header import *
 this function checks whether the current relation (given as an input) is feasible to the input supertree configuration
 only the current relations in the supertree is used for conflict detection 
 """
-def Possible_Conflict_Curr_Reln(src_taxa_label, dest_taxa_label, Reachability_Graph_Mat, target_reln, Output_Text_File):
+def Possible_Conflict_Curr_Reln(src_taxa_label, dest_taxa_label, Reachability_Graph_Mat, target_reln, Output_Text_File, conn_score):
 	if (target_reln == RELATION_R2):
 		src_taxa_clust_idx = Taxa_Info_Dict[dest_taxa_label]._Get_Taxa_Part_Clust_Idx()
 		dest_taxa_clust_idx = Taxa_Info_Dict[src_taxa_label]._Get_Taxa_Part_Clust_Idx()
@@ -30,6 +30,10 @@ def Possible_Conflict_Curr_Reln(src_taxa_label, dest_taxa_label, Reachability_Gr
 	# that is, they are already related via equivalence partition 
 	# then return
 	if (src_taxa_clust_idx == dest_taxa_clust_idx):
+		if (DEBUG_LEVEL >= 2):
+			fp = open(Output_Text_File, 'a')
+			fp.write('\n target_reln: ' + str(target_reln) + ' already in same taxa cluster')
+			fp.close()
 		return 1
 		
 	# we find the indices of the reachability matrix corresponding to individual cluster indices 
@@ -39,14 +43,17 @@ def Possible_Conflict_Curr_Reln(src_taxa_label, dest_taxa_label, Reachability_Gr
 	# case A - if the clusters are already related (depicted in the reachability matrix) then return 1
 	if (Reachability_Graph_Mat[reach_mat_dest_taxa_clust_idx][reach_mat_src_taxa_clust_idx] > 0) or \
 			(Reachability_Graph_Mat[reach_mat_src_taxa_clust_idx][reach_mat_dest_taxa_clust_idx] > 0):
-		if (DEBUG_LEVEL > 2):
+		if (DEBUG_LEVEL >= 2):
 			fp = open(Output_Text_File, 'a')
 			if (Reachability_Graph_Mat[reach_mat_src_taxa_clust_idx][reach_mat_dest_taxa_clust_idx] == 1):
-				fp.write('\n target_reln: ' + str(target_reln) + ' already related via relation r1')
+				fp.write('\n src_taxa_label: ' + str(src_taxa_label) + ' dest_taxa_label: ' \
+					+ str(dest_taxa_label) + ' target_reln: ' + str(target_reln) + ' already related via relation r1')
 			elif (Reachability_Graph_Mat[reach_mat_src_taxa_clust_idx][reach_mat_dest_taxa_clust_idx] == 2):
-				fp.write('\n target_reln: ' + str(target_reln) + ' already related via relation r4')
+				fp.write('\n src_taxa_label: ' + str(src_taxa_label) + ' dest_taxa_label: ' \
+					+ str(dest_taxa_label) + ' target_reln: ' + str(target_reln) + ' already related via relation r4')
 			elif (Reachability_Graph_Mat[reach_mat_dest_taxa_clust_idx][reach_mat_src_taxa_clust_idx] == 1):
-				fp.write('\n target_reln: ' + str(target_reln) + ' already related via relation r2')
+				fp.write('\n src_taxa_label: ' + str(src_taxa_label) + ' dest_taxa_label: ' \
+					+ str(dest_taxa_label) + ' target_reln: ' + str(target_reln) + ' already related via relation r2')
 			fp.close()
 		return 1
 
@@ -58,7 +65,9 @@ def Possible_Conflict_Curr_Reln(src_taxa_label, dest_taxa_label, Reachability_Gr
 		# then if B->D or B><D then return a conflict
 		#-------------------------------------------
 		for x in Cluster_Info_Dict[src_taxa_clust_idx]._GetInEdgeList():
-			if (Reachability_Graph_Mat[reach_mat_dest_taxa_clust_idx][CURRENT_CLUST_IDX_LIST.index(x)] > 0):
+			if (conn_score <= 0) and (Reachability_Graph_Mat[reach_mat_dest_taxa_clust_idx][CURRENT_CLUST_IDX_LIST.index(x)] > 0):
+				return 1
+			elif (conn_score > 0) and (Reachability_Graph_Mat[reach_mat_dest_taxa_clust_idx][CURRENT_CLUST_IDX_LIST.index(x)] == 1):
 				return 1
 		#-------------------------------------------
 		# if A->B is to be established
@@ -66,7 +75,9 @@ def Possible_Conflict_Curr_Reln(src_taxa_label, dest_taxa_label, Reachability_Gr
 		# then if E->A or E><A then return a conflict 
 		#-------------------------------------------
 		for x in Cluster_Info_Dict[dest_taxa_clust_idx]._GetOutEdgeList():
-			if (Reachability_Graph_Mat[CURRENT_CLUST_IDX_LIST.index(x)][reach_mat_src_taxa_clust_idx] > 0):
+			if (conn_score <= 0) and (Reachability_Graph_Mat[CURRENT_CLUST_IDX_LIST.index(x)][reach_mat_src_taxa_clust_idx] > 0):
+				return 1
+			elif (conn_score > 0) and (Reachability_Graph_Mat[CURRENT_CLUST_IDX_LIST.index(x)][reach_mat_src_taxa_clust_idx] == 1):
 				return 1
 		#-------------------------------------------
 		# if A->B is to be established
@@ -75,18 +86,19 @@ def Possible_Conflict_Curr_Reln(src_taxa_label, dest_taxa_label, Reachability_Gr
 		#-------------------------------------------
 		for x in Cluster_Info_Dict[src_taxa_clust_idx]._GetInEdgeList():
 			for y in Cluster_Info_Dict[dest_taxa_clust_idx]._GetOutEdgeList():
-				if (x == y) or (Reachability_Graph_Mat[CURRENT_CLUST_IDX_LIST.index(y)][CURRENT_CLUST_IDX_LIST.index(x)] > 0):
+				if (conn_score <= 0) and ((x == y) or (Reachability_Graph_Mat[CURRENT_CLUST_IDX_LIST.index(y)][CURRENT_CLUST_IDX_LIST.index(x)] > 0)):
 					return 1
-				
+				elif (conn_score > 0) and ((x == y) or (Reachability_Graph_Mat[CURRENT_CLUST_IDX_LIST.index(y)][CURRENT_CLUST_IDX_LIST.index(x)] == 1)):
+					return 1
 
 		# if A->B is to be established
 		# and there exists D><A
 		# then it would be D><B afterwards 
 		# so if there is D->B, B->D or D=B then return a conflict  
 		for x in Cluster_Info_Dict[src_taxa_clust_idx]._GetNoEdgeList():
-			if (dest_taxa_clust_idx == x) \
+			if (conn_score <= 0) and ((dest_taxa_clust_idx == x) \
 				or (Reachability_Graph_Mat[CURRENT_CLUST_IDX_LIST.index(x)][reach_mat_dest_taxa_clust_idx] == 1) \
-				or (Reachability_Graph_Mat[reach_mat_dest_taxa_clust_idx][CURRENT_CLUST_IDX_LIST.index(x)] == 1):
+				or (Reachability_Graph_Mat[reach_mat_dest_taxa_clust_idx][CURRENT_CLUST_IDX_LIST.index(x)] == 1)):
 				return 1
 		
 		# if A->B is to be established
@@ -96,9 +108,9 @@ def Possible_Conflict_Curr_Reln(src_taxa_label, dest_taxa_label, Reachability_Gr
 		# so if D->E or E->D or D=E then return a conflict  
 		for x in Cluster_Info_Dict[src_taxa_clust_idx]._GetNoEdgeList():
 			for y in Cluster_Info_Dict[dest_taxa_clust_idx]._GetOutEdgeList():
-				if (x == y) \
+				if (conn_score <= 0) and ((x == y) \
 					or (Reachability_Graph_Mat[CURRENT_CLUST_IDX_LIST.index(y)][CURRENT_CLUST_IDX_LIST.index(x)] == 1) \
-					or (Reachability_Graph_Mat[CURRENT_CLUST_IDX_LIST.index(x)][CURRENT_CLUST_IDX_LIST.index(y)] == 1):
+					or (Reachability_Graph_Mat[CURRENT_CLUST_IDX_LIST.index(x)][CURRENT_CLUST_IDX_LIST.index(y)] == 1)):
 					return 1
 
 	elif (target_reln == RELATION_R3):
