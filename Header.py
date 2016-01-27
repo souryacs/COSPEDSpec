@@ -81,8 +81,41 @@ KEY_ABSENCE_INDICATOR = 3
 
 # add - sourya
 MODE_PERCENT = 0.5
-
 MODE_BIN_COUNT = 40
+
+#"""
+#threshold specifying the percentage of supporting trees 
+#which is required to include a relation (and corresponding support score)
+#in the queue
+#currently 
+#"""
+#RELN_SUPPORT_THRS = 0.1
+
+"""
+this is a threshold corresponding to the selection of R1 or R2 relation
+for a non conflicting couplet with negative support score of the corresponding relation
+"""
+#R1R2Reln_MAJ_THRS = 0.7
+R1R2Reln_MAJ_THRS_high = 0.75	#0.8
+R1R2Reln_MAJ_THRS_low = 0.7	#0.8
+
+"""
+this is a threshold corresponding to the selection of R3 relation
+for a non conflicting couplet with negative support score of the corresponding relation
+"""
+R3Reln_MAJ_THRS = 0.15
+
+#"""
+#this is a threshold corresponding to the selection of R4 relation
+#for a non conflicting couplet with negative support score of the corresponding relation
+#"""
+#R4Reln_MAJ_THRS = 0.5
+
+"""
+for a couplet, relations with frequency of this percentage of the max (consensus) frequency
+will be included in the score queue
+"""
+PERCENT_MAX_FREQ = 0.35	#0.5
 
 #-----------------------------------------------------
 """ 
@@ -171,7 +204,209 @@ class Reln_TaxaPair(object):
 		when R4 relation is actually a pseudo R1 relation
 		"""
 		self.freq_R4_pseudo_R1R2 = [0] * 2
+		"""
+		this is a list of allowed relations between this couplet
+		we allow only those relations which have a significant frequency compared to the number of supporting trees
+		"""
+		self.allowed_reln_list = []
+	
+	#----------------------------------
+	"""
+	this function checks whether for a conflicting taxa pair with negative support score
+	R1 relation can be applied between this couplet
+	"""
+	def _Check_Reln_R1_Majority(self, outfile):
+		fr1 = self.freq_count[RELATION_R1]
+		fr2 = self.freq_count[RELATION_R2]
+		fr3 = self.freq_count[RELATION_R3]
+		fr4 = self.freq_count[RELATION_R4]
+		fpr1 = self.freq_R4_pseudo_R1R2[0]
+		fpr2 = self.freq_R4_pseudo_R1R2[1]
+		level_r1_count = self.ALL_Reln_Level_Diff_Info_Count[0]
+		sum_level_count = sum(self.ALL_Reln_Level_Diff_Info_Count)
+		level_val_r1 = self.ALL_Reln_Level_Diff_Val_Count[0]
+		level_val_r2 = self.ALL_Reln_Level_Diff_Val_Count[1]
 		
+		if (DEBUG_LEVEL >= 2):
+			fp = open(outfile, 'a')
+			fp.write('\n fr1: ' + str(fr1) + ' fr2: ' + str(fr2) + ' fr4: ' + str(fr4) + ' fr3: ' + str(fr3) \
+				+ ' fpr1: ' + str(fpr1) + ' fpr2: ' + str(fpr2) + ' level_r1_count: ' + str(level_r1_count) \
+					+ ' sum_level_count: ' + str(sum_level_count))
+			
+			if ((level_val_r1 + level_val_r2) > 0):
+				fp.write(' Ratio: ' + str((level_val_r1 * 1.0) / (level_val_r1 + level_val_r2)))  
+			fp.close()
+		
+		## old condition - sourya
+		#if ((fr1 + fpr1 - fpr2) > fr4) and ((fr1 + fpr1 - fpr2) > fr3) and ((fr1 + fpr1 - fpr2) > (fr2 + fpr2 - fpr1)):
+			#if (level_r1_count > (0.5 * sum_level_count)):
+				##if (((level_val_r1 - level_val_r2) * 1.0) / (level_val_r1 + level_val_r2) >= R1R2Reln_MAJ_THRS):
+				#if (((level_val_r1 * 1.0) / (level_val_r1 + level_val_r2)) >= R1R2Reln_MAJ_THRS):
+					#return True
+		## end old condition - sourya
+
+		## new condition - sourya
+		#if ((level_val_r1 + level_val_r2) > 0):
+			#if (((fr1 + fpr1) > fr4) and ((fr1 + fpr1) > fr3) and ((fr1 + fpr1) > (fr2 + fpr2))) \
+				#or (((level_val_r1 * 1.0) / (level_val_r1 + level_val_r2)) >= R1R2Reln_MAJ_THRS):
+				#return True
+		## end new condition - sourya
+	
+		# add - sourya
+		if  ((fr1 + fpr1 - fpr2) > fr4) and ((fr1 + fpr1 - fpr2) > fr3) and ((fr1 + fpr1 - fpr2) > (fr2 + fpr2 - fpr1)):
+			return True
+		if ((level_val_r1 + level_val_r2) > 0):
+			#if (((level_val_r1 * 1.0) / (level_val_r1 + level_val_r2)) >= R1R2Reln_MAJ_THRS_high):
+				#return True
+			if (((level_val_r1 * 1.0) / (level_val_r1 + level_val_r2)) >= R1R2Reln_MAJ_THRS_low):
+				if  ((fr1 + fpr1 - fpr2) > (fr4 - fpr1)) and ((fr1 + fpr1 - fpr2) > fr3) and ((fr1 + fpr1 - fpr2) > (fr2 + fpr2 - fpr1)):
+					return True
+				if  ((fr1 + 2 * (fpr1 - fpr2)) > fr4) and ((fr1 + fpr1 - fpr2) > fr3) and ((fr1 + fpr1 - fpr2) > (fr2 + fpr2 - fpr1)):
+					return True
+		# end add - sourya
+		
+		return False
+		
+	"""
+	this function checks whether for a conflicting taxa pair with negative support score
+	R2 relation can be applied between this couplet
+	"""
+	def _Check_Reln_R2_Majority(self, outfile):
+		fr1 = self.freq_count[RELATION_R1]
+		fr2 = self.freq_count[RELATION_R2]
+		fr3 = self.freq_count[RELATION_R3]
+		fr4 = self.freq_count[RELATION_R4]
+		fpr1 = self.freq_R4_pseudo_R1R2[0]
+		fpr2 = self.freq_R4_pseudo_R1R2[1]
+		level_r2_count = self.ALL_Reln_Level_Diff_Info_Count[1]
+		sum_level_count = sum(self.ALL_Reln_Level_Diff_Info_Count)
+		level_val_r1 = self.ALL_Reln_Level_Diff_Val_Count[0]
+		level_val_r2 = self.ALL_Reln_Level_Diff_Val_Count[1]
+		
+		if (DEBUG_LEVEL >= 2):
+			fp = open(outfile, 'a')
+			fp.write('\n fr1: ' + str(fr1) + ' fr2: ' + str(fr2) + ' fr4: ' + str(fr4) + ' fr3: ' + str(fr3) \
+				+ ' fpr1: ' + str(fpr1) + ' fpr2: ' + str(fpr2) + ' level_r2_count: ' + str(level_r2_count) \
+					+ ' sum_level_count: ' + str(sum_level_count))
+			
+			if ((level_val_r2 + level_val_r1) > 0):
+				fp.write(' Ratio: ' + str((level_val_r2 * 1.0) / (level_val_r2 + level_val_r1)))  
+			fp.close()
+		
+		## old condition - sourya
+		#if ((fr2 + fpr2 - fpr1) > fr4) and ((fr2 + fpr2 - fpr1) > fr3) and ((fr2 + fpr2 - fpr1) > (fr1 + fpr1 - fpr2)):
+			#if (level_r2_count > (0.5 * sum_level_count)):
+				##if (((level_val_r2 - level_val_r1) * 1.0) / (level_val_r2 + level_val_r1) >= R1R2Reln_MAJ_THRS):
+				#if (((level_val_r2 * 1.0) / (level_val_r2 + level_val_r1)) >= R1R2Reln_MAJ_THRS):
+					#return True
+		## end old condition - sourya
+
+		## new condition - sourya
+		#if ((level_val_r1 + level_val_r2) > 0):
+			#if (((fr2 + fpr2) > fr4) and ((fr2 + fpr2) > fr3) and ((fr2 + fpr2) > (fr1 + fpr1))) \
+				#or (((level_val_r2 * 1.0) / (level_val_r1 + level_val_r2)) >= R1R2Reln_MAJ_THRS):
+				#return True
+		## end new condition - sourya
+
+		# add - sourya
+		if  ((fr2 + fpr2 - fpr1) > fr4) and ((fr2 + fpr2 - fpr1) > fr3) and ((fr2 + fpr2 - fpr1) > (fr1 + fpr1 - fpr2)):
+			return True
+		if ((level_val_r1 + level_val_r2) > 0):
+			#if (((level_val_r2 * 1.0) / (level_val_r1 + level_val_r2)) >= R1R2Reln_MAJ_THRS_high):
+				#return True
+			if (((level_val_r2 * 1.0) / (level_val_r1 + level_val_r2)) >= R1R2Reln_MAJ_THRS_low):
+				if  ((fr2 + fpr2 - fpr1) > (fr4 - fpr2)) and ((fr2 + fpr2 - fpr1) > fr3) and ((fr2 + fpr2 - fpr1) > (fr1 + fpr1 - fpr2)):
+					return True
+				if  ((fr2 + 2 * (fpr2 - fpr1)) > fr4) and ((fr2 + fpr2 - fpr1) > fr3) and ((fr2 + fpr2 - fpr1) > (fr1 + fpr1 - fpr2)):
+					return True
+		# end add - sourya
+		
+		return False
+		
+	"""
+	this function checks whether for a conflicting taxa pair with negative support score
+	R3 relation can be applied between this couplet
+	"""
+	def _Check_Reln_R3_Majority(self, outfile):
+		level_val_r1 = self.ALL_Reln_Level_Diff_Val_Count[0]
+		level_val_r2 = self.ALL_Reln_Level_Diff_Val_Count[1]
+		lev_diff = math.fabs((level_val_r2 - level_val_r1) * 1.0)
+		fr3 = self.freq_count[RELATION_R3]
+		
+		if (DEBUG_LEVEL >= 2):
+			fp = open(outfile, 'a')
+			fp.write('\n fr3: ' + str(fr3) + ' supporting trees : ' + str(self.supporting_trees))
+			
+			if ((level_val_r2 + level_val_r1) > 0):
+				fp.write(' Ratio: ' + str(lev_diff / (level_val_r2 + level_val_r1)))  
+			fp.close()
+		
+		if (fr3 >= (0.2 * self.supporting_trees)):
+			if ((level_val_r2 + level_val_r1) > 0):
+				# frequency of R3 relation should be at least 20% of the total number of supporting trees
+				if ((lev_diff / (level_val_r2 + level_val_r1)) <= R3Reln_MAJ_THRS):
+					# the level difference should be very small
+					return True
+			else:
+				return True
+			
+		return False
+		
+	#"""
+	#this function checks whether for a conflicting taxa pair with negative support score
+	#R4 relation can be applied between this couplet
+	#"""
+	#def _Check_Reln_R4_Majority(self, outfile):
+		
+		#fr1 = self.freq_count[RELATION_R1]
+		#fr2 = self.freq_count[RELATION_R2]
+		#fr3 = self.freq_count[RELATION_R3]
+		#fr4 = self.freq_count[RELATION_R4]
+		#fpr1 = self.freq_R4_pseudo_R1R2[0]
+		#fpr2 = self.freq_R4_pseudo_R1R2[1]
+		#level_val_r1 = self.ALL_Reln_Level_Diff_Val_Count[0]
+		#level_val_r2 = self.ALL_Reln_Level_Diff_Val_Count[1]
+		#lev_diff = math.fabs((level_val_r2 - level_val_r1) * 1.0)
+		#max_fpr = max(fpr1, fpr2)
+		
+		#if (DEBUG_LEVEL >= 2):
+			#fp = open(outfile, 'a')
+			#fp.write('\n fr1: ' + str(fr1) + ' fr2: ' + str(fr2) + ' fr4: ' + str(fr4) + ' fr3: ' + str(fr3) \
+				#+ ' fpr1: ' + str(fpr1) + ' fpr2: ' + str(fpr2) + ' max_fpr: ' + str(max_fpr))
+			
+			#if ((level_val_r2 + level_val_r1) > 0):
+				#fp.write(' Ratio: ' + str(lev_diff / (level_val_r2 + level_val_r1)))  
+			#fp.close()
+		
+		#if (fr4 >= (fr1 + fpr1 - fpr2)) and ((fr4 - max_fpr) > fr3) and (fr4 >= (fr2 + fpr2 - fpr1)):
+			#return True
+		##elif ((fr4 - fpr2) > (fr2 + fpr2 - fpr1)) and ((fr4 - max_fpr) > fr3) and ((fr4 - fpr2) > (fr1 + fpr1 - fpr2)):
+			##return True
+		#elif ((level_val_r2 + level_val_r1) > 0):
+			#if ((lev_diff / (level_val_r2 + level_val_r1)) > R3Reln_MAJ_THRS) and ((lev_diff / (level_val_r2 + level_val_r1)) < R4Reln_MAJ_THRS):
+				#return True
+		
+		#return False
+		
+	#----------------------------------
+	"""
+	these functions adjust the set of allowed relations among a couplet
+	"""
+	def _AddAllowedReln(self, inp_reln):
+		self.allowed_reln_list.append(inp_reln)
+		
+	def _GetAllowedRelnList(self):
+		return self.allowed_reln_list
+	
+	def _RemoveAllowedReln(self, inp_reln):
+		if inp_reln in self.allowed_reln_list:
+			self.allowed_reln_list.remove(inp_reln)
+			
+	def _SetEmptyAllowedRelnList(self):
+		self.allowed_reln_list = []
+		
+	#----------------------------------	
+	
 	def _AddFreqPseudoR1(self, idx, r=1):
 		# modified - sourya
 		self.freq_R4_pseudo_R1R2[idx] = self.freq_R4_pseudo_R1R2[idx] + r
@@ -183,32 +418,32 @@ class Reln_TaxaPair(object):
 		for i in range(3):
 			self.ALL_Reln_Level_Diff_Val_Count[i] = (self.ALL_Reln_Level_Diff_Val_Count[i] * 1.0) / self.supporting_trees
 		
-	"""
-	this function checks whether a couplet has R4 as its consensus relation
-	and frequencies of different relations can be swapped
-	"""
-	def _CheckSwapFreq(self):
-		if (self._CheckTargetRelnConsensus(RELATION_R4)):
-			# R4 is its consensus relation
-			if (((self.freq_count[RELATION_R1] + self.freq_R4_pseudo_R1R2[0] - self.freq_R4_pseudo_R1R2[1]) \
-				> (self.freq_count[RELATION_R4] - self.freq_R4_pseudo_R1R2[0])) \
-					and (self._CheckTargetRelnLevelConsensus(RELATION_R1, 1) == 1)):
-				"""
-				here R1 can be established as a consensus relation
-				interchange the frequencies
-				"""
-				self.freq_count[RELATION_R1] = self.freq_count[RELATION_R1] + self.freq_R4_pseudo_R1R2[0]
-				self.freq_count[RELATION_R4] = self.freq_count[RELATION_R4] - self.freq_R4_pseudo_R1R2[0]
+	#"""
+	#this function checks whether a couplet has R4 as its consensus relation
+	#and frequencies of different relations can be swapped
+	#"""
+	#def _CheckSwapFreq(self):
+		#if (self._CheckTargetRelnConsensus(RELATION_R4)):
+			## R4 is its consensus relation
+			#if (((self.freq_count[RELATION_R1] + self.freq_R4_pseudo_R1R2[0] - self.freq_R4_pseudo_R1R2[1]) \
+				#> (self.freq_count[RELATION_R4] - self.freq_R4_pseudo_R1R2[0])) \
+					#and (self._CheckTargetRelnLevelConsensus(RELATION_R1, 1) == 1)):
+				#"""
+				#here R1 can be established as a consensus relation
+				#interchange the frequencies
+				#"""
+				#self.freq_count[RELATION_R1] = self.freq_count[RELATION_R1] + self.freq_R4_pseudo_R1R2[0]
+				#self.freq_count[RELATION_R4] = self.freq_count[RELATION_R4] - self.freq_R4_pseudo_R1R2[0]
 				
-			if (((self.freq_count[RELATION_R2] + self.freq_R4_pseudo_R1R2[1] - self.freq_R4_pseudo_R1R2[0]) \
-				> (self.freq_count[RELATION_R4] - self.freq_R4_pseudo_R1R2[1])) \
-					and (self._CheckTargetRelnLevelConsensus(RELATION_R2, 1) == 1)):
-				"""
-				here R2 can be established as a consensus relation
-				interchange the frequencies
-				"""
-				self.freq_count[RELATION_R2] = self.freq_count[RELATION_R2] + self.freq_R4_pseudo_R1R2[1]
-				self.freq_count[RELATION_R4] = self.freq_count[RELATION_R4] - self.freq_R4_pseudo_R1R2[1]
+			#if (((self.freq_count[RELATION_R2] + self.freq_R4_pseudo_R1R2[1] - self.freq_R4_pseudo_R1R2[0]) \
+				#> (self.freq_count[RELATION_R4] - self.freq_R4_pseudo_R1R2[1])) \
+					#and (self._CheckTargetRelnLevelConsensus(RELATION_R2, 1) == 1)):
+				#"""
+				#here R2 can be established as a consensus relation
+				#interchange the frequencies
+				#"""
+				#self.freq_count[RELATION_R2] = self.freq_count[RELATION_R2] + self.freq_R4_pseudo_R1R2[1]
+				#self.freq_count[RELATION_R4] = self.freq_count[RELATION_R4] - self.freq_R4_pseudo_R1R2[1]
 				
 	"""
 	this function computes the level difference (relation based) count 
@@ -313,21 +548,40 @@ class Reln_TaxaPair(object):
 		self.ALL_Reln_Level_Diff_Info_Count[idx] = self.ALL_Reln_Level_Diff_Info_Count[idx] + 1
 		self.ALL_Reln_Level_Diff_Val_Count[idx] = self.ALL_Reln_Level_Diff_Val_Count[idx] + val
 		
+	#------------------------------------------
+	"""
+	this function adds one XL value, computed for a particular input tree
+	to the list of XL values for this couplet
+	"""
 	def _AddXLVal(self, XL_val):
 		#self.XL_sum_gene_trees = self.XL_sum_gene_trees + XL_val
 		self.XL_sum_gene_trees.append(XL_val)	# modified - sourya
 		
+	"""
+	this function returns the list of XL values for this couplet
+	with respect to individual input trees
+	"""
 	def _GetXLSumGeneTrees(self):
 		#return self.XL_sum_gene_trees
 		return sum(self.XL_sum_gene_trees)	# modified - sourya
 	
+	"""
+	this function computes the average of XL measures
+	"""
 	def _GetAvgXLGeneTrees(self):
 		#return (self.XL_sum_gene_trees * 1.0) / self.supporting_trees
 		return (sum(self.XL_sum_gene_trees) * 1.0) / self.supporting_trees	# modified - sourya
 	
+	"""
+	this function computes the median of XL measures
+	"""
 	def _GetMedianXLGeneTrees(self):
 		return numpy.median(numpy.array(self.XL_sum_gene_trees)) # modified - sourya
 
+	"""
+	function to return the average of XL values for this couplet
+	depending on the user parameters, average, median, or binned average XL is returned
+	"""
 	def _GetNormalizedXLSumGeneTrees(self, dist_type):
 		if (dist_type == 1):
 			return self._GetAvgXLGeneTrees()
@@ -342,7 +596,9 @@ class Reln_TaxaPair(object):
 		elif (dist_type == 6):
 			return min(self._GetMedianXLGeneTrees(), self._GetMultiModeXLVal())
 		
-	#------------------------------------------
+	"""
+	this function computes the binned average of XL values associated for this couplet
+	"""
 	def _GetMultiModeXLVal(self, Output_Text_File=None):
 		if (self.binned_avg_XL == -1):
 			
@@ -395,30 +651,69 @@ class Reln_TaxaPair(object):
 		return self.binned_avg_XL
 	
 	#------------------------------------------
+	"""
+	this function adds one supporting tree for this couplet
+	"""
 	def _AddSupportingTree(self):
 		self.supporting_trees = self.supporting_trees + 1
 	
+	"""
+	this function returns the number of input trees supporting this couplet
+	"""
 	def _GetNoSupportTrees(self):
 		return self.supporting_trees
+	#------------------------------------------
+	"""
+	this function returns the frequency of the consensus relation
+	"""
+	def _GetConsensusFreq(self):
+		return max(self.freq_count)
 	
+	"""
+	this function returns the frequency of the input relation
+	specified by the variable 'reln_type'
+	"""
 	def _GetEdgeWeight(self, reln_type):
 		return self.freq_count[reln_type]      
-		
-	def _GetEdgeCost_ConnReln(self, reln_type):
-		return self.support_score[reln_type]
-		
-	def _IncrEdgeCost_ConnReln(self, reln_type, incr_cost):
-		self.support_score[reln_type] = self.support_score[reln_type] + incr_cost
 
-	# this function adds one frequency count (with a given input relation type)
+	"""
+	this function adds a specified frequency count (default 1)
+	corresponding to the relation specified by the variable 'reln_type'
+	"""
 	def _AddEdgeCount(self, reln_type, r=1):
 		# modified - sourya
-		if (reln_type == RELATION_R3):
+		if 0:	#(reln_type == RELATION_R3):
 			self.freq_count[reln_type] = self.freq_count[reln_type] + (2 * r)
 		else:
 			self.freq_count[reln_type] = self.freq_count[reln_type] + r
-		
-	# this function prints the relationship information
+	#------------------------------------------
+	"""
+	this function returns the support score of the input relation
+	specified by the variable 'reln_type'
+	"""
+	def _GetEdgeCost_ConnReln(self, reln_type):
+		return self.support_score[reln_type]
+
+	""" 
+	this function computes the support score value associated with individual couplet
+	for all different relations
+	"""
+	def _SetCostMetric(self):      
+		for reln_type in range(4):
+			# assign the score metric for this edge type
+			self.support_score[reln_type] = self.freq_count[reln_type] * self.priority_reln[reln_type]
+
+	"""
+	this function updates (increments) the support score of the input relation
+	specified by the variable 'reln_type'
+	and by the amount 'incr_cost'
+	"""
+	def _IncrEdgeCost_ConnReln(self, reln_type, incr_cost):
+		self.support_score[reln_type] = self.support_score[reln_type] + incr_cost
+	#------------------------------------------
+	"""
+	this function prints all the information associated with a couplet
+	"""
 	def _PrintRelnInfo(self, key, Output_Text_File):
 		fp = open(Output_Text_File, 'a')    
 		fp.write('\n taxa pair key: ' + str(key))
@@ -437,16 +732,22 @@ class Reln_TaxaPair(object):
 		fp.write('\n ALL relation based Level diff info count (r1/r2/r3): ' + str(self.ALL_Reln_Level_Diff_Info_Count))
 		fp.write('\n ALL relation based Level diff Val count (r1/r2/r3): ' + str(self.ALL_Reln_Level_Diff_Val_Count))
 		fp.write('\n R4 relation pseudo (R1/R2) count: ' + str(self.freq_R4_pseudo_R1R2))
+		fp.write('\n Allowed relation list: ' + str(self.allowed_reln_list))
+		if ((self.ALL_Reln_Level_Diff_Val_Count[0] + self.ALL_Reln_Level_Diff_Val_Count[1]) > 0):
+			fp.write('\n Level Val r1 reln ratio : ' + str((self.ALL_Reln_Level_Diff_Val_Count[0] * 1.0) / (self.ALL_Reln_Level_Diff_Val_Count[0] + self.ALL_Reln_Level_Diff_Val_Count[1])))
+			fp.write('\n Level Val r2 reln ratio : ' + str((self.ALL_Reln_Level_Diff_Val_Count[1] * 1.0) / (self.ALL_Reln_Level_Diff_Val_Count[0] + self.ALL_Reln_Level_Diff_Val_Count[1])))
+			fp.write('\n Level Val r3/r4 reln ratio : ' + str((math.fabs(self.ALL_Reln_Level_Diff_Val_Count[0] - self.ALL_Reln_Level_Diff_Val_Count[1])) / (self.ALL_Reln_Level_Diff_Val_Count[0] + self.ALL_Reln_Level_Diff_Val_Count[1])))
+		if (sum(self.ALL_Reln_Level_Diff_Info_Count) > 0):
+			fp.write('\n Level Count r1 reln ratio : ' + str((self.ALL_Reln_Level_Diff_Info_Count[0] * 1.0) / (sum(self.ALL_Reln_Level_Diff_Info_Count))))
+			fp.write('\n Level Count r2 reln ratio : ' + str((self.ALL_Reln_Level_Diff_Info_Count[1] * 1.0) / (sum(self.ALL_Reln_Level_Diff_Info_Count))))
+			fp.write('\n Level Count r3 reln ratio : ' + str((self.ALL_Reln_Level_Diff_Info_Count[2] * 1.0) / (sum(self.ALL_Reln_Level_Diff_Info_Count))))
 		fp.close()
-		#self._GetMultiModeXLVal(Output_Text_File)
-	
-	# this function computes the support score metric value associated with individual pair of taxa 
-	def _SetCostMetric(self):      
-		for reln_type in range(4):
-			# assign the score metric for this edge type
-			self.support_score[reln_type] = self.freq_count[reln_type] * self.priority_reln[reln_type]
-			
-	# this function returns the connection priority value for input relation 
+
+	#------------------------------------------
+	"""
+	this function returns the priority value for a given input relation 
+	specified by the variable 'reln_type'
+	"""
 	def _GetConnPrVal(self, reln_type):
 		return self.priority_reln[reln_type]
 	
@@ -460,7 +761,14 @@ class Reln_TaxaPair(object):
 		for reln_type in range(4):
 			# here we use the difference of current relation type frequency with the frequencies of all other relations
 			self.priority_reln[reln_type] = 2 * self.freq_count[reln_type] - listsum
-			
+		
+	#------------------------------------------
+	"""
+	this function checks whether a couplet is non-conflicting
+	that is, only one relation between them exists throughout all the gene trees
+	in such a case, a binary variable 1 and the corresponding relation type is returned in the form of a list
+	otherwise, a value 0 and a defaukt relation R4 is returned
+	"""
 	def _CheckNonConflictingCouplet(self):
 		# this is the sum of frequencies for all the relation types
 		listsum = sum(self.freq_count)

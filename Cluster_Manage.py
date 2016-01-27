@@ -50,18 +50,18 @@ def FindClusterReln(clust1_key, clust2_key):
 				"""
 				if ((r1_freq + pseudo_r1_freq - pseudo_r2_freq) > (r4_freq - pseudo_r1_freq)):
 					
-					# there is a R1 relation from the first to second cluster
-					if (len(Cluster_Info_Dict[clust2_key]._GetSpeciesList()) == 1):
-						return 1
-					if (Cluster_Info_Dict[clust2_key]._Get_Outdegree() == 0):
-						return 1
-					return 3
+					## there is a R1 relation from the first to second cluster
+					#if (len(Cluster_Info_Dict[clust2_key]._GetSpeciesList()) == 1):
+						#return 1
+					#if (Cluster_Info_Dict[clust2_key]._Get_Outdegree() == 0):
+						#return 1
+					#return 3
 					
 					# comment - sourya
-					#if 0:	#(r4_prior <= 0):
-						#return 1
-					#else:
-						#return 3
+					if 0:	#(r4_prior <= 0):
+						return 1
+					else:
+						return 3
 						
 				"""
 				R2 relation freq + Pseudo R2 reln freq - Pseudo R1 reln freq > R4 reln freq
@@ -69,18 +69,18 @@ def FindClusterReln(clust1_key, clust2_key):
 				"""
 				if ((r2_freq + pseudo_r2_freq - pseudo_r1_freq) > (r4_freq - pseudo_r2_freq)):
 
-					# there is a R2 relation from the first to second cluster
-					if (len(Cluster_Info_Dict[clust1_key]._GetSpeciesList()) == 1):
-						return 2
-					if (Cluster_Info_Dict[clust1_key]._Get_Outdegree() == 0):
-						return 2
-					return 4
+					## there is a R2 relation from the first to second cluster
+					#if (len(Cluster_Info_Dict[clust1_key]._GetSpeciesList()) == 1):
+						#return 2
+					#if (Cluster_Info_Dict[clust1_key]._Get_Outdegree() == 0):
+						#return 2
+					#return 4
 					
 					# comment - sourya
-					#if 0:	#(r4_prior <= 0):
-						#return 2
-					#else:
-						#return 4
+					if 0:	#(r4_prior <= 0):
+						return 2
+					else:
+						return 4
 
 			elif key2 in TaxaPair_Reln_Dict:
 				r1_freq = TaxaPair_Reln_Dict[key2]._GetEdgeWeight(RELATION_R1)
@@ -95,18 +95,18 @@ def FindClusterReln(clust1_key, clust2_key):
 				"""
 				if ((r1_freq + pseudo_r1_freq - pseudo_r2_freq) > (r4_freq - pseudo_r1_freq)):
 
-					# there is a R2 relation from the first to second cluster
-					if (len(Cluster_Info_Dict[clust1_key]._GetSpeciesList()) == 1):
-						return 2
-					if (Cluster_Info_Dict[clust1_key]._Get_Outdegree() == 0):
-						return 2
-					return 4
+					## there is a R2 relation from the first to second cluster
+					#if (len(Cluster_Info_Dict[clust1_key]._GetSpeciesList()) == 1):
+						#return 2
+					#if (Cluster_Info_Dict[clust1_key]._Get_Outdegree() == 0):
+						#return 2
+					#return 4
 					
 					# comment - sourya
-					#if 0:	#(r4_prior <= 0):
-						#return 2
-					#else:
-						#return 4
+					if 0:	#(r4_prior <= 0):
+						return 2
+					else:
+						return 4
 
 
 				"""
@@ -115,18 +115,18 @@ def FindClusterReln(clust1_key, clust2_key):
 				"""
 				if ((r2_freq + pseudo_r2_freq - pseudo_r1_freq) > (r4_freq - pseudo_r2_freq)):
 					
-					# there is a R1 relation from the first to second cluster
-					if (len(Cluster_Info_Dict[clust2_key]._GetSpeciesList()) == 1):
-						return 1
-					if (Cluster_Info_Dict[clust2_key]._Get_Outdegree() == 0):
-						return 1
-					return 3
+					## there is a R1 relation from the first to second cluster
+					#if (len(Cluster_Info_Dict[clust2_key]._GetSpeciesList()) == 1):
+						#return 1
+					#if (Cluster_Info_Dict[clust2_key]._Get_Outdegree() == 0):
+						#return 1
+					#return 3
 					
 					# comment - sourya
-					#if 0:	#(r4_prior <= 0):
-						#return 1
-					#else:
-						#return 3
+					if 0:	#(r4_prior <= 0):
+						return 1
+					else:
+						return 3
 
 	return 0
 

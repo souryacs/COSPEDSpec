@@ -78,6 +78,12 @@ def PrintNewick(root_clust_node_idx):
 		#flag_all_leaf_desc = True
 		## end add - sourya
 		
+		# add - sourya
+		single_tax_single_leaf_outnode = True
+		# end add - sourya
+		
+		spec_list = Cluster_Info_Dict[root_clust_node_idx]._GetSpeciesList()
+		
 		for l in Cluster_Info_Dict[root_clust_node_idx]._GetOutEdgeList():
 			if (Cluster_Info_Dict[l]._GetExploredStatus() == 0):
 				outnodes.append(l)
@@ -87,8 +93,6 @@ def PrintNewick(root_clust_node_idx):
 					#flag_all_leaf_desc = False
 				## end add - sourya
 		
-		spec_list = Cluster_Info_Dict[root_clust_node_idx]._GetSpeciesList()
-		
 		if (len(outnodes) == 0):
 			if (len(spec_list) > 1):
 				Tree_Str_List = Tree_Str_List + '('
@@ -97,15 +101,26 @@ def PrintNewick(root_clust_node_idx):
 				Tree_Str_List = Tree_Str_List + ')'
 		else:
 			
+			# add - sourya
+			if (len(spec_list) > 1):
+				single_tax_single_leaf_outnode = False
+			elif (len(outnodes) > 1):
+				single_tax_single_leaf_outnode = False
+			else:
+				l = outnodes[0]
+				if (len(Cluster_Info_Dict[l]._GetOutEdgeList()) > 0):
+					single_tax_single_leaf_outnode = False
+			# end add - sourya
+			
 			# comment - sourya
-			if 1:	#(len(spec_list) > 1):	# condition add - sourya
+			if (single_tax_single_leaf_outnode == False):	#1:	#(len(spec_list) > 1):	# condition add - sourya
 				Tree_Str_List = Tree_Str_List + '('
 			# end comment - sourya
 			
 			Tree_Str_List = Tree_Str_List + ','.join("'" + item + "'" for item in spec_list)
 			Tree_Str_List = Tree_Str_List + ','    
 			
-			if 1:	#(flag_all_leaf_desc == False):	# this condition add - sourya
+			if (single_tax_single_leaf_outnode == False):	# 1:	#(flag_all_leaf_desc == False):	# this condition add - sourya
 				Tree_Str_List = Tree_Str_List + '('
 			
 			for i in range(len(outnodes)):
@@ -123,11 +138,11 @@ def PrintNewick(root_clust_node_idx):
 						if (j < len(outnodes)):
 							Tree_Str_List = Tree_Str_List + ','      
 			
-			if 1:	#(flag_all_leaf_desc == False):	# this condition add - sourya
+			if (single_tax_single_leaf_outnode == False):	#1:	#(flag_all_leaf_desc == False):	# this condition add - sourya
 				Tree_Str_List = Tree_Str_List + ')'
 				
 			# comment - sourya
-			if 1:	#(len(spec_list) > 1):	# condition add - sourya
+			if (single_tax_single_leaf_outnode == False):	#1:	#(len(spec_list) > 1):	# condition add - sourya
 				Tree_Str_List = Tree_Str_List + ')'
 			# end comment - sourya
 		
@@ -207,7 +222,11 @@ def DefineLeafPairReln(xl_val, ratio_val, lca_level, node1, node2, reln_type, Cu
 def DeriveCoupletRelations(Curr_tree, Total_Taxa_Count):
   
 	Curr_tree_taxa_count = len(Curr_tree.infer_taxa().labels())
-	ratio_val = (Curr_tree_taxa_count * 1.0) / Total_Taxa_Count
+	
+	# modified  - sourya - 
+	# initially it was introduced, but again reverted back due to debugging
+	ratio_val = 1
+	#ratio_val = (Curr_tree_taxa_count * 1.0) / Total_Taxa_Count
 
 	# traverse the internal nodes of the tree in postorder fashion
 	for curr_node in Curr_tree.postorder_internal_node_iter():        

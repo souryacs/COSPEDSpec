@@ -262,16 +262,16 @@ def main():
 		reln_type = single_edge_exist_list[1]
 		#print 'taxa pair: ', l, '  single_edge_exist: ', single_edge_exist, ' consensus_reln_type: ', reln_type
 
-		#---------------------------------------
-		# add - sourya
-		"""
-		here we check and redistribute the frequency based on the consensus relation R4
-		and the count of pseudo R1 and R2 relations
-		"""
-		TaxaPair_Reln_Dict[l]._CheckSwapFreq()
+		##---------------------------------------
+		## add - sourya
+		#"""
+		#here we check and redistribute the frequency based on the consensus relation R4
+		#and the count of pseudo R1 and R2 relations
+		#"""
+		#TaxaPair_Reln_Dict[l]._CheckSwapFreq()
 
-		# end add - sourya
-		#---------------------------------------
+		## end add - sourya
+		##---------------------------------------
 
 		"""
 		first set the priority values of this couplet
@@ -286,39 +286,83 @@ def main():
 		TaxaPair_Reln_Dict[l]._SetCostMetric()
 
 		#------------------------------------------------------------
-		""" 
-		support score and corresponding couplets will be placed in one of the following priority queues
-		1) Cost_List_Taxa_Pair_Multi_Reln: for conflicting couplets (more than one relations are supported)
-		2) Cost_List_Taxa_Pair_Single_Reln: for non-conflicting couplets + when we use two different queues 
-		each element of the queue contains the following fields:
-		1) taxa1 and taxa2    
-		2) relation type (r1 to r4)
-		3) support score for that relation 
-		"""    
-		if (single_edge_exist == 0):
-			for reln_type in range(4):
-				""" 
-				note: we add only those relations (between a taxa pair) in a queue 
-				which are supported by at least one source tree
-				that is, their frequency is non zero
+		# comment - sourya
+		
+		#""" 
+		#support score and corresponding couplets will be placed in one of the following priority queues
+		#1) Cost_List_Taxa_Pair_Multi_Reln: for conflicting couplets (more than one relations are supported)
+		#2) Cost_List_Taxa_Pair_Single_Reln: for non-conflicting couplets + when we use two different queues 
+		#each element of the queue contains the following fields:
+		#1) taxa1 and taxa2    
+		#2) relation type (r1 to r4)
+		#3) support score for that relation 
+		#"""    
+		#if (single_edge_exist == 0):
+			#for reln_type in range(4):
+				#""" 
+				#note: we add only those relations (between a taxa pair) in a queue 
+				#which are supported by at least one source tree
+				#that is, their frequency is non zero
+				#"""
+				#if (TaxaPair_Reln_Dict[l]._GetEdgeWeight(reln_type) > 0):
+					#sublist = [l[0], l[1], reln_type, TaxaPair_Reln_Dict[l]._GetEdgeCost_ConnReln(reln_type)]
+					#Cost_List_Taxa_Pair_Multi_Reln.append(sublist)
+		#else:
+			#""" 
+			#if the current relation is the strict consensus and only supported relation for this couplet, 
+			#copy the relation information in appropriate queue
+			#"""
+			#sublist = [l[0], l[1], reln_type, TaxaPair_Reln_Dict[l]._GetEdgeCost_ConnReln(reln_type)]
+			#""" 
+			#if we have provision for using two separate queues, then we place this relation in Cost_List_Taxa_Pair_Single_Reln
+			#else we place this relation in Cost_List_Taxa_Pair_Multi_Reln
+			#"""
+			#if (NO_OF_QUEUES == 2):
+				#Cost_List_Taxa_Pair_Single_Reln.append(sublist)
+			#else:
+				#Cost_List_Taxa_Pair_Multi_Reln.append(sublist)
+		
+		# end comment - sourya
+		
+		## add - sourya
+		#"""
+		#we have added a new condition for insertion of support scores and relations in the queue
+		#a relation having frequency 10% of the total number of supported trees will be included
+		#Note: this implementation requires following conditions to be true
+		#1) integral frequency count and support tree count to be maintained
+		#2) NO_OF_QUEUES to be set as 1
+		#"""
+		#for reln_type in range(4):
+			#if (TaxaPair_Reln_Dict[l]._GetEdgeWeight(reln_type) >= (RELN_SUPPORT_THRS * TaxaPair_Reln_Dict[l]._GetNoSupportTrees())):
+				#"""
+				#add this relation as the allowed relation for this couplet
+				#"""
+				#TaxaPair_Reln_Dict[l]._AddAllowedReln(reln_type)
+				#"""
+				#add this score in the queue
+				#"""
+				#sublist = [l[0], l[1], reln_type, TaxaPair_Reln_Dict[l]._GetEdgeCost_ConnReln(reln_type)]
+				#Cost_List_Taxa_Pair_Multi_Reln.append(sublist)
+		## end add - sourya
+		
+		# add - sourya
+		"""
+		for a particular couplet, we select (for queing) only those relations
+		which have at least 50% frequency of the consensus relation frequency
+		"""
+		max_freq = TaxaPair_Reln_Dict[l]._GetConsensusFreq()
+		for reln_type in range(4):
+			if (TaxaPair_Reln_Dict[l]._GetEdgeWeight(reln_type) >= (PERCENT_MAX_FREQ * max_freq)):
 				"""
-				if (TaxaPair_Reln_Dict[l]._GetEdgeWeight(reln_type) > 0):
-					sublist = [l[0], l[1], reln_type, TaxaPair_Reln_Dict[l]._GetEdgeCost_ConnReln(reln_type)]
-					Cost_List_Taxa_Pair_Multi_Reln.append(sublist)
-		else:
-			""" 
-			if the current relation is the strict consensus and only supported relation for this couplet, 
-			copy the relation information in appropriate queue
-			"""
-			sublist = [l[0], l[1], reln_type, TaxaPair_Reln_Dict[l]._GetEdgeCost_ConnReln(reln_type)]
-			""" 
-			if we have provision for using two separate queues, then we place this relation in Cost_List_Taxa_Pair_Single_Reln
-			else we place this relation in Cost_List_Taxa_Pair_Multi_Reln
-			"""
-			if (NO_OF_QUEUES == 2):
-				Cost_List_Taxa_Pair_Single_Reln.append(sublist)
-			else:
+				add this relation as the allowed relation for this couplet
+				"""
+				TaxaPair_Reln_Dict[l]._AddAllowedReln(reln_type)
+				"""
+				add this score in the queue
+				"""
+				sublist = [l[0], l[1], reln_type, TaxaPair_Reln_Dict[l]._GetEdgeCost_ConnReln(reln_type)]
 				Cost_List_Taxa_Pair_Multi_Reln.append(sublist)
+		# end add - sourya
 		
 	#------------------------------------------------------------  
 	if (DEBUG_LEVEL >= 2):
@@ -404,63 +448,63 @@ def main():
 	# note the timestamp
 	reachability_graph_form_timestamp = time.time()  
 	#------------------------------------------------------------
-	## add - sourya
-	#"""
-	#here we check pair wise clusters
-	#which are not related by any edge (relation R1 or R2)
-	#for each such pair of clustters, we check whether there is a pseudo R1 / R2 connection that exists
-	#"""
-	#for i in range(len(CURRENT_CLUST_IDX_LIST) - 1):
-		#for j in range((i + 1), len(CURRENT_CLUST_IDX_LIST)):
-			#if (Reachability_Graph_Mat[i][j] == 2):
-				#"""
-				#current cluster pairs are related by R4 relation
-				#"""
-				#clust1_key = CURRENT_CLUST_IDX_LIST[i]
-				#clust2_key = CURRENT_CLUST_IDX_LIST[j]
-				#reln_type = FindClusterReln(clust1_key, clust2_key)
-				#if (reln_type == 1):
-					#if (DEBUG_LEVEL >= 2):
-						#fp = open(Output_Text_File, 'a')
-						#fp.write('\n\n *** Directed out edge from the cluster: ' + str(clust1_key) + ' to the cluster : ' + str(clust2_key))
-						#fp.close()
-					#ConnectClustPairOutEdge(Reachability_Graph_Mat, clust1_key, clust2_key)
-				#elif (reln_type == 3):
-					#if (DEBUG_LEVEL >= 2):
-						#fp = open(Output_Text_File, 'a')
-						#fp.write('\n\n *** Directed out edge from the parent(s) of cluster: ' + str(clust1_key) + ' to the cluster : ' + str(clust2_key))
-						#fp.close()
-					## add out edge from the parents of clust1_key to the clust2_key
-					#for x in Cluster_Info_Dict[clust1_key]._GetInEdgeList():
-						#ConnectClustPairOutEdge(Reachability_Graph_Mat, x, clust2_key)
-				#elif (reln_type == 2):
-					#if (DEBUG_LEVEL >= 2):
-						#fp = open(Output_Text_File, 'a')
-						#fp.write('\n\n *** Directed out edge from the cluster: ' + str(clust2_key) + ' to the cluster : ' + str(clust1_key))
-						#fp.close()
-					#ConnectClustPairOutEdge(Reachability_Graph_Mat, clust2_key, clust1_key)
-				#elif (reln_type == 4):
-					#if (DEBUG_LEVEL >= 2):
-						#fp = open(Output_Text_File, 'a')
-						#fp.write('\n\n *** Directed out edge from the parent(s) of cluster: ' + str(clust2_key) + ' to the cluster : ' + str(clust1_key))
-						#fp.close()
-					## add out edge from the parents of clust2_key to the clust1_key
-					#for x in Cluster_Info_Dict[clust2_key]._GetInEdgeList():
-						#ConnectClustPairOutEdge(Reachability_Graph_Mat, x, clust1_key)
+	# add - sourya
+	"""
+	here we check pair wise clusters
+	which are not related by any edge (relation R1 or R2)
+	for each such pair of clustters, we check whether there is a pseudo R1 / R2 connection that exists
+	"""
+	for i in range(len(CURRENT_CLUST_IDX_LIST) - 1):
+		for j in range((i + 1), len(CURRENT_CLUST_IDX_LIST)):
+			if (Reachability_Graph_Mat[i][j] == 2):
+				"""
+				current cluster pairs are related by R4 relation
+				"""
+				clust1_key = CURRENT_CLUST_IDX_LIST[i]
+				clust2_key = CURRENT_CLUST_IDX_LIST[j]
+				reln_type = FindClusterReln(clust1_key, clust2_key)
+				if (reln_type == 1):
+					if (DEBUG_LEVEL >= 2):
+						fp = open(Output_Text_File, 'a')
+						fp.write('\n\n *** Directed out edge from the cluster: ' + str(clust1_key) + ' to the cluster : ' + str(clust2_key))
+						fp.close()
+					ConnectClustPairOutEdge(Reachability_Graph_Mat, clust1_key, clust2_key)
+				elif (reln_type == 3):
+					if (DEBUG_LEVEL >= 2):
+						fp = open(Output_Text_File, 'a')
+						fp.write('\n\n *** Directed out edge from the parent(s) of cluster: ' + str(clust1_key) + ' to the cluster : ' + str(clust2_key))
+						fp.close()
+					# add out edge from the parents of clust1_key to the clust2_key
+					for x in Cluster_Info_Dict[clust1_key]._GetInEdgeList():
+						ConnectClustPairOutEdge(Reachability_Graph_Mat, x, clust2_key)
+				elif (reln_type == 2):
+					if (DEBUG_LEVEL >= 2):
+						fp = open(Output_Text_File, 'a')
+						fp.write('\n\n *** Directed out edge from the cluster: ' + str(clust2_key) + ' to the cluster : ' + str(clust1_key))
+						fp.close()
+					ConnectClustPairOutEdge(Reachability_Graph_Mat, clust2_key, clust1_key)
+				elif (reln_type == 4):
+					if (DEBUG_LEVEL >= 2):
+						fp = open(Output_Text_File, 'a')
+						fp.write('\n\n *** Directed out edge from the parent(s) of cluster: ' + str(clust2_key) + ' to the cluster : ' + str(clust1_key))
+						fp.close()
+					# add out edge from the parents of clust2_key to the clust1_key
+					for x in Cluster_Info_Dict[clust2_key]._GetInEdgeList():
+						ConnectClustPairOutEdge(Reachability_Graph_Mat, x, clust1_key)
 
-	## print the cluster information 
-	#if (DEBUG_LEVEL >= 2):
-		#fp = open(Output_Text_File, 'a')
-		#fp.write('\n **** total number of clusters: ' + str(len(CURRENT_CLUST_IDX_LIST)))
-		#fp.write('\n CURRENT_CLUST_IDX_LIST contents: ')
-		#fp.write(str(CURRENT_CLUST_IDX_LIST))    
-		#fp.write('\n ========== cluster information after pseudo R1 / R2 relation addition =============')
-		#fp.close()
-		#for i in Cluster_Info_Dict:
-			##print 'printing the information for cluster node: ', i
-			#Cluster_Info_Dict[i]._PrintClusterInfo(i, Output_Text_File)
+	# print the cluster information 
+	if (DEBUG_LEVEL >= 2):
+		fp = open(Output_Text_File, 'a')
+		fp.write('\n **** total number of clusters: ' + str(len(CURRENT_CLUST_IDX_LIST)))
+		fp.write('\n CURRENT_CLUST_IDX_LIST contents: ')
+		fp.write(str(CURRENT_CLUST_IDX_LIST))    
+		fp.write('\n ========== cluster information after pseudo R1 / R2 relation addition =============')
+		fp.close()
+		for i in Cluster_Info_Dict:
+			#print 'printing the information for cluster node: ', i
+			Cluster_Info_Dict[i]._PrintClusterInfo(i, Output_Text_File)
 	
-	## end add - sourya
+	# end add - sourya
 	#----------------------------------------------  
 	""" 
 	after processing above queue, taxa subsets (clusters) are formed (r3 relation)

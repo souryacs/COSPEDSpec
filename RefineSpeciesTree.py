@@ -1286,26 +1286,29 @@ def ResolveMultifurcation(Curr_tree, clust_species_list, no_of_input_clusters, O
 # ILS sorting
 def Refine_Supertree_Binary_Form(Curr_tree, Output_Text_File, NJ_RULE_USED, DIST_MAT_TYPE, DIST_MAT_UPDATE, NJ_MERGE_CLUST):
 
-	# add - sourya
-	# maintain the list of couplets
-	for curr_node in Curr_tree.postorder_internal_node_iter():
-		curr_node_children = curr_node.child_nodes()
-		if (len(curr_node_children) == 2) and (curr_node_children[0].is_leaf() == True) and (curr_node_children[1].is_leaf() == True):
-			# add - sourya
-			clust_idx_child1 = Taxa_Info_Dict[curr_node_children[0].taxon.label]._Get_Taxa_Part_Clust_Idx()
-			clust_idx_child2 = Taxa_Info_Dict[curr_node_children[1].taxon.label]._Get_Taxa_Part_Clust_Idx()
-			if (clust_idx_child1 == clust_idx_child2):	# condition add - sourya
-				subl = []
-				for x in curr_node_children:
-					if (x.is_leaf() == True):
-						subl.append(x.taxon.label)
-				Sibling_Couplet_List.append(subl)
-	# end add - sourya
+	# comment - sourya
+	#----------------------------------------
+	## add - sourya
+	## maintain the list of couplets
+	#for curr_node in Curr_tree.postorder_internal_node_iter():
+		#curr_node_children = curr_node.child_nodes()
+		#if (len(curr_node_children) == 2) and (curr_node_children[0].is_leaf() == True) and (curr_node_children[1].is_leaf() == True):
+			## add - sourya
+			#clust_idx_child1 = Taxa_Info_Dict[curr_node_children[0].taxon.label]._Get_Taxa_Part_Clust_Idx()
+			#clust_idx_child2 = Taxa_Info_Dict[curr_node_children[1].taxon.label]._Get_Taxa_Part_Clust_Idx()
+			#if (clust_idx_child1 == clust_idx_child2):	# condition add - sourya
+				#subl = []
+				#for x in curr_node_children:
+					#if (x.is_leaf() == True):
+						#subl.append(x.taxon.label)
+				#Sibling_Couplet_List.append(subl)
+	## end add - sourya
 	
-	if (DEBUG_LEVEL >= 2):
-		fp = open(Output_Text_File, 'a')
-		fp.write('\n Sibling_Couplet_List ' + str(Sibling_Couplet_List))
-		fp.close()
+	#if (DEBUG_LEVEL >= 2):
+		#fp = open(Output_Text_File, 'a')
+		#fp.write('\n Sibling_Couplet_List ' + str(Sibling_Couplet_List))
+		#fp.close()
+	#----------------------------------------
 	
 	"""
 	we traverse input tree internal nodes in postorder fashion

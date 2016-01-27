@@ -71,63 +71,88 @@ def TransClosUpd(Reachability_Graph_Mat, nodeA_reach_mat_idx, nodeB_reach_mat_id
 					Connect_ClusterPair(Reachability_Graph_Mat, \
 						CURRENT_CLUST_IDX_LIST.index(x), CURRENT_CLUST_IDX_LIST.index(y), RELATION_R1, x, y)  
 
-		# for A->B connection
-		# if D><A exists
-		# then establish D><B
-		for x in Cluster_Info_Dict[src_taxa_clust_idx]._GetNoEdgeList():
-			if (Reachability_Graph_Mat[CURRENT_CLUST_IDX_LIST.index(x)][dest_reach_mat_idx] == 0):
-				Connect_ClusterPair(Reachability_Graph_Mat, CURRENT_CLUST_IDX_LIST.index(x), \
-					dest_reach_mat_idx, RELATION_R4, x, dest_taxa_clust_idx)
-				
-		# for A->B connection
-		# if D><A exists
-		# then for all B->E
-		# establish D><E
-		for x in Cluster_Info_Dict[src_taxa_clust_idx]._GetNoEdgeList():
-			for y in Cluster_Info_Dict[dest_taxa_clust_idx]._GetOutEdgeList():
-				if (Reachability_Graph_Mat[CURRENT_CLUST_IDX_LIST.index(x)][CURRENT_CLUST_IDX_LIST.index(y)] == 0):
-					Connect_ClusterPair(Reachability_Graph_Mat, CURRENT_CLUST_IDX_LIST.index(x), \
-						CURRENT_CLUST_IDX_LIST.index(y), RELATION_R4, x, y)  
-	
-	else:
-		# construct the out neighborhood of src_cluster
-		# it will contain the cluster itself and all the other clusters connected via out edges from this cluster
-		src_clust_out_neighb = []
-		src_clust_out_neighb.append(src_taxa_clust_idx)
-		src_clust_out_neighb.extend(Cluster_Info_Dict[src_taxa_clust_idx]._GetOutEdgeList())
-		# construct the out neighborhood of dest cluster
-		# it will contain the cluster itself and all the other clusters connected via out edges from this cluster    
-		dest_clust_out_neighb = []
-		dest_clust_out_neighb.append(dest_taxa_clust_idx)
-		dest_clust_out_neighb.extend(Cluster_Info_Dict[dest_taxa_clust_idx]._GetOutEdgeList())
+		## comment - sourya
 		
-		for x in src_clust_out_neighb:
-			for y in dest_clust_out_neighb:
-				if (Reachability_Graph_Mat[CURRENT_CLUST_IDX_LIST.index(x)][CURRENT_CLUST_IDX_LIST.index(y)] == 0):
-					Connect_ClusterPair(Reachability_Graph_Mat, CURRENT_CLUST_IDX_LIST.index(x), \
-						CURRENT_CLUST_IDX_LIST.index(y), RELATION_R4, x, y)  
+		## for A->B connection
+		## if D><A exists
+		## then establish D><B
+		#for x in Cluster_Info_Dict[src_taxa_clust_idx]._GetNoEdgeList():
+			#if (Reachability_Graph_Mat[CURRENT_CLUST_IDX_LIST.index(x)][dest_reach_mat_idx] == 0):
+				#Connect_ClusterPair(Reachability_Graph_Mat, CURRENT_CLUST_IDX_LIST.index(x), \
+					#dest_reach_mat_idx, RELATION_R4, x, dest_taxa_clust_idx)
+				
+		## for A->B connection
+		## if D><A exists
+		## then for all B->E
+		## establish D><E
+		#for x in Cluster_Info_Dict[src_taxa_clust_idx]._GetNoEdgeList():
+			#for y in Cluster_Info_Dict[dest_taxa_clust_idx]._GetOutEdgeList():
+				#if (Reachability_Graph_Mat[CURRENT_CLUST_IDX_LIST.index(x)][CURRENT_CLUST_IDX_LIST.index(y)] == 0):
+					#Connect_ClusterPair(Reachability_Graph_Mat, CURRENT_CLUST_IDX_LIST.index(x), \
+						#CURRENT_CLUST_IDX_LIST.index(y), RELATION_R4, x, y)  
+	
+		## end comment - sourya
+
+	# comment - sourya
+	
+	#else:
+		## construct the out neighborhood of src_cluster
+		## it will contain the cluster itself and all the other clusters connected via out edges from this cluster
+		#src_clust_out_neighb = []
+		#src_clust_out_neighb.append(src_taxa_clust_idx)
+		#src_clust_out_neighb.extend(Cluster_Info_Dict[src_taxa_clust_idx]._GetOutEdgeList())
+		## construct the out neighborhood of dest cluster
+		## it will contain the cluster itself and all the other clusters connected via out edges from this cluster    
+		#dest_clust_out_neighb = []
+		#dest_clust_out_neighb.append(dest_taxa_clust_idx)
+		#dest_clust_out_neighb.extend(Cluster_Info_Dict[dest_taxa_clust_idx]._GetOutEdgeList())
+		
+		#for x in src_clust_out_neighb:
+			#for y in dest_clust_out_neighb:
+				#if (Reachability_Graph_Mat[CURRENT_CLUST_IDX_LIST.index(x)][CURRENT_CLUST_IDX_LIST.index(y)] == 0):
+					#Connect_ClusterPair(Reachability_Graph_Mat, CURRENT_CLUST_IDX_LIST.index(x), \
+						#CURRENT_CLUST_IDX_LIST.index(y), RELATION_R4, x, y)  
+	
+	# end comment - sourya
 	
 #-----------------------------------------------------
-""" this function merges two clusters 
+""" 
+this function merges two clusters 
 basically the cluster src_clust_idx will be merged to the dest_clust_idx
-so all the entries concerning src_clust_idx will now point to the dest_clust_idx"""
+so all the entries concerning src_clust_idx will now point to the dest_clust_idx
+"""
 def Merge_Clusters(Reachability_Graph_Mat, dest_taxa_label, src_taxa_label, dest_clust_idx, src_clust_idx, \
 		    dest_clust_reach_mat_idx, src_clust_reach_mat_idx):
-	""" first update the reachability matrix entries 
-	originally all the Reachability_Graph_Mat entries concerning src_clust_reach_mat_idx 
-	will now point to the dest_clust_reach_mat_idx 
-	also update the dest cluster out edge and in edge lists """
+	
+	""" 
+	first update the reachability matrix entries 
+	originally all the Reachability_Graph_Mat entries concerning src_clust_reach_mat_idx (for the cluster src_clust_idx)
+	will now point to the dest_clust_reach_mat_idx (for the cluster dest_clust_idx) as well
+	also update the dest cluster out edge, in edge, and no edge lists (corresponding to the relations R1, R2, and R4)
+	"""
+	
+	"""
+	Important - Note -
+	In copying the out / in / no edge information
+	we can overwrite the no edge with a definite out / in edge
+	"""
 
 	for x in Cluster_Info_Dict[src_clust_idx]._GetOutEdgeList():
 		Cluster_Info_Dict[x]._RemoveInEdge(src_clust_idx)
 		#Cluster_Info_Dict[src_clust_idx]._RemoveOutEdge(x)
-		if (Reachability_Graph_Mat[dest_clust_reach_mat_idx][CURRENT_CLUST_IDX_LIST.index(x)] == 0):
+		if x in Cluster_Info_Dict[dest_clust_idx]._GetNoEdgeList():
+			Cluster_Info_Dict[x]._RemoveNoEdge(dest_clust_idx)
+			Cluster_Info_Dict[dest_clust_idx]._RemoveNoEdge(x)
+		if (Reachability_Graph_Mat[dest_clust_reach_mat_idx][CURRENT_CLUST_IDX_LIST.index(x)] != 1):
 			Connect_ClusterPair(Reachability_Graph_Mat, dest_clust_reach_mat_idx, CURRENT_CLUST_IDX_LIST.index(x), RELATION_R1, dest_clust_idx, x)  
 
 	for x in Cluster_Info_Dict[src_clust_idx]._GetInEdgeList():
 		Cluster_Info_Dict[x]._RemoveOutEdge(src_clust_idx)
 		#Cluster_Info_Dict[src_clust_idx]._RemoveInEdge(x)
-		if (Reachability_Graph_Mat[CURRENT_CLUST_IDX_LIST.index(x)][dest_clust_reach_mat_idx] == 0):
+		if x in Cluster_Info_Dict[dest_clust_idx]._GetNoEdgeList():
+			Cluster_Info_Dict[x]._RemoveNoEdge(dest_clust_idx)
+			Cluster_Info_Dict[dest_clust_idx]._RemoveNoEdge(x)
+		if (Reachability_Graph_Mat[CURRENT_CLUST_IDX_LIST.index(x)][dest_clust_reach_mat_idx] != 1):
 			Connect_ClusterPair(Reachability_Graph_Mat, CURRENT_CLUST_IDX_LIST.index(x), dest_clust_reach_mat_idx, RELATION_R1, x, dest_clust_idx)  
 
 	for x in Cluster_Info_Dict[src_clust_idx]._GetNoEdgeList():
