@@ -268,22 +268,33 @@ returns - 1) binary value 1 or 0 depending on the couplet is a sibling or not
 2) indices x and y where the species in index x is placed at a higher level than the species at index y
 with respect to the input gene trees' configurations
 """
+
+# this function is modified by - sourya - 29.01.2016
+
 def CheckR1RelationLevelBased(x1, x2):
 	key1 = (x1, x2)
 	key2 = (x2, x1)
 	if key1 in TaxaPair_Reln_Dict:
 		if (TaxaPair_Reln_Dict[key1]._CheckTargetRelnLevelConsensus(RELATION_R3)):
 			return 0
-		elif (TaxaPair_Reln_Dict[key1]._CheckHigherTargetRelnLevelValue(RELATION_R2)):
+		#elif (TaxaPair_Reln_Dict[key1]._CheckHigherTargetRelnLevelValue(RELATION_R2)):
+			#return -1
+		#elif (TaxaPair_Reln_Dict[key1]._CheckHigherTargetRelnLevelValue(RELATION_R1)):
+			#return 1
+		elif (TaxaPair_Reln_Dict[key1]._CheckTargetRelnLevelConsensus(RELATION_R2)):
 			return -1
-		elif (TaxaPair_Reln_Dict[key1]._CheckHigherTargetRelnLevelValue(RELATION_R1)):
+		elif (TaxaPair_Reln_Dict[key1]._CheckTargetRelnLevelConsensus(RELATION_R1)):
 			return 1
 	elif key2 in TaxaPair_Reln_Dict:
 		if (TaxaPair_Reln_Dict[key2]._CheckTargetRelnLevelConsensus(RELATION_R3)):
 			return 0
-		elif (TaxaPair_Reln_Dict[key2]._CheckHigherTargetRelnLevelValue(RELATION_R2)):
+		#elif (TaxaPair_Reln_Dict[key2]._CheckHigherTargetRelnLevelValue(RELATION_R2)):
+			#return 1
+		#elif (TaxaPair_Reln_Dict[key2]._CheckHigherTargetRelnLevelValue(RELATION_R1)):
+			#return -1
+		elif (TaxaPair_Reln_Dict[key2]._CheckTargetRelnLevelConsensus(RELATION_R2)):
 			return 1
-		elif (TaxaPair_Reln_Dict[key2]._CheckHigherTargetRelnLevelValue(RELATION_R1)):
+		elif (TaxaPair_Reln_Dict[key2]._CheckTargetRelnLevelConsensus(RELATION_R1)):
 			return -1
 	
 	return KEY_ABSENCE_INDICATOR	# key absence indicator
@@ -528,6 +539,33 @@ def Merge_Leaf_NonLeaf(Curr_tree, clust_species_list, leaf_idx, non_leaf_idx, ta
 			fp.write('\n ---- res_clust2_child2_high_leaf_high: ' + str(res_clust2_child2_high_leaf_high) + \
 				' val_clust2_child2_high_leaf_high: ' + str(val_clust2_child2_high_leaf_high))
 			fp.close()
+			
+		# add - sourya
+		"""
+		case 1 - case (C, (A, B))
+		here level based comparison yields (C,A) as 1, and (B,A) as -1
+		"""
+		if (res_clust2_child2_high_leaf_high == 1) and (res_clust2_child1_high_leaf_high != 1):	# == -1):	#sourya
+			src_subtree_node = leaf_mrca_node
+			dest_subtree_node = Curr_tree.mrca(taxon_labels=clust2_child1_taxa_list)
+			Curr_tree = InsertSubTree(Curr_tree, src_subtree_node, dest_subtree_node, Output_Text_File)
+			return Curr_tree
+		"""
+		case 2 - case (B, (A, C))
+		here level based comparison yields (C,A) as -1, and (B,A) as 1
+		"""
+		if (res_clust2_child1_high_leaf_high == 1) and (res_clust2_child2_high_leaf_high != 1):	#== -1):	#sourya
+			src_subtree_node = leaf_mrca_node
+			dest_subtree_node = Curr_tree.mrca(taxon_labels=clust2_child2_taxa_list)
+			Curr_tree = InsertSubTree(Curr_tree, src_subtree_node, dest_subtree_node, Output_Text_File)
+			return Curr_tree
+		"""
+		case 3 - default - (A,(B,C))
+		when none of the above cases are valid
+		"""
+		Curr_tree = MergeSubtrees(Curr_tree, leaf_mrca_node, non_leaf_mrca_node, all_taxa_mrca_node, taxa_list, Output_Text_File)
+		return Curr_tree
+		# end add - sourya
 		
 		## configuration (C, (A, B)) or (B, (A, C)) is present
 		#if (res_clust2_child1_high_leaf_high == 1) and (res_clust2_child2_high_leaf_high != 1):
@@ -586,9 +624,11 @@ def Merge_Leaf_NonLeaf(Curr_tree, clust_species_list, leaf_idx, non_leaf_idx, ta
 	## end comment - sourya
 	##------------------------------------------------------
 
-	# otherwise the configuration (A,(B,C)) will be employed
-	Curr_tree = MergeSubtrees(Curr_tree, leaf_mrca_node, non_leaf_mrca_node, all_taxa_mrca_node, taxa_list, Output_Text_File)
-	return Curr_tree
+	# comment - sourya
+	## otherwise the configuration (A,(B,C)) will be employed
+	#Curr_tree = MergeSubtrees(Curr_tree, leaf_mrca_node, non_leaf_mrca_node, all_taxa_mrca_node, taxa_list, Output_Text_File)
+	#return Curr_tree
+	# end comment - sourya
 	
 #-------------------------------------------
 """

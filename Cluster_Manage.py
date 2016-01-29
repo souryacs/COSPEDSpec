@@ -8,7 +8,7 @@ from Header import *
 import UtilFunc
 from UtilFunc import *
 
-##-----------------------------------------------------
+#-----------------------------------------------------
 """
 this function generates an out edge from the first cluster to the second cluster
 """
@@ -20,8 +20,7 @@ def ConnectClustPairOutEdge(Reachability_Graph_Mat, clust1, clust2):
 	Reachability_Graph_Mat[reach_clust1_idx][reach_clust2_idx] = 1
 	return
 
-
-##-----------------------------------------------------
+#-----------------------------------------------------
 """
 this function finds whether there is a hidden R1 / R2 relation between this pair of clusters
 which was originally related via R4 (no edge)
@@ -33,8 +32,23 @@ the return value is an integer. It can have following values.
 @ 4: there will be a directed out edge from the parent(s) of clust2_key to the clust1_key
 """
 def FindClusterReln(clust1_key, clust2_key):
-	for t1 in Cluster_Info_Dict[clust1_key]._GetSpeciesList():
-		for t2 in Cluster_Info_Dict[clust2_key]._GetSpeciesList():
+	"""
+	now there is no such strict consensus R4 relation between this cluster pair
+	so we can proceed to check if a edge connection can be possible
+	"""
+	clust1_spec_list = Cluster_Info_Dict[clust1_key]._GetSpeciesList()
+	clust2_spec_list = Cluster_Info_Dict[clust2_key]._GetSpeciesList()
+
+	"""
+	there are two conditions for a cluster to have directed out edge to another cluster
+	-- For a couplet (x,y) where x in Clust1, y in Clust2
+	1) (Either fr1(x,y) + pr1(x,y) - pr2(x,y)) > (fr4(x,y) - pr1(x,y))
+	or 2) Level ratio of r1(x,y) is greater than a certain threshold, and fr1(x,y) is significant (r1 relation 
+	belongs to the set of allowable relations from x to y)
+	"""
+	
+	for t1 in clust1_spec_list:
+		for t2 in clust2_spec_list:
 			key1 = (t1, t2)
 			key2 = (t2, t1)
 			if key1 in TaxaPair_Reln_Dict:
@@ -43,41 +57,26 @@ def FindClusterReln(clust1_key, clust2_key):
 				r4_freq = TaxaPair_Reln_Dict[key1]._GetEdgeWeight(RELATION_R4)
 				pseudo_r1_freq = TaxaPair_Reln_Dict[key1]._GetFreqPseudoR1(0)
 				pseudo_r2_freq = TaxaPair_Reln_Dict[key1]._GetFreqPseudoR1(1)
-				r4_prior = TaxaPair_Reln_Dict[key1]._GetConnPrVal(RELATION_R4)
-				"""
-				R1 relation freq + Pseudo R1 reln freq - Pseudo R2 reln freq > R4 reln freq
-				return 1 / 3
-				"""
-				if ((r1_freq + pseudo_r1_freq - pseudo_r2_freq) > (r4_freq - pseudo_r1_freq)):
-					
-					## there is a R1 relation from the first to second cluster
-					#if (len(Cluster_Info_Dict[clust2_key]._GetSpeciesList()) == 1):
-						#return 1
-					#if (Cluster_Info_Dict[clust2_key]._Get_Outdegree() == 0):
-						#return 1
-					#return 3
-					
-					# comment - sourya
-					if 0:	#(r4_prior <= 0):
+				r1_level_val_ratio = TaxaPair_Reln_Dict[key1]._GetLevelValRatio(0)
+				r2_level_val_ratio = TaxaPair_Reln_Dict[key1]._GetLevelValRatio(1)
+				allowed_reln_list = TaxaPair_Reln_Dict[key1]._GetAllowedRelnList()
+
+				#if ((r1_freq + pseudo_r1_freq - pseudo_r2_freq) > (r4_freq - pseudo_r1_freq)) \
+					#or ((r1_level_val_ratio >= R1R2Reln_MAJ_THRS_low) and (RELATION_R1 in allowed_reln_list)):
+				#if ((r1_level_val_ratio >= R1R2Reln_MAJ_THRS_low) and (RELATION_R1 in allowed_reln_list)):
+				if ((r1_freq + 2 * pseudo_r1_freq) > r4_freq) \
+					and ((r1_level_val_ratio >= R1R2Reln_MAJ_THRS_low) and (RELATION_R1 in allowed_reln_list)):
+					if (len(clust1_spec_list) > 1):
 						return 1
 					else:
 						return 3
-						
-				"""
-				R2 relation freq + Pseudo R2 reln freq - Pseudo R1 reln freq > R4 reln freq
-				return 2
-				"""
-				if ((r2_freq + pseudo_r2_freq - pseudo_r1_freq) > (r4_freq - pseudo_r2_freq)):
 
-					## there is a R2 relation from the first to second cluster
-					#if (len(Cluster_Info_Dict[clust1_key]._GetSpeciesList()) == 1):
-						#return 2
-					#if (Cluster_Info_Dict[clust1_key]._Get_Outdegree() == 0):
-						#return 2
-					#return 4
-					
-					# comment - sourya
-					if 0:	#(r4_prior <= 0):
+				#if ((r2_freq + pseudo_r2_freq - pseudo_r1_freq) > (r4_freq - pseudo_r2_freq)) \
+					#or ((r2_level_val_ratio >= R1R2Reln_MAJ_THRS_low) and (RELATION_R2 in allowed_reln_list)):
+				#if ((r2_level_val_ratio >= R1R2Reln_MAJ_THRS_low) and (RELATION_R2 in allowed_reln_list)):
+				if ((r2_freq + 2 * pseudo_r2_freq) > r4_freq) \
+					and ((r2_level_val_ratio >= R1R2Reln_MAJ_THRS_low) and (RELATION_R2 in allowed_reln_list)):
+					if (len(clust2_spec_list) > 1):
 						return 2
 					else:
 						return 4
@@ -88,50 +87,33 @@ def FindClusterReln(clust1_key, clust2_key):
 				r4_freq = TaxaPair_Reln_Dict[key2]._GetEdgeWeight(RELATION_R4)
 				pseudo_r1_freq = TaxaPair_Reln_Dict[key2]._GetFreqPseudoR1(0)
 				pseudo_r2_freq = TaxaPair_Reln_Dict[key2]._GetFreqPseudoR1(1)
-				r4_prior = TaxaPair_Reln_Dict[key2]._GetConnPrVal(RELATION_R4)
-				"""
-				R1 relation freq + Pseudo R1 reln freq - Pseudo R2 reln freq > R4 reln freq
-				return 2
-				"""
-				if ((r1_freq + pseudo_r1_freq - pseudo_r2_freq) > (r4_freq - pseudo_r1_freq)):
-
-					## there is a R2 relation from the first to second cluster
-					#if (len(Cluster_Info_Dict[clust1_key]._GetSpeciesList()) == 1):
-						#return 2
-					#if (Cluster_Info_Dict[clust1_key]._Get_Outdegree() == 0):
-						#return 2
-					#return 4
-					
-					# comment - sourya
-					if 0:	#(r4_prior <= 0):
+				r1_level_val_ratio = TaxaPair_Reln_Dict[key2]._GetLevelValRatio(0)
+				r2_level_val_ratio = TaxaPair_Reln_Dict[key2]._GetLevelValRatio(1)
+				allowed_reln_list = TaxaPair_Reln_Dict[key2]._GetAllowedRelnList()
+				
+				#if ((r1_freq + pseudo_r1_freq - pseudo_r2_freq) > (r4_freq - pseudo_r1_freq)) \
+					#or ((r1_level_val_ratio >= R1R2Reln_MAJ_THRS_low) and (RELATION_R1 in allowed_reln_list)):
+				#if ((r1_level_val_ratio >= R1R2Reln_MAJ_THRS_low) and (RELATION_R1 in allowed_reln_list)):
+				if ((r1_freq + 2 * pseudo_r1_freq) > r4_freq) \
+					and ((r1_level_val_ratio >= R1R2Reln_MAJ_THRS_low) and (RELATION_R1 in allowed_reln_list)):
+					if (len(clust2_spec_list) > 1):
 						return 2
 					else:
 						return 4
 
-
-				"""
-				R2 relation freq + Pseudo R2 reln freq - Pseudo R1 reln freq > R4 reln freq
-				return 1
-				"""
-				if ((r2_freq + pseudo_r2_freq - pseudo_r1_freq) > (r4_freq - pseudo_r2_freq)):
-					
-					## there is a R1 relation from the first to second cluster
-					#if (len(Cluster_Info_Dict[clust2_key]._GetSpeciesList()) == 1):
-						#return 1
-					#if (Cluster_Info_Dict[clust2_key]._Get_Outdegree() == 0):
-						#return 1
-					#return 3
-					
-					# comment - sourya
-					if 0:	#(r4_prior <= 0):
+				#if ((r2_freq + pseudo_r2_freq - pseudo_r1_freq) > (r4_freq - pseudo_r2_freq)) \
+					#or ((r2_level_val_ratio >= R1R2Reln_MAJ_THRS_low) and (RELATION_R2 in allowed_reln_list)):
+				#if ((r2_level_val_ratio >= R1R2Reln_MAJ_THRS_low) and (RELATION_R2 in allowed_reln_list)):
+				if ((r2_freq + 2 * pseudo_r2_freq) > r4_freq) \
+					and ((r2_level_val_ratio >= R1R2Reln_MAJ_THRS_low) and (RELATION_R2 in allowed_reln_list)):
+					if (len(clust1_spec_list) > 1):
 						return 1
 					else:
 						return 3
 
 	return 0
 
-
-##-----------------------------------------------------
+#-----------------------------------------------------
 # this function computes the score (ancestor relation) from clust1 to clust2
 def ComputeScore(clust1, clust2, Output_Text_File, MPP_SOLVE_METRIC, DIST_MAT_TYPE):
   

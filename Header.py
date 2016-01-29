@@ -103,7 +103,7 @@ R1R2Reln_MAJ_THRS_low = 0.7	#0.8
 this is a threshold corresponding to the selection of R3 relation
 for a non conflicting couplet with negative support score of the corresponding relation
 """
-R3Reln_MAJ_THRS = 0.15
+R3Reln_MAJ_THRS = 0.2	#0.15
 
 #"""
 #this is a threshold corresponding to the selection of R4 relation
@@ -212,6 +212,25 @@ class Reln_TaxaPair(object):
 	
 	#----------------------------------
 	"""
+	this function returns the ratio of level value
+	@param: idx: 	if 0, returns ratio w.r.t r1
+							  if 1, returns ratio w.r.t r2
+	"""
+	def _GetLevelValRatio(self, idx):
+		level_val_r1 = self.ALL_Reln_Level_Diff_Val_Count[0]
+		level_val_r2 = self.ALL_Reln_Level_Diff_Val_Count[1]
+		if (idx == 0):
+			if ((level_val_r1 + level_val_r2) > 0):
+				return (level_val_r1 * 1.0) / (level_val_r1 + level_val_r2)
+			else:
+				return 0
+		else:
+			if ((level_val_r1 + level_val_r2) > 0):
+				return (level_val_r2 * 1.0) / (level_val_r1 + level_val_r2)
+			else:
+				return 0
+	
+	"""
 	this function checks whether for a conflicting taxa pair with negative support score
 	R1 relation can be applied between this couplet
 	"""
@@ -234,7 +253,7 @@ class Reln_TaxaPair(object):
 					+ ' sum_level_count: ' + str(sum_level_count))
 			
 			if ((level_val_r1 + level_val_r2) > 0):
-				fp.write(' Ratio: ' + str((level_val_r1 * 1.0) / (level_val_r1 + level_val_r2)))  
+				fp.write(' Ratio: ' + str(self._GetLevelValRatio(0)))  
 			fp.close()
 		
 		## old condition - sourya
@@ -256,11 +275,11 @@ class Reln_TaxaPair(object):
 		if  ((fr1 + fpr1 - fpr2) > fr4) and ((fr1 + fpr1 - fpr2) > fr3) and ((fr1 + fpr1 - fpr2) > (fr2 + fpr2 - fpr1)):
 			return True
 		if ((level_val_r1 + level_val_r2) > 0):
-			#if (((level_val_r1 * 1.0) / (level_val_r1 + level_val_r2)) >= R1R2Reln_MAJ_THRS_high):
+			#if (self._GetLevelValRatio(0) >= R1R2Reln_MAJ_THRS_high):
 				#return True
-			if (((level_val_r1 * 1.0) / (level_val_r1 + level_val_r2)) >= R1R2Reln_MAJ_THRS_low):
-				if  ((fr1 + fpr1 - fpr2) > (fr4 - fpr1)) and ((fr1 + fpr1 - fpr2) > fr3) and ((fr1 + fpr1 - fpr2) > (fr2 + fpr2 - fpr1)):
-					return True
+			if (self._GetLevelValRatio(0) >= R1R2Reln_MAJ_THRS_low):
+				#if  ((fr1 + fpr1 - fpr2) > (fr4 - fpr1)) and ((fr1 + fpr1 - fpr2) > fr3) and ((fr1 + fpr1 - fpr2) > (fr2 + fpr2 - fpr1)):
+					#return True
 				if  ((fr1 + 2 * (fpr1 - fpr2)) > fr4) and ((fr1 + fpr1 - fpr2) > fr3) and ((fr1 + fpr1 - fpr2) > (fr2 + fpr2 - fpr1)):
 					return True
 		# end add - sourya
@@ -290,7 +309,7 @@ class Reln_TaxaPair(object):
 					+ ' sum_level_count: ' + str(sum_level_count))
 			
 			if ((level_val_r2 + level_val_r1) > 0):
-				fp.write(' Ratio: ' + str((level_val_r2 * 1.0) / (level_val_r2 + level_val_r1)))  
+				fp.write(' Ratio: ' + str(self._GetLevelValRatio(1)))  
 			fp.close()
 		
 		## old condition - sourya
@@ -312,11 +331,11 @@ class Reln_TaxaPair(object):
 		if  ((fr2 + fpr2 - fpr1) > fr4) and ((fr2 + fpr2 - fpr1) > fr3) and ((fr2 + fpr2 - fpr1) > (fr1 + fpr1 - fpr2)):
 			return True
 		if ((level_val_r1 + level_val_r2) > 0):
-			#if (((level_val_r2 * 1.0) / (level_val_r1 + level_val_r2)) >= R1R2Reln_MAJ_THRS_high):
+			#if (self._GetLevelValRatio(1) >= R1R2Reln_MAJ_THRS_high):
 				#return True
-			if (((level_val_r2 * 1.0) / (level_val_r1 + level_val_r2)) >= R1R2Reln_MAJ_THRS_low):
-				if  ((fr2 + fpr2 - fpr1) > (fr4 - fpr2)) and ((fr2 + fpr2 - fpr1) > fr3) and ((fr2 + fpr2 - fpr1) > (fr1 + fpr1 - fpr2)):
-					return True
+			if (self._GetLevelValRatio(1) >= R1R2Reln_MAJ_THRS_low):
+				#if  ((fr2 + fpr2 - fpr1) > (fr4 - fpr2)) and ((fr2 + fpr2 - fpr1) > fr3) and ((fr2 + fpr2 - fpr1) > (fr1 + fpr1 - fpr2)):
+					#return True
 				if  ((fr2 + 2 * (fpr2 - fpr1)) > fr4) and ((fr2 + fpr2 - fpr1) > fr3) and ((fr2 + fpr2 - fpr1) > (fr1 + fpr1 - fpr2)):
 					return True
 		# end add - sourya
@@ -340,6 +359,12 @@ class Reln_TaxaPair(object):
 			if ((level_val_r2 + level_val_r1) > 0):
 				fp.write(' Ratio: ' + str(lev_diff / (level_val_r2 + level_val_r1)))  
 			fp.close()
+		
+		"""
+		if R3 relation is consensus then we impose R3 relation between this couplet
+		"""
+		if self._CheckTargetRelnConsensus(RELATION_R3):
+			return True
 		
 		if (fr3 >= (0.2 * self.supporting_trees)):
 			if ((level_val_r2 + level_val_r1) > 0):
@@ -402,8 +427,8 @@ class Reln_TaxaPair(object):
 		if inp_reln in self.allowed_reln_list:
 			self.allowed_reln_list.remove(inp_reln)
 			
-	def _SetEmptyAllowedRelnList(self):
-		self.allowed_reln_list = []
+	#def _SetEmptyAllowedRelnList(self):
+		#self.allowed_reln_list = []
 		
 	#----------------------------------	
 	
