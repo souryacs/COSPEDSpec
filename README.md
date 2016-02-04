@@ -3,10 +3,11 @@ COSPEDSpec
 *********************************
 
 COSPEDSpec is a python based tool for computing species tree from a set of incongruent gene trees:
-1. First a couplet based supertree method COSPEDTree (please check the reference at the end) is applied as its first stage, to generate a possibly 
-non-binary species tree S' covering all the input taxa.
-2. Subsequently we apply a refinement on S', with reducing the number of extra lineages (deep coalescence) with 
-respect to the input gene tree set, for producing a strict binary species tree.
+1. First, a couplet based supertree method COSPEDTree (please check the reference at the end) 
+is applied as its first stage, to generate a possibly non-binary species tree S' covering all the input taxa. 
+Note that we adapt the basic COSPEDTree method to use in this code.
+2. Subsequently we apply a refinement on S', which produces a strict binary species tree. The 
+refinement uses a couplet based measure termed as 'excess gene leaf count'.
 
 Input source trees can be either in NEWICK format or in NEXUS format. 
 However, all the source trees should have identical input formats. They should be placed in a standard tree list file, 
@@ -50,31 +51,22 @@ use pip downloader, instead.
 Command line options
 ****************
 
-"-I", "--INPFILE"
+-I INP_FILENAME, --INPFILE=INP_FILENAME
 
-          specifies name of the input file containing gene trees
-			  
-"-O", "--OUTFILE"
+                name of the input file containing gene trees
 
-          specifies name of the output file to contain target species tree
-  
-"-p", "--inpform"
-			  
-        specifies the file format (input gene tree list containing file)
-        its value can be 1 (corresponds to the newick format - default) or 2 (corresponding to the nexus format)
+-O OUT_FILENAME, --OUTFILE=OUT_FILENAME
 
-"-q", "--queues", \
+                name of the output file to contain target species tree
 
-        specifies the number of priority queues which will contain the support scores of individual couplets, 
-        during execution of the supertree algorithm.
-        
-        Its value can be one of the following:
-        a) Value of 1 indicates that only a single max priority queue is used for storing the support score values. 
-        b) Value of 2 (default option) indicates that two separate queues are used to store the support scores. First queue is used to 
-        store for non-conflicting couplets (all input trees having same relation for the couplet), whereas the second queue is 
-        used to store the support scores of conflicting couplets (here at least two different relations of that couplet are supported by 
-        the input trees).
-        
+-p INP_FILE_FORMAT, --inpform=INP_FILE_FORMAT
+
+                1 - input file format is NEWICK (default)
+                2 - input file format is NEXUS
+
+-r TAXON_NAME, --ROOT=TAXON_NAME
+
+		User can specify a taxon name to root the output species tree with that specified taxon.
         
 An example of a command line option: 
 
@@ -89,13 +81,14 @@ Citation
 ********************
 If you use COSPEDSpec, please cite:
 
-Sourya Bhattacharyya, Jayanta Mukhopadhyay, Couplet Supertree based Species Tree Estimation, ISBRA 2015, LNBI 9096, pp. 48–59, 2015.
+Sourya Bhattacharyya, Jayanta Mukhopadhyay, Couplet Supertree based Species Tree Estimation, 
+ISBRA 2015, LNBI 9096, pp. 48–59, 2015.
 
+Additionally, for details of our proposed couplet based supertree (COSPEDTree) approach, you may check (and cite) the following paper:
 
-Additionally, for details of our proposed couplet based supertree approach, you may check the following paper:
-
-Sourya Bhattacharyya, Jayanta Mukherjee, COSPEDTree: COuplet Supertree by Equivalence Partitioning of taxa set and DAG formation, 
-IEEE/ACM Transactions on Computational Biology and Bioinformatics. volume 12, number 3, pages 590-603, 2015.
+Sourya Bhattacharyya, Jayanta Mukherjee, COSPEDTree: COuplet Supertree by Equivalence Partitioning of taxa set 
+and DAG formation, IEEE/ACM Transactions on Computational Biology and Bioinformatics. 
+volume 12, number 3, pages 590-603, 2015.
 
 
 *********************************
