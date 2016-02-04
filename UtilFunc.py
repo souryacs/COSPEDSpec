@@ -70,58 +70,36 @@ def PrintNewick(root_clust_node_idx):
 	if (Cluster_Info_Dict[root_clust_node_idx]._GetExploredStatus() == 0):  
 		# set the explored status of the current node to true
 		Cluster_Info_Dict[root_clust_node_idx]._SetExploredStatus()
-		# get the out edge list of the current node which are not explored yet 
-		outnodes = []
-		
-		## add - sourya
-		## if all the descendants of current cluster are leaves then we turn the flag on
-		#flag_all_leaf_desc = True
-		## end add - sourya
-		
-		# add - sourya
-		single_tax_single_leaf_outnode = True
-		# end add - sourya
-		
+		# this is the list of taxa of this cluster
 		spec_list = Cluster_Info_Dict[root_clust_node_idx]._GetSpeciesList()
-		
+		# get the out edge list of the current cluster which are not explored yet 
+		outnodes = []
 		for l in Cluster_Info_Dict[root_clust_node_idx]._GetOutEdgeList():
 			if (Cluster_Info_Dict[l]._GetExploredStatus() == 0):
 				outnodes.append(l)
-				## add - sourya
-				#if (len(Cluster_Info_Dict[l]._GetOutEdgeList()) > 0):
-					## this cluster is non leaf
-					#flag_all_leaf_desc = False
-				## end add - sourya
 		
-		if (len(outnodes) == 0):
-			if (len(spec_list) > 1):
-				Tree_Str_List = Tree_Str_List + '('
-			Tree_Str_List = Tree_Str_List + ','.join("'" + item + "'" for item in spec_list)
-			if (len(spec_list) > 1):
-				Tree_Str_List = Tree_Str_List + ')'
-		else:
+		""" 
+		at first, print the contents of this taxa cluster
+		if the cluster has more than one taxon, then use ( and ) to enclose the taxa list
+		"""
+		if (len(outnodes) > 0):
+			Tree_Str_List = Tree_Str_List + '('
 			
-			# add - sourya
-			if (len(spec_list) > 1):
-				single_tax_single_leaf_outnode = False
-			elif (len(outnodes) > 1):
-				single_tax_single_leaf_outnode = False
-			else:
-				l = outnodes[0]
-				if (len(Cluster_Info_Dict[l]._GetOutEdgeList()) > 0):
-					single_tax_single_leaf_outnode = False
-			# end add - sourya
+		if (len(spec_list) > 1):
+			Tree_Str_List = Tree_Str_List + '('
+		Tree_Str_List = Tree_Str_List + ','.join("'" + item + "'" for item in spec_list)
+		if (len(spec_list) > 1):
+			Tree_Str_List = Tree_Str_List + ')'
+		"""
+		here we check if the cluster has one or more out edges
+		then recursively traverse all the out edge clusters
+		"""
+		if (len(outnodes) > 0):
+			# first add one comma
+			Tree_Str_List = Tree_Str_List + ','
 			
-			# comment - sourya
-			if (single_tax_single_leaf_outnode == False):	#1:	#(len(spec_list) > 1):	# condition add - sourya
-				Tree_Str_List = Tree_Str_List + '('
-			# end comment - sourya
-			
-			Tree_Str_List = Tree_Str_List + ','.join("'" + item + "'" for item in spec_list)
-			Tree_Str_List = Tree_Str_List + ','    
-			
-			if (single_tax_single_leaf_outnode == False):	# 1:	#(flag_all_leaf_desc == False):	# this condition add - sourya
-				Tree_Str_List = Tree_Str_List + '('
+			# then add one opening bracket, within which, all the out edge cluster contents will reside
+			Tree_Str_List = Tree_Str_List + '('
 			
 			for i in range(len(outnodes)):
 				if (Cluster_Info_Dict[outnodes[i]]._GetExploredStatus() == 0):  
@@ -133,18 +111,82 @@ def PrintNewick(root_clust_node_idx):
 						while (j < len(outnodes)):
 							if (Cluster_Info_Dict[outnodes[j]]._GetExploredStatus() == 0):  
 								break
-							j = j + 1	      
+							j = j + 1
 						# in this case, we append one comma
 						if (j < len(outnodes)):
 							Tree_Str_List = Tree_Str_List + ','      
 			
-			if (single_tax_single_leaf_outnode == False):	#1:	#(flag_all_leaf_desc == False):	# this condition add - sourya
-				Tree_Str_List = Tree_Str_List + ')'
+			# at last, append one closing bracket, signifying the end of out edge cluster contents
+			Tree_Str_List = Tree_Str_List + ')'
+
+		if (len(outnodes) > 0):
+			Tree_Str_List = Tree_Str_List + ')'
+		
+		## add - sourya
+		#single_tax_single_leaf_outnode = False
+		## end add - sourya
+		
+		#if (len(outnodes) == 0):
+			#if (len(spec_list) > 1):
+				#Tree_Str_List = Tree_Str_List + '('
+			#Tree_Str_List = Tree_Str_List + ','.join("'" + item + "'" for item in spec_list)
+			#if (len(spec_list) > 1):
+				#Tree_Str_List = Tree_Str_List + ')'
+		#else:
+			
+			## add - sourya
+			#if (len(spec_list) == 1):
+				#if (len(outnodes) == 1):
+					#l = outnodes[0]
+					#if (len(Cluster_Info_Dict[l]._GetSpeciesList()) == 1) and (len(Cluster_Info_Dict[l]._GetOutEdgeList()) == 0):
+						#single_tax_single_leaf_outnode = True
+			## end add - sourya
+			
+			### add - sourya
+			##if (len(spec_list) > 1):
+				##single_tax_single_leaf_outnode = False
+			##elif (len(outnodes) > 1):
+				##single_tax_single_leaf_outnode = False
+			##else:
+				##l = outnodes[0]
+				##if (len(Cluster_Info_Dict[l]._GetOutEdgeList()) > 0):
+					##single_tax_single_leaf_outnode = False
+			### end add - sourya
+			
+			## comment - sourya
+			#if (single_tax_single_leaf_outnode == False):	#1:	#(len(spec_list) > 1):	# condition add - sourya
+				#Tree_Str_List = Tree_Str_List + '('
+			## end comment - sourya
+			
+			#Tree_Str_List = Tree_Str_List + ','.join("'" + item + "'" for item in spec_list)
+			#Tree_Str_List = Tree_Str_List + ','    
+			
+			#if (single_tax_single_leaf_outnode == False):	# 1:	#(flag_all_leaf_desc == False):	# this condition add - sourya
+				#Tree_Str_List = Tree_Str_List + '('
+			
+			#for i in range(len(outnodes)):
+				#if (Cluster_Info_Dict[outnodes[i]]._GetExploredStatus() == 0):  
+					#Tree_Str_List = Tree_Str_List + PrintNewick(outnodes[i])
+					#if (i < (len(outnodes) - 1)):
+						## we check whether any subsequent node belonging to the outnodes list
+						## is left for traverse
+						#j = i + 1
+						#while (j < len(outnodes)):
+							#if (Cluster_Info_Dict[outnodes[j]]._GetExploredStatus() == 0):  
+								#break
+							#j = j + 1
+						## in this case, we append one comma
+						#if (j < len(outnodes)):
+							#Tree_Str_List = Tree_Str_List + ','      
+			
+			#if (single_tax_single_leaf_outnode == False):	#1:	#(flag_all_leaf_desc == False):	# this condition add - sourya
+				#Tree_Str_List = Tree_Str_List + ')'
 				
-			# comment - sourya
-			if (single_tax_single_leaf_outnode == False):	#1:	#(len(spec_list) > 1):	# condition add - sourya
-				Tree_Str_List = Tree_Str_List + ')'
-			# end comment - sourya
+			## comment - sourya
+			#if (single_tax_single_leaf_outnode == False):	#1:	#(len(spec_list) > 1):	# condition add - sourya
+				#Tree_Str_List = Tree_Str_List + ')'
+			## end comment - sourya
+		
 		
 	return Tree_Str_List    
 

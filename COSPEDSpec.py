@@ -156,7 +156,7 @@ def main():
 		print 'dir_of_inp_file: ', dir_of_inp_file  
 			
 	if (OUTPUT_FILENAME == ""):
-		dir_of_curr_exec = dir_of_inp_file + 'COSPEDSpec' + '_D' + str(DIST_MAT_TYPE) + '_U' + str(DIST_MAT_UPDATE) + '_C' + str(NJ_MERGE_CLUST)
+		dir_of_curr_exec = dir_of_inp_file + 'COSPEDSpec' + '_D' + str(DIST_MAT_TYPE) + '_U' + str(DIST_MAT_UPDATE) + '_C' + str(NJ_MERGE_CLUST) + '_X' + str(MPP_SOLVE_METRIC)
 		""" 
 		create the directory
 		"""
@@ -178,7 +178,7 @@ def main():
 			dir_of_curr_exec = './'
 		else:
 			dir_of_curr_exec = OUTPUT_FILENAME[:(k1+1)]
-		Output_Text_File = OUTPUT_FILENAME + '_complete_text_description'   
+		Output_Text_File = dir_of_curr_exec + '/' + 'COSPEDSpec_Complete_Desription.txt'
 		print 'Output_Text_File: ', Output_Text_File
 		
 	# open the output text file

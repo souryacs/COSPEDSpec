@@ -185,14 +185,7 @@ def Proc_Queue(Reachability_Graph_Mat, Single_Reln_no_Conflict_Queue_process, Ou
 					
 					## also update the reachability graph information
 					#Reachability_Graph_Mat = AdjustReachGraph(Reachability_Graph_Mat, src_taxa_label, dest_taxa_label, reln_type)
-			
-					##"""
-					##after finalizing one of the relations for this conflicting couplet
-					##empty the set of allowed relations
-					##"""
-					##l = (src_taxa_label, dest_taxa_label)
-					##TaxaPair_Reln_Dict[l]._SetEmptyAllowedRelnList()
-			
+
 			#else:
 				#"""
 				#Case 2 --- here the support score is negative
@@ -221,13 +214,6 @@ def Proc_Queue(Reachability_Graph_Mat, Single_Reln_no_Conflict_Queue_process, Ou
 					## also update the reachability graph information
 					#Reachability_Graph_Mat = AdjustReachGraph(Reachability_Graph_Mat, src_taxa_label, dest_taxa_label, connecting_reln_type)
 
-					##"""
-					##after finalizing one of the relations for this conflicting couplet
-					##empty the set of allowed relations
-					##"""
-					##l = (src_taxa_label, dest_taxa_label)
-					##TaxaPair_Reln_Dict[l]._SetEmptyAllowedRelnList()
-			
 				#else:
 					#"""
 					#no relation can be established between the couplet
@@ -249,7 +235,7 @@ def Proc_Queue(Reachability_Graph_Mat, Single_Reln_no_Conflict_Queue_process, Ou
 		## end add - sourya
 		#-------------------------------------------------
 		
-		## add - sourya
+		# add - sourya
 		
 		""" 
 		if the couplet is already connected, as shown by the entries in Reachability_Graph_Mat

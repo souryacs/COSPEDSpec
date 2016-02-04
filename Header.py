@@ -10,7 +10,8 @@ from optparse import OptionParser
 import math
 import sys
 #import networkx as nx
-import matplotlib.pyplot as plt	# add - debug - sourya
+#import matplotlib.pyplot as plt	# add - debug - sourya
+import decimal
 
 # we define custom relation types
 RELATION_R3 = 0	# relation r3
@@ -60,7 +61,7 @@ CURRENT_CLUST_IDX_LIST = []
 
 # this is the debug level
 # set for printing the necessary information
-DEBUG_LEVEL = 2
+DEBUG_LEVEL = 0
 
 MAJORITY_CONSENSUS_RATIO = 0.6
 LEVEL_COUNT_VAL_CONSENSUS_RATIO = 0.7
@@ -96,7 +97,7 @@ this is a threshold corresponding to the selection of R1 or R2 relation
 for a non conflicting couplet with negative support score of the corresponding relation
 """
 #R1R2Reln_MAJ_THRS = 0.7
-R1R2Reln_MAJ_THRS_high = 0.75	#0.8
+R1R2Reln_MAJ_THRS_high = 0.8	#0.75
 R1R2Reln_MAJ_THRS_low = 0.7	#0.8
 
 """
@@ -115,7 +116,9 @@ R3Reln_MAJ_THRS = 0.2	#0.15
 for a couplet, relations with frequency of this percentage of the max (consensus) frequency
 will be included in the score queue
 """
-PERCENT_MAX_FREQ = 0.35	#0.5
+PERCENT_MAX_FREQ = 0.5	#0.35
+
+CONSENSUS_FREQ_RATIO_THR = 0.7	#0.8
 
 #-----------------------------------------------------
 """ 
@@ -243,46 +246,23 @@ class Reln_TaxaPair(object):
 		fpr2 = self.freq_R4_pseudo_R1R2[1]
 		level_r1_count = self.ALL_Reln_Level_Diff_Info_Count[0]
 		sum_level_count = sum(self.ALL_Reln_Level_Diff_Info_Count)
-		level_val_r1 = self.ALL_Reln_Level_Diff_Val_Count[0]
-		level_val_r2 = self.ALL_Reln_Level_Diff_Val_Count[1]
+		r1_level_val_ratio = self._GetLevelValRatio(0)
 		
 		if (DEBUG_LEVEL >= 2):
 			fp = open(outfile, 'a')
 			fp.write('\n fr1: ' + str(fr1) + ' fr2: ' + str(fr2) + ' fr4: ' + str(fr4) + ' fr3: ' + str(fr3) \
 				+ ' fpr1: ' + str(fpr1) + ' fpr2: ' + str(fpr2) + ' level_r1_count: ' + str(level_r1_count) \
 					+ ' sum_level_count: ' + str(sum_level_count))
-			
-			if ((level_val_r1 + level_val_r2) > 0):
-				fp.write(' Ratio: ' + str(self._GetLevelValRatio(0)))  
+			fp.write(' Ratio: ' + str(r1_level_val_ratio))  
 			fp.close()
 		
-		## old condition - sourya
-		#if ((fr1 + fpr1 - fpr2) > fr4) and ((fr1 + fpr1 - fpr2) > fr3) and ((fr1 + fpr1 - fpr2) > (fr2 + fpr2 - fpr1)):
-			#if (level_r1_count > (0.5 * sum_level_count)):
-				##if (((level_val_r1 - level_val_r2) * 1.0) / (level_val_r1 + level_val_r2) >= R1R2Reln_MAJ_THRS):
-				#if (((level_val_r1 * 1.0) / (level_val_r1 + level_val_r2)) >= R1R2Reln_MAJ_THRS):
-					#return True
-		## end old condition - sourya
-
-		## new condition - sourya
-		#if ((level_val_r1 + level_val_r2) > 0):
-			#if (((fr1 + fpr1) > fr4) and ((fr1 + fpr1) > fr3) and ((fr1 + fpr1) > (fr2 + fpr2))) \
-				#or (((level_val_r1 * 1.0) / (level_val_r1 + level_val_r2)) >= R1R2Reln_MAJ_THRS):
-				#return True
-		## end new condition - sourya
-	
-		# add - sourya
-		if  ((fr1 + fpr1 - fpr2) > fr4) and ((fr1 + fpr1 - fpr2) > fr3) and ((fr1 + fpr1 - fpr2) > (fr2 + fpr2 - fpr1)):
+		if (round(r1_level_val_ratio, 2) >= R1R2Reln_MAJ_THRS_high):
 			return True
-		if ((level_val_r1 + level_val_r2) > 0):
-			#if (self._GetLevelValRatio(0) >= R1R2Reln_MAJ_THRS_high):
-				#return True
-			if (self._GetLevelValRatio(0) >= R1R2Reln_MAJ_THRS_low):
-				#if  ((fr1 + fpr1 - fpr2) > (fr4 - fpr1)) and ((fr1 + fpr1 - fpr2) > fr3) and ((fr1 + fpr1 - fpr2) > (fr2 + fpr2 - fpr1)):
-					#return True
-				if  ((fr1 + 2 * (fpr1 - fpr2)) > fr4) and ((fr1 + fpr1 - fpr2) > fr3) and ((fr1 + fpr1 - fpr2) > (fr2 + fpr2 - fpr1)):
-					return True
-		# end add - sourya
+		
+		if (round(((fr1 * 1.0) / self._GetConsensusFreq()), 2) >= CONSENSUS_FREQ_RATIO_THR):
+			if  (((fr1 + 2 * (fpr1 - fpr2)) > fr4) and ((fr1 + fpr1 - fpr2) > fr3) and ((fr1 + fpr1 - fpr2) > (fr2 + fpr2 - fpr1))) \
+				or (round(r1_level_val_ratio, 2) >= R1R2Reln_MAJ_THRS_low):
+				return True
 		
 		return False
 		
@@ -299,47 +279,24 @@ class Reln_TaxaPair(object):
 		fpr2 = self.freq_R4_pseudo_R1R2[1]
 		level_r2_count = self.ALL_Reln_Level_Diff_Info_Count[1]
 		sum_level_count = sum(self.ALL_Reln_Level_Diff_Info_Count)
-		level_val_r1 = self.ALL_Reln_Level_Diff_Val_Count[0]
-		level_val_r2 = self.ALL_Reln_Level_Diff_Val_Count[1]
+		r2_level_val_ratio = self._GetLevelValRatio(1)
 		
 		if (DEBUG_LEVEL >= 2):
 			fp = open(outfile, 'a')
 			fp.write('\n fr1: ' + str(fr1) + ' fr2: ' + str(fr2) + ' fr4: ' + str(fr4) + ' fr3: ' + str(fr3) \
 				+ ' fpr1: ' + str(fpr1) + ' fpr2: ' + str(fpr2) + ' level_r2_count: ' + str(level_r2_count) \
 					+ ' sum_level_count: ' + str(sum_level_count))
-			
-			if ((level_val_r2 + level_val_r1) > 0):
-				fp.write(' Ratio: ' + str(self._GetLevelValRatio(1)))  
+			fp.write(' Ratio: ' + str(r2_level_val_ratio))  
 			fp.close()
 		
-		## old condition - sourya
-		#if ((fr2 + fpr2 - fpr1) > fr4) and ((fr2 + fpr2 - fpr1) > fr3) and ((fr2 + fpr2 - fpr1) > (fr1 + fpr1 - fpr2)):
-			#if (level_r2_count > (0.5 * sum_level_count)):
-				##if (((level_val_r2 - level_val_r1) * 1.0) / (level_val_r2 + level_val_r1) >= R1R2Reln_MAJ_THRS):
-				#if (((level_val_r2 * 1.0) / (level_val_r2 + level_val_r1)) >= R1R2Reln_MAJ_THRS):
-					#return True
-		## end old condition - sourya
-
-		## new condition - sourya
-		#if ((level_val_r1 + level_val_r2) > 0):
-			#if (((fr2 + fpr2) > fr4) and ((fr2 + fpr2) > fr3) and ((fr2 + fpr2) > (fr1 + fpr1))) \
-				#or (((level_val_r2 * 1.0) / (level_val_r1 + level_val_r2)) >= R1R2Reln_MAJ_THRS):
-				#return True
-		## end new condition - sourya
-
-		# add - sourya
-		if  ((fr2 + fpr2 - fpr1) > fr4) and ((fr2 + fpr2 - fpr1) > fr3) and ((fr2 + fpr2 - fpr1) > (fr1 + fpr1 - fpr2)):
+		if (round(r2_level_val_ratio, 2) >= R1R2Reln_MAJ_THRS_high):
 			return True
-		if ((level_val_r1 + level_val_r2) > 0):
-			#if (self._GetLevelValRatio(1) >= R1R2Reln_MAJ_THRS_high):
-				#return True
-			if (self._GetLevelValRatio(1) >= R1R2Reln_MAJ_THRS_low):
-				#if  ((fr2 + fpr2 - fpr1) > (fr4 - fpr2)) and ((fr2 + fpr2 - fpr1) > fr3) and ((fr2 + fpr2 - fpr1) > (fr1 + fpr1 - fpr2)):
-					#return True
-				if  ((fr2 + 2 * (fpr2 - fpr1)) > fr4) and ((fr2 + fpr2 - fpr1) > fr3) and ((fr2 + fpr2 - fpr1) > (fr1 + fpr1 - fpr2)):
-					return True
-		# end add - sourya
 		
+		if (round(((fr2 * 1.0) / self._GetConsensusFreq()), 2) >= CONSENSUS_FREQ_RATIO_THR):
+			if  (((fr2 + 2 * (fpr2 - fpr1)) > fr4) and ((fr2 + fpr2 - fpr1) > fr3) and ((fr2 + fpr2 - fpr1) > (fr1 + fpr1 - fpr2))) \
+				or (round(r2_level_val_ratio, 2) >= R1R2Reln_MAJ_THRS_low):
+				return True
+
 		return False
 		
 	"""
@@ -366,9 +323,9 @@ class Reln_TaxaPair(object):
 		if self._CheckTargetRelnConsensus(RELATION_R3):
 			return True
 		
+		# frequency of R3 relation should be at least 20% of the total number of supporting trees
 		if (fr3 >= (0.2 * self.supporting_trees)):
 			if ((level_val_r2 + level_val_r1) > 0):
-				# frequency of R3 relation should be at least 20% of the total number of supporting trees
 				if ((lev_diff / (level_val_r2 + level_val_r1)) <= R3Reln_MAJ_THRS):
 					# the level difference should be very small
 					return True
@@ -518,17 +475,6 @@ class Reln_TaxaPair(object):
 		if (self.freq_count[inp_reln_type] == max(self.freq_count)):
 			return True
 		return False
-		## comment - sourya
-		#for reln_type in range(4):
-			#if (reln_type == inp_reln_type):
-				#continue
-			#if (self.freq_count[inp_reln_type] < self.freq_count[reln_type]):
-				#return False
-			## add - sourya
-			#if (self.freq_count[inp_reln_type] == self.freq_count[reln_type]) and (inp_reln_type == RELATION_R4) and (reln_type != RELATION_R4):
-				#return False
-			## end add - sourya
-		#return True
 	
 	def _CheckTargetRelnLevelConsensus(self, src_reln, only_cons=0):
 		reln_array = [RELATION_R1, RELATION_R2, RELATION_R3]
