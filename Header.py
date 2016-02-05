@@ -61,7 +61,7 @@ CURRENT_CLUST_IDX_LIST = []
 
 # this is the debug level
 # set for printing the necessary information
-DEBUG_LEVEL = 0
+DEBUG_LEVEL = 2
 
 MAJORITY_CONSENSUS_RATIO = 0.6
 LEVEL_COUNT_VAL_CONSENSUS_RATIO = 0.7
@@ -461,11 +461,11 @@ class Reln_TaxaPair(object):
 		return target_val
 		
 	
-	def _GetR1R2LevelDiff(self, abs_comp):
-		target_val = self.ALL_Reln_Level_Diff_Val_Count[0] - self.ALL_Reln_Level_Diff_Val_Count[1]
-		if (abs_comp == True):
-			target_val = math.fabs(target_val)
-		return target_val
+	#def _GetR1R2LevelDiff(self, abs_comp):
+		#target_val = self.ALL_Reln_Level_Diff_Val_Count[0] - self.ALL_Reln_Level_Diff_Val_Count[1]
+		#if (abs_comp == True):
+			#target_val = math.fabs(target_val)
+		#return target_val
 
 	"""
 	this function checks whether the input relation type is a consensus relation
@@ -476,44 +476,44 @@ class Reln_TaxaPair(object):
 			return True
 		return False
 	
-	def _CheckTargetRelnLevelConsensus(self, src_reln, only_cons=0):
-		reln_array = [RELATION_R1, RELATION_R2, RELATION_R3]
-		src_reln_idx = reln_array.index(src_reln)
-		sum_level_count = sum(self.ALL_Reln_Level_Diff_Info_Count)
-		sum_level_val = sum(self.ALL_Reln_Level_Diff_Val_Count)
-		if (src_reln_idx == 0) or (src_reln_idx == 1):
-			if (only_cons == 0):
-				if (self.ALL_Reln_Level_Diff_Info_Count[src_reln_idx] >= (MAJORITY_CONSENSUS_RATIO * sum_level_count)) and \
-					(self.ALL_Reln_Level_Diff_Val_Count[src_reln_idx] >= (LEVEL_COUNT_VAL_CONSENSUS_RATIO * sum_level_val)):
-					return 1
-			else:
-				if (self.ALL_Reln_Level_Diff_Info_Count[src_reln_idx] > (0.5 * sum_level_count)) and \
-					(self.ALL_Reln_Level_Diff_Val_Count[src_reln_idx] > (0.5 * sum_level_val)):
-					return 1
-		else:
-			if (self.ALL_Reln_Level_Diff_Info_Count[2] > (self.ALL_Reln_Level_Diff_Info_Count[0] + self.ALL_Reln_Level_Diff_Info_Count[1])):
-				return 1
+	#def _CheckTargetRelnLevelConsensus(self, src_reln, only_cons=0):
+		#reln_array = [RELATION_R1, RELATION_R2, RELATION_R3]
+		#src_reln_idx = reln_array.index(src_reln)
+		#sum_level_count = sum(self.ALL_Reln_Level_Diff_Info_Count)
+		#sum_level_val = sum(self.ALL_Reln_Level_Diff_Val_Count)
+		#if (src_reln_idx == 0) or (src_reln_idx == 1):
+			#if (only_cons == 0):
+				#if (self.ALL_Reln_Level_Diff_Info_Count[src_reln_idx] >= (MAJORITY_CONSENSUS_RATIO * sum_level_count)) and \
+					#(self.ALL_Reln_Level_Diff_Val_Count[src_reln_idx] >= (LEVEL_COUNT_VAL_CONSENSUS_RATIO * sum_level_val)):
+					#return 1
+			#else:
+				#if (self.ALL_Reln_Level_Diff_Info_Count[src_reln_idx] > (0.5 * sum_level_count)) and \
+					#(self.ALL_Reln_Level_Diff_Val_Count[src_reln_idx] > (0.5 * sum_level_val)):
+					#return 1
+		#else:
+			#if (self.ALL_Reln_Level_Diff_Info_Count[2] > (self.ALL_Reln_Level_Diff_Info_Count[0] + self.ALL_Reln_Level_Diff_Info_Count[1])):
+				#return 1
 			
-		return 0
+		#return 0
 	
-	def _CheckHigherTargetRelnLevelValue(self, src_reln):
-		reln_array = [RELATION_R1, RELATION_R2, RELATION_R3]
-		src_reln_idx = reln_array.index(src_reln)
-		for idx in range(3):
-			if (idx == src_reln_idx):
-				continue
-			if (self.ALL_Reln_Level_Diff_Info_Count[src_reln_idx] < self.ALL_Reln_Level_Diff_Info_Count[idx]):
-				return 0
-			if (self.ALL_Reln_Level_Diff_Val_Count[src_reln_idx] < self.ALL_Reln_Level_Diff_Val_Count[idx]):
-				return 0
+	#def _CheckHigherTargetRelnLevelValue(self, src_reln):
+		#reln_array = [RELATION_R1, RELATION_R2, RELATION_R3]
+		#src_reln_idx = reln_array.index(src_reln)
+		#for idx in range(3):
+			#if (idx == src_reln_idx):
+				#continue
+			#if (self.ALL_Reln_Level_Diff_Info_Count[src_reln_idx] < self.ALL_Reln_Level_Diff_Info_Count[idx]):
+				#return 0
+			#if (self.ALL_Reln_Level_Diff_Val_Count[src_reln_idx] < self.ALL_Reln_Level_Diff_Val_Count[idx]):
+				#return 0
 	
-		return 1
+		#return 1
 	
-	def _GetAllRelnLevelDiffCount(self):
-		return self.ALL_Reln_Level_Diff_Info_Count
+	#def _GetAllRelnLevelDiffCount(self):
+		#return self.ALL_Reln_Level_Diff_Info_Count
 		
-	def _GetAllRelnLevelDiffVal(self):
-		return self.ALL_Reln_Level_Diff_Val_Count
+	#def _GetAllRelnLevelDiffVal(self):
+		#return self.ALL_Reln_Level_Diff_Val_Count
 		
 	def _IncrAllRelnLevelDiffInfoCount(self, idx, val):
 		self.ALL_Reln_Level_Diff_Info_Count[idx] = self.ALL_Reln_Level_Diff_Info_Count[idx] + 1

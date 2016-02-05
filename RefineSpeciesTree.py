@@ -815,90 +815,194 @@ def Merge_Both_NonLeaf(Curr_tree, clust_species_list, idx1, idx2, taxa_list, Out
 		fp.write('\n ---- XL_clust1_child2_clust2_child2: ' + str(XL_clust1_child2_clust2_child2))
 		fp.close()
 	
-	#------------------------------------------------------
-	"""
-	first we inspect the case when ((A,B),(C,D)) configuration can be employed
-	"""
-	XL_list = [XL_clust1_child1_clust1_child2, XL_clust2_child1_clust2_child2, XL_clust1_child1_clust2_child1, \
-		XL_clust1_child1_clust2_child2, XL_clust1_child2_clust2_child1, XL_clust1_child2_clust2_child2]
-	XL_list.sort()
-	
-	"""
-	if the XL count of (A,B) and (C,D) lie within first three indices
-	then merge this cluster pair
-	"""
-	if (XL_list.index(XL_clust1_child1_clust1_child2) <= 2) and (XL_list.index(XL_clust2_child1_clust2_child2) <= 2):
-		if (DEBUG_LEVEL >= 2):
-			fp = open(Output_Text_File, 'a')
-			fp.write('\n *** Default Merging Condition ((A,B),(C,D))')
-			fp.close()
+	if (XL_clust1_child1_clust1_child2 <= XL_clust2_child1_clust2_child2):
+		"""
+		cluster (A,B) will remain intact
+		we have to inspect between three configurations
+		1) ((A,B),(C,D)), 2) (C, (D, (A, B))), 3) (D, (C, (A, B)))
+		"""
+		#  XL(C,:) / 2
+		XL_clust2_child1_clust1_avg = (XL_clust1_child1_clust2_child1 + XL_clust1_child2_clust2_child1) / 2.0
+		# XL(D,:) / 2
+		XL_clust2_child2_clust1_avg = (XL_clust1_child1_clust2_child2 + XL_clust1_child2_clust2_child2) / 2.0
 		
-		# ((A,B),(C,D)) configuration can be employed
-		Curr_tree = MergeSubtrees(Curr_tree, clust1_mrca_node, clust2_mrca_node, all_taxa_mrca_node, taxa_list, Output_Text_File)
-		return Curr_tree
-	#------------------------------------------------------
-	"""
-	otherwise, we have to inspect other configurations
-	"""
-	# computing the sum of XL values for all different clusters
-	# XL sum for cluster A
-	sum_XL_clust1_child1 = XL_clust1_child1_clust1_child2 + XL_clust1_child1_clust2_child1 + XL_clust1_child1_clust2_child2
-	# XL sum for cluster B
-	sum_XL_clust1_child2 = XL_clust1_child1_clust1_child2 + XL_clust1_child2_clust2_child1 + XL_clust1_child2_clust2_child2
-	# XL sum for cluster C
-	sum_XL_clust2_child1 = XL_clust2_child1_clust2_child2 + XL_clust1_child1_clust2_child1 + XL_clust1_child2_clust2_child1
-	# XL sum for cluster D
-	sum_XL_clust2_child2 = XL_clust2_child1_clust2_child2 + XL_clust1_child1_clust2_child2 + XL_clust1_child2_clust2_child2
-	
-	sum_XL_list = [sum_XL_clust1_child1, sum_XL_clust1_child2, sum_XL_clust2_child1, sum_XL_clust2_child2]
+		"""
+		# case 1A - XL(C,D) is lower than both XL(C,:) / 2 and XL(D,:) / 2 (: denotes A and B)
+		"""
+		if (XL_clust2_child1_clust2_child2 <= XL_clust2_child1_clust1_avg) and (XL_clust2_child1_clust2_child2 <= XL_clust2_child2_clust1_avg):
+			# ((A,B),(C,D)) configuration can be employed
+			if (DEBUG_LEVEL >= 2):
+				fp = open(Output_Text_File, 'a')
+				fp.write('\n *** Default Merging Condition ((A,B),(C,D))')
+				fp.close()
+			Curr_tree = MergeSubtrees(Curr_tree, clust1_mrca_node, clust2_mrca_node, all_taxa_mrca_node, taxa_list, Output_Text_File)
+			return Curr_tree
 		
-	if (DEBUG_LEVEL >= 2):
-		fp = open(Output_Text_File, 'a')
-		fp.write('\n sum_XL_clust1_child1: ' + str(sum_XL_clust1_child1))
-		fp.write('\n sum_XL_clust1_child2: ' + str(sum_XL_clust1_child2))
-		fp.write('\n sum_XL_clust2_child1: ' + str(sum_XL_clust2_child1))
-		fp.write('\n sum_XL_clust2_child2: ' + str(sum_XL_clust2_child2))
-		fp.close()
-	
-	if (sum_XL_clust1_child1 == max(sum_XL_list)):
-		# the configuration (A, (B, (C, D))) can be employed here
-		if (DEBUG_LEVEL >= 2):
-			fp = open(Output_Text_File, 'a')
-			fp.write('\n *** Merging Condition (A, (B, (C, D)))')
-			fp.close()
-		src_subtree_node = clust2_mrca_node
-		dest_subtree_node = Curr_tree.mrca(taxon_labels=clust1_child2_taxa_list)
-		Curr_tree = InsertSubTree(Curr_tree, src_subtree_node, dest_subtree_node, Output_Text_File)
-	elif (sum_XL_clust1_child2 == max(sum_XL_list)):
-		# the configuration (B, (A, (C, D))) can be employed here
-		if (DEBUG_LEVEL >= 2):
-			fp = open(Output_Text_File, 'a')
-			fp.write('\n *** Merging Condition (B, (A, (C, D)))')
-			fp.close()
-		src_subtree_node = clust2_mrca_node
-		dest_subtree_node = Curr_tree.mrca(taxon_labels=clust1_child1_taxa_list)
-		Curr_tree = InsertSubTree(Curr_tree, src_subtree_node, dest_subtree_node, Output_Text_File)
-	elif (sum_XL_clust2_child1 == max(sum_XL_list)):
-		# configuration (C, (D, (A, B))) can be employed here
-		if (DEBUG_LEVEL >= 2):
-			fp = open(Output_Text_File, 'a')
-			fp.write('\n *** Merging Condition (C, (D, (A, B)))')
-			fp.close()
-		src_subtree_node = clust1_mrca_node
-		dest_subtree_node = Curr_tree.mrca(taxon_labels=clust2_child2_taxa_list)
-		Curr_tree = InsertSubTree(Curr_tree, src_subtree_node, dest_subtree_node, Output_Text_File)
-	else:	#if (sum_XL_clust2_child2 == max(sum_XL_list)):
-		# configuration (D, (C, (A, B))) can be employed here
-		if (DEBUG_LEVEL >= 2):
-			fp = open(Output_Text_File, 'a')
-			fp.write('\n *** Merging Condition (D, (C, (A, B)))')
-			fp.close()
-		src_subtree_node = clust1_mrca_node
-		dest_subtree_node = Curr_tree.mrca(taxon_labels=clust2_child1_taxa_list)
-		Curr_tree = InsertSubTree(Curr_tree, src_subtree_node, dest_subtree_node, Output_Text_File)
+		"""
+		# case 2A - XL(C,:) / 2 is lower than both XL(C,D) and XL(D,:) / 2 (: denotes A and B)
+		"""
+		if (XL_clust2_child1_clust1_avg <= XL_clust2_child1_clust2_child2) and (XL_clust2_child1_clust1_avg <= XL_clust2_child2_clust1_avg):
+			# configuration (D, (C, (A, B))) can be employed here
+			if (DEBUG_LEVEL >= 2):
+				fp = open(Output_Text_File, 'a')
+				fp.write('\n *** Merging Condition (D, (C, (A, B)))')
+				fp.close()
+			src_subtree_node = clust1_mrca_node
+			dest_subtree_node = Curr_tree.mrca(taxon_labels=clust2_child1_taxa_list)
+			Curr_tree = InsertSubTree(Curr_tree, src_subtree_node, dest_subtree_node, Output_Text_File)
+			return Curr_tree
 		
-	return Curr_tree
+		"""
+		# case 3A - XL(D,:) / 2 is lower than both XL(C,D) and XL(C,:) / 2 (: denotes A and B)
+		"""
+		if (XL_clust2_child2_clust1_avg <= XL_clust2_child1_clust1_avg) and (XL_clust2_child2_clust1_avg <= XL_clust2_child1_clust2_child2):
+			# configuration (C, (D, (A, B))) can be employed here
+			if (DEBUG_LEVEL >= 2):
+				fp = open(Output_Text_File, 'a')
+				fp.write('\n *** Merging Condition (C, (D, (A, B)))')
+				fp.close()
+			src_subtree_node = clust1_mrca_node
+			dest_subtree_node = Curr_tree.mrca(taxon_labels=clust2_child2_taxa_list)
+			Curr_tree = InsertSubTree(Curr_tree, src_subtree_node, dest_subtree_node, Output_Text_File)
+			return Curr_tree
+		
+	else:
+		"""
+		cluster (C,D) will remain intact
+		we have to inspect between three configurations
+		1) ((A,B),(C,D)), 2) (A, (B, (C, D))), 3) (B, (A, (C, D)))
+		"""
+		#  XL(A,:) / 2
+		XL_clust1_child1_clust2_avg = (XL_clust1_child1_clust2_child1 + XL_clust1_child1_clust2_child2) / 2.0
+		# XL(B,:) / 2
+		XL_clust1_child2_clust2_avg = (XL_clust1_child2_clust2_child1 + XL_clust1_child2_clust2_child2) / 2.0
+		"""
+		# case 1B - XL(A,B) is lower than both XL(A,:) / 2 and XL(B,:) / 2 (: denotes C and D)
+		"""
+		if (XL_clust1_child1_clust1_child2 <= XL_clust1_child1_clust2_avg) and (XL_clust1_child1_clust1_child2 <= XL_clust1_child2_clust2_avg):
+			if (DEBUG_LEVEL >= 2):
+				fp = open(Output_Text_File, 'a')
+				fp.write('\n *** Default Merging Condition ((A,B),(C,D))')
+				fp.close()
+			Curr_tree = MergeSubtrees(Curr_tree, clust1_mrca_node, clust2_mrca_node, all_taxa_mrca_node, taxa_list, Output_Text_File)
+			return Curr_tree
+		
+		"""
+		# case 2B - XL(A,:) / 2 is lower than both XL(A,B) and XL(B,:) / 2 (: denotes C and D)
+		"""
+		if (XL_clust1_child1_clust2_avg <= XL_clust1_child1_clust1_child2) and (XL_clust1_child1_clust2_avg <= XL_clust1_child2_clust2_avg):
+			# the configuration (B, (A, (C, D))) can be employed here
+			if (DEBUG_LEVEL >= 2):
+				fp = open(Output_Text_File, 'a')
+				fp.write('\n *** Merging Condition (B, (A, (C, D)))')
+				fp.close()
+			src_subtree_node = clust2_mrca_node
+			dest_subtree_node = Curr_tree.mrca(taxon_labels=clust1_child1_taxa_list)
+			Curr_tree = InsertSubTree(Curr_tree, src_subtree_node, dest_subtree_node, Output_Text_File)
+			return Curr_tree
+			
+		"""
+		# case 3B - XL(B,:) / 2 is lower than both XL(A,B) and XL(A,:) / 2 (: denotes C and D)
+		"""
+		if (XL_clust1_child2_clust2_avg <= XL_clust1_child1_clust1_child2) and (XL_clust1_child2_clust2_avg <= XL_clust1_child1_clust2_avg):
+			# the configuration (A, (B, (C, D))) can be employed here
+			if (DEBUG_LEVEL >= 2):
+				fp = open(Output_Text_File, 'a')
+				fp.write('\n *** Merging Condition (A, (B, (C, D)))')
+				fp.close()
+			src_subtree_node = clust2_mrca_node
+			dest_subtree_node = Curr_tree.mrca(taxon_labels=clust1_child2_taxa_list)
+			Curr_tree = InsertSubTree(Curr_tree, src_subtree_node, dest_subtree_node, Output_Text_File)
+			return Curr_tree
+			
+	#-----------------------------------------------------
+	# comment - sourya
+
+	#"""
+	#first we inspect the case when ((A,B),(C,D)) configuration can be employed
+	#"""
+	#XL_list = [XL_clust1_child1_clust1_child2, XL_clust2_child1_clust2_child2, XL_clust1_child1_clust2_child1, \
+		#XL_clust1_child1_clust2_child2, XL_clust1_child2_clust2_child1, XL_clust1_child2_clust2_child2]
+	#XL_list.sort()
 	
+	#"""
+	#if the XL count of (A,B) and (C,D) lie within first three indices
+	#then merge this cluster pair
+	#"""
+	#if (XL_list.index(XL_clust1_child1_clust1_child2) <= 2) and (XL_list.index(XL_clust2_child1_clust2_child2) <= 2):
+		#if (DEBUG_LEVEL >= 2):
+			#fp = open(Output_Text_File, 'a')
+			#fp.write('\n *** Default Merging Condition ((A,B),(C,D))')
+			#fp.close()
+		
+		## ((A,B),(C,D)) configuration can be employed
+		#Curr_tree = MergeSubtrees(Curr_tree, clust1_mrca_node, clust2_mrca_node, all_taxa_mrca_node, taxa_list, Output_Text_File)
+		#return Curr_tree
+	##------------------------------------------------------
+	#"""
+	#otherwise, we have to inspect other configurations
+	#"""
+	## computing the sum of XL values for all different clusters
+	## XL sum for cluster A
+	#sum_XL_clust1_child1 = XL_clust1_child1_clust1_child2 + XL_clust1_child1_clust2_child1 + XL_clust1_child1_clust2_child2
+	## XL sum for cluster B
+	#sum_XL_clust1_child2 = XL_clust1_child1_clust1_child2 + XL_clust1_child2_clust2_child1 + XL_clust1_child2_clust2_child2
+	## XL sum for cluster C
+	#sum_XL_clust2_child1 = XL_clust2_child1_clust2_child2 + XL_clust1_child1_clust2_child1 + XL_clust1_child2_clust2_child1
+	## XL sum for cluster D
+	#sum_XL_clust2_child2 = XL_clust2_child1_clust2_child2 + XL_clust1_child1_clust2_child2 + XL_clust1_child2_clust2_child2
+	
+	#sum_XL_list = [sum_XL_clust1_child1, sum_XL_clust1_child2, sum_XL_clust2_child1, sum_XL_clust2_child2]
+		
+	#if (DEBUG_LEVEL >= 2):
+		#fp = open(Output_Text_File, 'a')
+		#fp.write('\n sum_XL_clust1_child1: ' + str(sum_XL_clust1_child1))
+		#fp.write('\n sum_XL_clust1_child2: ' + str(sum_XL_clust1_child2))
+		#fp.write('\n sum_XL_clust2_child1: ' + str(sum_XL_clust2_child1))
+		#fp.write('\n sum_XL_clust2_child2: ' + str(sum_XL_clust2_child2))
+		#fp.close()
+	
+	#if (sum_XL_clust1_child1 == max(sum_XL_list)):
+		## the configuration (A, (B, (C, D))) can be employed here
+		#if (DEBUG_LEVEL >= 2):
+			#fp = open(Output_Text_File, 'a')
+			#fp.write('\n *** Merging Condition (A, (B, (C, D)))')
+			#fp.close()
+		#src_subtree_node = clust2_mrca_node
+		#dest_subtree_node = Curr_tree.mrca(taxon_labels=clust1_child2_taxa_list)
+		#Curr_tree = InsertSubTree(Curr_tree, src_subtree_node, dest_subtree_node, Output_Text_File)
+	#elif (sum_XL_clust1_child2 == max(sum_XL_list)):
+		## the configuration (B, (A, (C, D))) can be employed here
+		#if (DEBUG_LEVEL >= 2):
+			#fp = open(Output_Text_File, 'a')
+			#fp.write('\n *** Merging Condition (B, (A, (C, D)))')
+			#fp.close()
+		#src_subtree_node = clust2_mrca_node
+		#dest_subtree_node = Curr_tree.mrca(taxon_labels=clust1_child1_taxa_list)
+		#Curr_tree = InsertSubTree(Curr_tree, src_subtree_node, dest_subtree_node, Output_Text_File)
+	#elif (sum_XL_clust2_child1 == max(sum_XL_list)):
+		## configuration (C, (D, (A, B))) can be employed here
+		#if (DEBUG_LEVEL >= 2):
+			#fp = open(Output_Text_File, 'a')
+			#fp.write('\n *** Merging Condition (C, (D, (A, B)))')
+			#fp.close()
+		#src_subtree_node = clust1_mrca_node
+		#dest_subtree_node = Curr_tree.mrca(taxon_labels=clust2_child2_taxa_list)
+		#Curr_tree = InsertSubTree(Curr_tree, src_subtree_node, dest_subtree_node, Output_Text_File)
+	#else:	#if (sum_XL_clust2_child2 == max(sum_XL_list)):
+		## configuration (D, (C, (A, B))) can be employed here
+		#if (DEBUG_LEVEL >= 2):
+			#fp = open(Output_Text_File, 'a')
+			#fp.write('\n *** Merging Condition (D, (C, (A, B)))')
+			#fp.close()
+		#src_subtree_node = clust1_mrca_node
+		#dest_subtree_node = Curr_tree.mrca(taxon_labels=clust2_child1_taxa_list)
+		#Curr_tree = InsertSubTree(Curr_tree, src_subtree_node, dest_subtree_node, Output_Text_File)
+		
+	#return Curr_tree
+	
+	# end comment - sourya
+	#-----------------------------------------------------
 
 ##-------------------------------------------
 #"""
