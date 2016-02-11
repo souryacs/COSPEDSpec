@@ -8,8 +8,11 @@ from UtilFunc import *
 #------------------------------------------------
 """
 this function computes average XL information between a pair of taxa clusters
+@param type_of_output: if 0, computes the average of XL measures
+													1, returns the minimum of XL measures
+													2, returns the maximum of XL measures
 """
-def FindAvgXL(taxa_clust1, taxa_clust2, DIST_MAT_TYPE, single_elem):
+def FindAvgXL(taxa_clust1, taxa_clust2, DIST_MAT_TYPE, single_elem, type_of_output=0):
 	if (single_elem == False):
 		curr_taxa_pair_list = []
 	
@@ -31,10 +34,15 @@ def FindAvgXL(taxa_clust1, taxa_clust2, DIST_MAT_TYPE, single_elem):
 				else:
 					return val
 	
-	# average of this pairwise list is used as the XT approximation
+	# average of this pairwise list is used as the XL approximation
 	if (single_elem == False):
 		if (len(curr_taxa_pair_list) > 0):
-			return (sum(curr_taxa_pair_list) * 1.0) / len(curr_taxa_pair_list)
+			if (type_of_output == 0):
+				return (sum(curr_taxa_pair_list) * 1.0) / len(curr_taxa_pair_list)
+			elif (type_of_output == 1):
+				return min(curr_taxa_pair_list)
+			else:
+				return max(curr_taxa_pair_list)
 		else:
 			return 0
 	
@@ -44,17 +52,49 @@ def FindAvgXL(taxa_clust1, taxa_clust2, DIST_MAT_TYPE, single_elem):
 """
 this function fills the distance matrix using normalized excess gene count
 for a particular taxa cluster, it uses one representative taxon of that taxa cluster
+@param type_of_output: if 0, computes the average of XL measures
+													1, returns the minimum of XL measures
+													2, returns the maximum of XL measures
 """
-def Fill_DistMat_SingleEntry(DistMat, no_of_clust, clust_species_list, DIST_MAT_TYPE):
+def Fill_DistMat_SingleEntry(DistMat, no_of_clust, clust_species_list, DIST_MAT_TYPE, type_of_output=0):
 	"""
 	check and explore each pair of taxa clusters
 	"""
 	for i in range(no_of_clust - 1):
+		#"""
+		#arrange elements of clust_species_list[i] 
+		#in preorder manner
+		#"""
+		## this is the MRCA node corresponding to the clust_species_list[i]
+		#clust_i_mrca_node = Curr_tree.mrca(taxon_labels=clust_species_list[i])
+		#clust_i_preorder_taxa_list = []
+		#for n in clust_i_mrca_node.preorder_iter():
+			#if (n.is_leaf() == True):
+				#if n.taxon.label in clust_species_list[i]:
+					#clust_i_preorder_taxa_list.append(n.taxon.label)
+		
 		for j in range(i+1, no_of_clust):
-			# here both clust_species_list[i] and clust_species_list[j]
-			# are one element lists (according to their construction)
-			# we have extracted the corresponding element by using [0] operator (extracting first element)
-			entry = FindAvgXL(clust_species_list[i], clust_species_list[j], DIST_MAT_TYPE, True)
+			#"""
+			#clust_species_list[i] and clust_species_list[j]
+			#contain two taxa list of one or more elements
+			#"""
+			#""" 
+			#first we arrange elements of clust_species_list[i] and clust_species_list[j] 
+			#in preorder manner
+			#"""
+			## this is the MRCA node corresponding to the clust_species_list[j]
+			#clust_j_mrca_node = Curr_tree.mrca(taxon_labels=clust_species_list[j])
+	
+			
+			#clust_j_preorder_taxa_list = []
+	
+	
+			#for n in clust_j_mrca_node.preorder_iter():
+				#if (n.is_leaf() == True):
+					#if n.taxon.label in clust_species_list[j]:
+						#clust_j_preorder_taxa_list.append(n.taxon.label)
+
+			entry = FindAvgXL(clust_species_list[i], clust_species_list[j], DIST_MAT_TYPE, True, type_of_output)
 			DistMat[j][i] = DistMat[i][j] = entry
 
 	return
@@ -63,8 +103,11 @@ def Fill_DistMat_SingleEntry(DistMat, no_of_clust, clust_species_list, DIST_MAT_
 """
 this function fills the distance matrix using normalized excess gene count
 for a particular taxa cluster, it uses aerage information of that taxa cluster
+@param type_of_output: if 0, computes the average of XL measures
+													1, returns the minimum of XL measures
+													2, returns the maximum of XL measures
 """
-def Fill_DistMat_AvgEntry(DistMat, no_of_clust, clust_species_list, DIST_MAT_TYPE):
+def Fill_DistMat_AvgEntry(DistMat, no_of_clust, clust_species_list, DIST_MAT_TYPE, type_of_output=0):
 	"""
 	check and explore each pair of taxa clusters
 	"""
@@ -73,7 +116,7 @@ def Fill_DistMat_AvgEntry(DistMat, no_of_clust, clust_species_list, DIST_MAT_TYP
 			# here both clust_species_list[i] and clust_species_list[j]
 			# are one element lists (according to their construction)
 			# we have extracted the corresponding element by using [0] operator (extracting first element)
-			entry = FindAvgXL(clust_species_list[i], clust_species_list[j], DIST_MAT_TYPE, False)
+			entry = FindAvgXL(clust_species_list[i], clust_species_list[j], DIST_MAT_TYPE, False, type_of_output)
 			DistMat[j][i] = DistMat[i][j] = entry
 	
 	return
@@ -486,7 +529,7 @@ def Merge_Leaves(Curr_tree, clust_species_list, idx1, idx2, taxa_list, Output_Te
 this function merges one leaf node and another non leaf node (taxa cluster)
 to refine the output species tree
 """
-def Merge_Leaf_NonLeaf(Curr_tree, clust_species_list, leaf_idx, non_leaf_idx, taxa_list, Output_Text_File, DIST_MAT_TYPE):
+def Merge_Leaf_NonLeaf(Curr_tree, clust_species_list, leaf_idx, non_leaf_idx, taxa_list, Output_Text_File, DIST_MAT_TYPE, DIST_MAT_UPDATE):
 	
 	#----------------------------------------------------------------
 	# representing first cluster as A (leaf node) and second cluster as (B,C)
@@ -505,12 +548,25 @@ def Merge_Leaf_NonLeaf(Curr_tree, clust_species_list, leaf_idx, non_leaf_idx, ta
 	clust2_children = non_leaf_mrca_node.child_nodes()
 	clust2_child1_taxa_list = []
 	clust2_child2_taxa_list = []
-	for n in clust2_children[0].leaf_nodes():
-		if n.taxon.label in taxa_list:
-			clust2_child1_taxa_list.append(n.taxon.label)
-	for n in clust2_children[1].leaf_nodes():
-		if n.taxon.label in taxa_list:
-			clust2_child2_taxa_list.append(n.taxon.label)
+	
+	# comment - sourya
+	#for n in clust2_children[0].leaf_nodes():
+		#if n.taxon.label in taxa_list:
+			#clust2_child1_taxa_list.append(n.taxon.label)
+	# add - sourya
+	for n in clust2_children[0].preorder_iter():
+		if (n.is_leaf() == True):
+			if n.taxon.label in taxa_list:
+				clust2_child1_taxa_list.append(n.taxon.label)
+	# comment - sourya
+	#for n in clust2_children[1].leaf_nodes():
+		#if n.taxon.label in taxa_list:
+			#clust2_child2_taxa_list.append(n.taxon.label)
+	# add - sourya
+	for n in clust2_children[1].preorder_iter():
+		if (n.is_leaf() == True):
+			if n.taxon.label in taxa_list:
+				clust2_child2_taxa_list.append(n.taxon.label)
 	
 	if (DEBUG_LEVEL >= 2):
 		fp = open(Output_Text_File, 'a')
@@ -522,9 +578,9 @@ def Merge_Leaf_NonLeaf(Curr_tree, clust_species_list, leaf_idx, non_leaf_idx, ta
 		fp.close()
 	
 	# obtain three sets of XL values
-	XL_clust2_child1_clust2_child2 = FindAvgXL(clust2_child1_taxa_list, clust2_child2_taxa_list, DIST_MAT_TYPE, False)
-	XL_clust2_child1_leaf = FindAvgXL(clust2_child1_taxa_list, clust_species_list[leaf_idx], DIST_MAT_TYPE, False)
-	XL_clust2_child2_leaf = FindAvgXL(clust2_child2_taxa_list, clust_species_list[leaf_idx], DIST_MAT_TYPE, False)
+	XL_clust2_child1_clust2_child2 = FindAvgXL(clust2_child1_taxa_list, clust2_child2_taxa_list, DIST_MAT_TYPE, False, (DIST_MAT_UPDATE - 1))
+	XL_clust2_child1_leaf = FindAvgXL(clust2_child1_taxa_list, clust_species_list[leaf_idx], DIST_MAT_TYPE, False, (DIST_MAT_UPDATE - 1))
+	XL_clust2_child2_leaf = FindAvgXL(clust2_child2_taxa_list, clust_species_list[leaf_idx], DIST_MAT_TYPE, False, (DIST_MAT_UPDATE - 1))
 
 	if (DEBUG_LEVEL >= 2):
 		fp = open(Output_Text_File, 'a')
@@ -532,6 +588,17 @@ def Merge_Leaf_NonLeaf(Curr_tree, clust_species_list, leaf_idx, non_leaf_idx, ta
 		fp.write('\n ---- XL_clust2_child1_leaf: ' + str(XL_clust2_child1_leaf))
 		fp.write('\n ---- XL_clust2_child2_leaf: ' + str(XL_clust2_child2_leaf))
 		fp.close()
+		
+	## add - sourya
+	#"""
+	#if one of the children of the clust2 is a leaf
+	#then we proceed for the simple merging
+	#"""
+	#if (len(clust2_child1_taxa_list) == 1) or (len(clust2_child2_taxa_list) == 1):
+		## configuration (A,(B,C)) will be employed
+		#Curr_tree = MergeSubtrees(Curr_tree, leaf_mrca_node, non_leaf_mrca_node, all_taxa_mrca_node, taxa_list, Output_Text_File)
+		#return Curr_tree
+	## end add - sourya
 
 	XL_list = [XL_clust2_child1_clust2_child2, XL_clust2_child1_leaf, XL_clust2_child2_leaf]
 	if (XL_clust2_child1_clust2_child2 == min(XL_list)):
@@ -738,7 +805,7 @@ def Merge_Leaf_NonLeaf(Curr_tree, clust_species_list, leaf_idx, non_leaf_idx, ta
 """
 this function merges both non leaf nodes (taxa cluster) to refine the output species tree
 """
-def Merge_Both_NonLeaf(Curr_tree, clust_species_list, idx1, idx2, taxa_list, Output_Text_File, DIST_MAT_TYPE):
+def Merge_Both_NonLeaf(Curr_tree, clust_species_list, idx1, idx2, taxa_list, Output_Text_File, DIST_MAT_TYPE, DIST_MAT_UPDATE):
 	
 	#----------------------------------------------------------------
 	#representing first cluster as (A,B) and second cluster as (C,D)
@@ -757,13 +824,25 @@ def Merge_Both_NonLeaf(Curr_tree, clust_species_list, idx1, idx2, taxa_list, Out
 	clust1_children = clust1_mrca_node.child_nodes()
 	clust1_child1_taxa_list = []
 	clust1_child2_taxa_list = []
-	for n in clust1_children[0].leaf_nodes():
-		if n.taxon.label in taxa_list:
-			clust1_child1_taxa_list.append(n.taxon.label)
-	for n in clust1_children[1].leaf_nodes():
-		if n.taxon.label in taxa_list:
-			clust1_child2_taxa_list.append(n.taxon.label)
-	
+	# comment - sourya
+	#for n in clust1_children[0].leaf_nodes():
+		#if n.taxon.label in taxa_list:
+			#clust1_child1_taxa_list.append(n.taxon.label)
+	# add - sourya
+	for n in clust1_children[0].preorder_iter():
+		if (n.is_leaf() == True):
+			if n.taxon.label in taxa_list:
+				clust1_child1_taxa_list.append(n.taxon.label)
+	# comment - sourya
+	#for n in clust1_children[1].leaf_nodes():
+		#if n.taxon.label in taxa_list:
+			#clust1_child2_taxa_list.append(n.taxon.label)
+	# add - sourya
+	for n in clust1_children[1].preorder_iter():
+		if (n.is_leaf() == True):
+			if n.taxon.label in taxa_list:
+				clust1_child2_taxa_list.append(n.taxon.label)
+
 	if (DEBUG_LEVEL >= 2):
 		fp = open(Output_Text_File, 'a')
 		fp.write('\n ===>>> Merging both non leaf nodes') 
@@ -775,12 +854,25 @@ def Merge_Both_NonLeaf(Curr_tree, clust_species_list, idx1, idx2, taxa_list, Out
 	clust2_children = clust2_mrca_node.child_nodes()
 	clust2_child1_taxa_list = []
 	clust2_child2_taxa_list = []
-	for n in clust2_children[0].leaf_nodes():
-		if n.taxon.label in taxa_list:
-			clust2_child1_taxa_list.append(n.taxon.label)
-	for n in clust2_children[1].leaf_nodes():
-		if n.taxon.label in taxa_list:
-			clust2_child2_taxa_list.append(n.taxon.label)
+	# comment - sourya
+	#for n in clust2_children[0].leaf_nodes():
+		#if n.taxon.label in taxa_list:
+			#clust2_child1_taxa_list.append(n.taxon.label)
+	# add - sourya
+	for n in clust2_children[0].preorder_iter():
+		if (n.is_leaf() == True):
+			if n.taxon.label in taxa_list:
+				clust2_child1_taxa_list.append(n.taxon.label)
+			
+	# comment - sourya
+	#for n in clust2_children[1].leaf_nodes():
+		#if n.taxon.label in taxa_list:
+			#clust2_child2_taxa_list.append(n.taxon.label)
+	# add - sourya
+	for n in clust2_children[1].preorder_iter():
+		if (n.is_leaf() == True):
+			if n.taxon.label in taxa_list:
+				clust2_child2_taxa_list.append(n.taxon.label)
 
 	if (DEBUG_LEVEL >= 2):
 		fp = open(Output_Text_File, 'a')
@@ -793,17 +885,17 @@ def Merge_Both_NonLeaf(Curr_tree, clust_species_list, idx1, idx2, taxa_list, Out
 	#------------------------------
 	# obtain XL values for different taxa sets
 	# XL(A,B)
-	XL_clust1_child1_clust1_child2 = FindAvgXL(clust1_child1_taxa_list, clust1_child2_taxa_list, DIST_MAT_TYPE, False)
+	XL_clust1_child1_clust1_child2 = FindAvgXL(clust1_child1_taxa_list, clust1_child2_taxa_list, DIST_MAT_TYPE, True, (DIST_MAT_UPDATE - 1))
 	# XL(C,D)
-	XL_clust2_child1_clust2_child2 = FindAvgXL(clust2_child1_taxa_list, clust2_child2_taxa_list, DIST_MAT_TYPE, False)
+	XL_clust2_child1_clust2_child2 = FindAvgXL(clust2_child1_taxa_list, clust2_child2_taxa_list, DIST_MAT_TYPE, True, (DIST_MAT_UPDATE - 1))
 	# XL(A,C)
-	XL_clust1_child1_clust2_child1 = FindAvgXL(clust1_child1_taxa_list, clust2_child1_taxa_list, DIST_MAT_TYPE, False)
+	XL_clust1_child1_clust2_child1 = FindAvgXL(clust1_child1_taxa_list, clust2_child1_taxa_list, DIST_MAT_TYPE, True, (DIST_MAT_UPDATE - 1))
 	# XL(A,D)
-	XL_clust1_child1_clust2_child2 = FindAvgXL(clust1_child1_taxa_list, clust2_child2_taxa_list, DIST_MAT_TYPE, False)
+	XL_clust1_child1_clust2_child2 = FindAvgXL(clust1_child1_taxa_list, clust2_child2_taxa_list, DIST_MAT_TYPE, True, (DIST_MAT_UPDATE - 1))
 	# XL(B,C)
-	XL_clust1_child2_clust2_child1 = FindAvgXL(clust1_child2_taxa_list, clust2_child1_taxa_list, DIST_MAT_TYPE, False)
+	XL_clust1_child2_clust2_child1 = FindAvgXL(clust1_child2_taxa_list, clust2_child1_taxa_list, DIST_MAT_TYPE, True, (DIST_MAT_UPDATE - 1))
 	# XL(B,D)
-	XL_clust1_child2_clust2_child2 = FindAvgXL(clust1_child2_taxa_list, clust2_child2_taxa_list, DIST_MAT_TYPE, False)
+	XL_clust1_child2_clust2_child2 = FindAvgXL(clust1_child2_taxa_list, clust2_child2_taxa_list, DIST_MAT_TYPE, True, (DIST_MAT_UPDATE - 1))
 	
 	if (DEBUG_LEVEL >= 2):
 		fp = open(Output_Text_File, 'a')
@@ -1430,18 +1522,18 @@ def Merge_Both_NonLeaf(Curr_tree, clust_species_list, idx1, idx2, taxa_list, Out
 """
 this is a new function to merge taxa clusters for agglomerative clustering - sourya
 """
-def Merge_Cluster_Pair_New(Curr_tree, clust_species_list, min_idx_i, min_idx_j, taxa_list, Output_Text_File, DIST_MAT_TYPE):
+def Merge_Cluster_Pair_New(Curr_tree, clust_species_list, min_idx_i, min_idx_j, taxa_list, Output_Text_File, DIST_MAT_TYPE, DIST_MAT_UPDATE):
 
 	isleaf_clust1 = IsLeafCluster(clust_species_list, min_idx_i)
 	isleaf_clust2 = IsLeafCluster(clust_species_list, min_idx_j)
 	if (isleaf_clust1 == True) and (isleaf_clust2 == True):
 		Curr_tree = Merge_Leaves(Curr_tree, clust_species_list, min_idx_i, min_idx_j, taxa_list, Output_Text_File)
 	elif (isleaf_clust1 == True) and (isleaf_clust2 == False):
-		Curr_tree = Merge_Leaf_NonLeaf(Curr_tree, clust_species_list, min_idx_i, min_idx_j, taxa_list, Output_Text_File, DIST_MAT_TYPE)
+		Curr_tree = Merge_Leaf_NonLeaf(Curr_tree, clust_species_list, min_idx_i, min_idx_j, taxa_list, Output_Text_File, DIST_MAT_TYPE, DIST_MAT_UPDATE)
 	elif (isleaf_clust1 == False) and (isleaf_clust2 == True):
-		Curr_tree = Merge_Leaf_NonLeaf(Curr_tree, clust_species_list, min_idx_j, min_idx_i, taxa_list, Output_Text_File, DIST_MAT_TYPE)
+		Curr_tree = Merge_Leaf_NonLeaf(Curr_tree, clust_species_list, min_idx_j, min_idx_i, taxa_list, Output_Text_File, DIST_MAT_TYPE, DIST_MAT_UPDATE)
 	elif (isleaf_clust1 == False) and (isleaf_clust2 == False):
-		Curr_tree = Merge_Both_NonLeaf(Curr_tree, clust_species_list, min_idx_i, min_idx_j, taxa_list, Output_Text_File, DIST_MAT_TYPE)
+		Curr_tree = Merge_Both_NonLeaf(Curr_tree, clust_species_list, min_idx_i, min_idx_j, taxa_list, Output_Text_File, DIST_MAT_TYPE, DIST_MAT_UPDATE)
 	
 	return Curr_tree
 
@@ -1492,16 +1584,27 @@ def ResolveMultifurcation(Curr_tree, clust_species_list, no_of_input_clusters, O
 		fp.write('\n Examining ILS score for individual cluster pairs ')
 		fp.close()      
 
+	# comment - sourya
 	#---------------------------------------
 	# using single taxon as a representative of the taxa cluster
 	#Fill_DistMat_SingleEntry(DistMat, no_of_clust, clust_species_list, DIST_MAT_TYPE)
 	
-	# using average information from a taxa cluster - currently commented - requires more running time
-	Fill_DistMat_AvgEntry(DistMat, no_of_clust, clust_species_list, DIST_MAT_TYPE)
+	# using average information from a taxa cluster
+	Fill_DistMat_AvgEntry(DistMat, no_of_clust, clust_species_list, DIST_MAT_TYPE, (DIST_MAT_UPDATE - 1))
 	#---------------------------------------
-
+	# end comment - sourya
+	
 	# loop to execute the agglomerative clustering
 	while(no_of_clust > 2):
+		# add - sourya
+		"""
+		instead of approximating the cluster contents
+		we use the XL value computed from individual cluster elements
+		"""
+		#Fill_DistMat_SingleEntry(DistMat, no_of_clust, clust_species_list, DIST_MAT_TYPE, (DIST_MAT_UPDATE - 1))
+		#Fill_DistMat_AvgEntry(DistMat, no_of_clust, clust_species_list, DIST_MAT_TYPE, (DIST_MAT_UPDATE - 1))
+		# end add - sourya
+		
 		min_idx_i, min_idx_j = Get_NJ_Based_Min_Pair_Idx(DistMat, Norm_DistMat, \
 			no_of_clust, clust_species_list, NJ_RULE_USED, Output_Text_File)
 
@@ -1526,7 +1629,7 @@ def ResolveMultifurcation(Curr_tree, clust_species_list, no_of_input_clusters, O
 		if (NJ_MERGE_CLUST == 1):
 			Curr_tree = Merge_Cluster_Pair(Curr_tree, clust_species_list, min_idx_i, min_idx_j, taxa_list, Output_Text_File)
 		else:
-			Curr_tree = Merge_Cluster_Pair_New(Curr_tree, clust_species_list, min_idx_i, min_idx_j, taxa_list, Output_Text_File, DIST_MAT_TYPE)
+			Curr_tree = Merge_Cluster_Pair_New(Curr_tree, clust_species_list, min_idx_i, min_idx_j, taxa_list, Output_Text_File, DIST_MAT_TYPE, DIST_MAT_UPDATE)
 		#---------------------------------------------------------      
 		"""
 		adjust the DistMat by inserting one new row and column corresponding to the new cluster
@@ -1539,6 +1642,7 @@ def ResolveMultifurcation(Curr_tree, clust_species_list, no_of_input_clusters, O
 		# now apply reshape operation to get proper square matrix dimension
 		DistMat = numpy.reshape(DistMat, ((no_of_clust + 1), (no_of_clust + 1)), order='C')
 		
+		# comment - sourya
 		# now fill the elements of the new added row and column
 		for k in range(no_of_clust):
 			# for any index k, the number of extra lineage is the maximum of these three quantities
@@ -1546,15 +1650,17 @@ def ResolveMultifurcation(Curr_tree, clust_species_list, no_of_input_clusters, O
 				if (DIST_MAT_UPDATE == 1):
 					DistMat[k][no_of_clust] = (DistMat[k][min_idx_i] + DistMat[k][min_idx_j]) / 2.0
 				elif (DIST_MAT_UPDATE == 2):
-					DistMat[k][no_of_clust] = max(DistMat[k][min_idx_i], DistMat[k][min_idx_j], DistMat[min_idx_i][min_idx_j])
-				elif (DIST_MAT_UPDATE == 3):
-					DistMat[k][no_of_clust] = (DistMat[k][min_idx_i] * len(clust_species_list[min_idx_i]) + \
-						DistMat[k][min_idx_j] * len(clust_species_list[min_idx_j])) / (len(clust_species_list[min_idx_i]) + len(clust_species_list[min_idx_j]))
-					#DistMat[k][no_of_clust] = max(DistMat[k][min_idx_i], DistMat[k][min_idx_j])	# modified - sourya
+					DistMat[k][no_of_clust] = min(DistMat[k][min_idx_i], DistMat[k][min_idx_j])	# modified - sourya
+				else:
+					DistMat[k][no_of_clust] = max(DistMat[k][min_idx_i], DistMat[k][min_idx_j])	# modified - sourya
+				#elif (DIST_MAT_UPDATE == 3):
+					#DistMat[k][no_of_clust] = (DistMat[k][min_idx_i] * len(clust_species_list[min_idx_i]) + \
+						#DistMat[k][min_idx_j] * len(clust_species_list[min_idx_j])) / (len(clust_species_list[min_idx_i]) + len(clust_species_list[min_idx_j]))
 			else:
 				DistMat[k][no_of_clust] = (DistMat[k][min_idx_i] + DistMat[k][min_idx_j] - DistMat[min_idx_i][min_idx_j]) / 2.0
 			# symmetric property
 			DistMat[no_of_clust][k] = DistMat[k][no_of_clust]
+		# end comment - sourya
 		
 		# now remove the rows and columns corresponding to min_idx_i and min_idx_j
 		DistMat = numpy.delete(DistMat, (min_idx_i), axis=0)	# delete the row
@@ -1567,11 +1673,24 @@ def ResolveMultifurcation(Curr_tree, clust_species_list, no_of_input_clusters, O
 		Norm_DistMat = numpy.delete(Norm_DistMat, (min_idx_i), axis=1)	# delete the column
 		Norm_DistMat.fill(0)
 		
+		
 		# remove individual clusters' taxa information from the clust_species_list
 		# and add taxa_list as a new element
 		clust_species_list.pop(min_idx_i)
 		clust_species_list.pop(min_idx_j - 1)
-		clust_species_list.append(taxa_list)    
+		
+		# comment - sourya
+		#clust_species_list.append(taxa_list)    
+		
+		# add - sourya
+		taxa_list_mrca_node = Curr_tree.mrca(taxon_labels=taxa_list)
+		preorder_taxa_list = []
+		for n in taxa_list_mrca_node.preorder_iter():
+			if (n.is_leaf() == True):
+				if n.taxon.label in taxa_list:
+					preorder_taxa_list.append(n.taxon.label)
+		clust_species_list.append(preorder_taxa_list)   
+		# end add - sourya
 		
 		# decrement the number of clusters considered
 		no_of_clust = no_of_clust - 1
@@ -1620,14 +1739,26 @@ def Refine_Supertree_Binary_Form(Curr_tree, Output_Text_File, NJ_RULE_USED, DIST
 			# create a list which will contain the species list lying under 
 			# individual child nodes of rhe current node
 			clust_species_list = []
-			# examine individual nodes of the current node's children list
+			
+			# comment - sourya
+			## examine individual nodes of the current node's children list
+			#for x in curr_node_children:
+				#if (x.is_leaf() == True):
+					#subl = []
+					#subl.append(x.taxon.label)
+				#else:
+					#subl = GetTaxaUnderInternalNode(x)
+				#clust_species_list.append(subl)
+			# end comment - sourya
+
+			# add - sourya
 			for x in curr_node_children:
-				if (x.is_leaf() == True):
-					subl = []
-					subl.append(x.taxon.label)
-				else:
-					subl = GetTaxaUnderInternalNode(x)
+				subl = []
+				for n in x.preorder_iter():
+					if (n.is_leaf() == True):
+						subl.append(n.taxon.label)
 				clust_species_list.append(subl)
+			# end add - sourya
 			
 			# call the resolving routine
 			ResolveMultifurcation(Curr_tree, clust_species_list, len(curr_node_children), Output_Text_File, \

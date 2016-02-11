@@ -11,7 +11,7 @@ import math
 import sys
 #import networkx as nx
 #import matplotlib.pyplot as plt	# add - debug - sourya
-import decimal
+#import decimal
 
 # we define custom relation types
 RELATION_R3 = 0	# relation r3
@@ -61,7 +61,7 @@ CURRENT_CLUST_IDX_LIST = []
 
 # this is the debug level
 # set for printing the necessary information
-DEBUG_LEVEL = 2
+DEBUG_LEVEL = 0
 
 MAJORITY_CONSENSUS_RATIO = 0.6
 LEVEL_COUNT_VAL_CONSENSUS_RATIO = 0.7
@@ -75,13 +75,13 @@ AGGLO_CLUST = 2
 this is a list of couplets which are siblings
 according to their R3 consensus relation
 """
-Sibling_Couplet_List = []
+#Sibling_Couplet_List = []
 
 # error indicator 
 KEY_ABSENCE_INDICATOR = 3
 
 # add - sourya
-MODE_PERCENT = 0.5
+MODE_PERCENT = 0.25	#0.5
 MODE_BIN_COUNT = 40
 
 #"""
@@ -99,6 +99,7 @@ for a non conflicting couplet with negative support score of the corresponding r
 #R1R2Reln_MAJ_THRS = 0.7
 R1R2Reln_MAJ_THRS_high = 0.8	#0.75
 R1R2Reln_MAJ_THRS_low = 0.7	#0.8
+R1R2Reln_MAJ_THRS_very_low = 0.65
 
 """
 this is a threshold corresponding to the selection of R3 relation
@@ -312,25 +313,43 @@ class Reln_TaxaPair(object):
 		if (DEBUG_LEVEL >= 2):
 			fp = open(outfile, 'a')
 			fp.write('\n fr3: ' + str(fr3) + ' supporting trees : ' + str(self.supporting_trees))
-			
 			if ((level_val_r2 + level_val_r1) > 0):
-				fp.write(' Ratio: ' + str(lev_diff / (level_val_r2 + level_val_r1)))  
+				fp.write(' Ratio: ' + str(round((lev_diff / (level_val_r2 + level_val_r1)), 2)))  
 			fp.close()
 		
 		"""
 		if R3 relation is consensus then we impose R3 relation between this couplet
 		"""
-		if self._CheckTargetRelnConsensus(RELATION_R3):
+		if (self._CheckTargetRelnConsensus(RELATION_R3) == True):
+			if (DEBUG_LEVEL >= 2):
+				fp = open(outfile, 'a')
+				fp.write('\n *** R3 RELATI0N IS THE MAJORITY *** ')  
+				fp.close()
 			return True
 		
-		# frequency of R3 relation should be at least 20% of the total number of supporting trees
-		if (fr3 >= (0.2 * self.supporting_trees)):
+		"""
+		R3 relation should not be the relation with minimum frequency among all constituent relations
+		"""
+		if (fr3 > min(self.freq_count)):
 			if ((level_val_r2 + level_val_r1) > 0):
-				if ((lev_diff / (level_val_r2 + level_val_r1)) <= R3Reln_MAJ_THRS):
+				if ((round((lev_diff / (level_val_r2 + level_val_r1)), 2)) <= R3Reln_MAJ_THRS):
 					# the level difference should be very small
+					if (DEBUG_LEVEL >= 2):
+						fp = open(outfile, 'a')
+						fp.write('\n *** R3 RELATI0N IS THE MAJORITY *** ')  
+						fp.close()
 					return True
-			else:
+			else:	#if ((level_val_r2 + level_val_r1) == 0):
+				if (DEBUG_LEVEL >= 2):
+					fp = open(outfile, 'a')
+					fp.write('\n *** R3 RELATI0N IS THE MAJORITY *** ')  
+					fp.close()
 				return True
+
+		if (DEBUG_LEVEL >= 2):
+			fp = open(outfile, 'a')
+			fp.write('\n R3 RELATI0N IS NOT THE MAJORITY')  
+			fp.close()
 			
 		return False
 		
@@ -476,25 +495,25 @@ class Reln_TaxaPair(object):
 			return True
 		return False
 	
-	#def _CheckTargetRelnLevelConsensus(self, src_reln, only_cons=0):
-		#reln_array = [RELATION_R1, RELATION_R2, RELATION_R3]
-		#src_reln_idx = reln_array.index(src_reln)
-		#sum_level_count = sum(self.ALL_Reln_Level_Diff_Info_Count)
-		#sum_level_val = sum(self.ALL_Reln_Level_Diff_Val_Count)
-		#if (src_reln_idx == 0) or (src_reln_idx == 1):
-			#if (only_cons == 0):
-				#if (self.ALL_Reln_Level_Diff_Info_Count[src_reln_idx] >= (MAJORITY_CONSENSUS_RATIO * sum_level_count)) and \
-					#(self.ALL_Reln_Level_Diff_Val_Count[src_reln_idx] >= (LEVEL_COUNT_VAL_CONSENSUS_RATIO * sum_level_val)):
-					#return 1
-			#else:
-				#if (self.ALL_Reln_Level_Diff_Info_Count[src_reln_idx] > (0.5 * sum_level_count)) and \
-					#(self.ALL_Reln_Level_Diff_Val_Count[src_reln_idx] > (0.5 * sum_level_val)):
-					#return 1
-		#else:
-			#if (self.ALL_Reln_Level_Diff_Info_Count[2] > (self.ALL_Reln_Level_Diff_Info_Count[0] + self.ALL_Reln_Level_Diff_Info_Count[1])):
-				#return 1
+	def _CheckTargetRelnLevelConsensus(self, src_reln, only_cons=0):
+		reln_array = [RELATION_R1, RELATION_R2, RELATION_R3]
+		src_reln_idx = reln_array.index(src_reln)
+		sum_level_count = sum(self.ALL_Reln_Level_Diff_Info_Count)
+		sum_level_val = sum(self.ALL_Reln_Level_Diff_Val_Count)
+		if (src_reln_idx == 0) or (src_reln_idx == 1):
+			if (only_cons == 0):
+				if (self.ALL_Reln_Level_Diff_Info_Count[src_reln_idx] >= (MAJORITY_CONSENSUS_RATIO * sum_level_count)) and \
+					(self.ALL_Reln_Level_Diff_Val_Count[src_reln_idx] >= (LEVEL_COUNT_VAL_CONSENSUS_RATIO * sum_level_val)):
+					return 1
+			else:
+				if (self.ALL_Reln_Level_Diff_Info_Count[src_reln_idx] > (0.5 * sum_level_count)) and \
+					(self.ALL_Reln_Level_Diff_Val_Count[src_reln_idx] > (0.5 * sum_level_val)):
+					return 1
+		else:
+			if (self.ALL_Reln_Level_Diff_Info_Count[2] > (self.ALL_Reln_Level_Diff_Info_Count[0] + self.ALL_Reln_Level_Diff_Info_Count[1])):
+				return 1
 			
-		#return 0
+		return 0
 	
 	#def _CheckHigherTargetRelnLevelValue(self, src_reln):
 		#reln_array = [RELATION_R1, RELATION_R2, RELATION_R3]

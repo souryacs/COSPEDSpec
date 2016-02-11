@@ -84,8 +84,8 @@ def parse_options():
 				dest="dist_mat_update", \
 				default=1, \
 				help="1 - Use divide by 2 \
-				2 - Max operator \
-				3 - weighted average")     
+				2 - Min operator \
+				3 - Max operator")     
 	
 	parser.add_option("-c", "--njmerge", \
 				type="int", \
@@ -102,6 +102,14 @@ def parse_options():
 				default=2, \
 				help="1 - Use priority measure based selection (higher value)\
 				2 - Use XL based selection (lower value)")     
+
+	parser.add_option("-y", "--yesdynamicreln", \
+				type="int", \
+				action="store", \
+				dest="Yes_Dynamic_Reln", \
+				default=2, \
+				help="1 - For < 0 support score, consider all relations\
+				2 - Use relation of higher support score (conventional)")     
 	
 	parser.add_option("-r", "--ROOT", \
 			type="string", \
@@ -137,6 +145,8 @@ def main():
 	
 	MPP_SOLVE_METRIC = opts.MPP_solve_metric
 	
+	YES_DYNAMIC_RELN = opts.Yes_Dynamic_Reln
+	
 	if (INPUT_FILENAME == ""):
 		print '******** THERE IS NO INPUT FILE SPECIFIED - RETURN **********'
 		return
@@ -156,7 +166,8 @@ def main():
 		print 'dir_of_inp_file: ', dir_of_inp_file  
 			
 	if (OUTPUT_FILENAME == ""):
-		dir_of_curr_exec = dir_of_inp_file + 'COSPEDSpec' + '_D' + str(DIST_MAT_TYPE) + '_U' + str(DIST_MAT_UPDATE) + '_C' + str(NJ_MERGE_CLUST) + '_X' + str(MPP_SOLVE_METRIC)
+		dir_of_curr_exec = dir_of_inp_file + 'COSPEDSpec' + '_D' + str(DIST_MAT_TYPE) \
+			+ '_U' + str(DIST_MAT_UPDATE) + '_C' + str(NJ_MERGE_CLUST) + '_X' + str(MPP_SOLVE_METRIC) + '_Y' + str(YES_DYNAMIC_RELN)
 		""" 
 		create the directory
 		"""
@@ -421,11 +432,11 @@ def main():
 	process the non-conflicting queue first, provided we use this queue
 	"""
 	if (NO_OF_QUEUES == 2):
-		Reachability_Graph_Mat = Proc_Queue(Reachability_Graph_Mat, 1, Output_Text_File)
+		Reachability_Graph_Mat = Proc_Queue(Reachability_Graph_Mat, 1, Output_Text_File, YES_DYNAMIC_RELN)
 	""" 
 	then we process the conflicting queue (couplets having multiple relations supported)
 	"""
-	Reachability_Graph_Mat = Proc_Queue(Reachability_Graph_Mat, 0, Output_Text_File)
+	Reachability_Graph_Mat = Proc_Queue(Reachability_Graph_Mat, 0, Output_Text_File, YES_DYNAMIC_RELN)
 
 	# we print the final connection status for all the tree nodes
 	if (DEBUG_LEVEL > 2):
@@ -698,8 +709,8 @@ def main():
 		COMPLETE_INPUT_TAXA_LIST[:] = []
 	if (len(CURRENT_CLUST_IDX_LIST) > 0):
 		CURRENT_CLUST_IDX_LIST[:] = []
-	if (len(Sibling_Couplet_List) > 0):
-		Sibling_Couplet_List[:] = []
+	#if (len(Sibling_Couplet_List) > 0):
+		#Sibling_Couplet_List[:] = []
 
 	# free the reachability graph (numpy array)
 	del Reachability_Graph_Mat

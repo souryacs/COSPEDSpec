@@ -18,7 +18,7 @@ Single_Reln_no_Conflict_Queue_process:
 if 1, then points to the non-conflicting queue 
 otherwise, points to the multi relation (conflicting) queue
 """
-def Proc_Queue(Reachability_Graph_Mat, Single_Reln_no_Conflict_Queue_process, Output_Text_File):
+def Proc_Queue(Reachability_Graph_Mat, Single_Reln_no_Conflict_Queue_process, Output_Text_File, YES_DYNAMIC_RELN):
 	if (Single_Reln_no_Conflict_Queue_process == 1):
 		Inp_Queue = Cost_List_Taxa_Pair_Single_Reln
 	else:
@@ -151,164 +151,24 @@ def Proc_Queue(Reachability_Graph_Mat, Single_Reln_no_Conflict_Queue_process, Ou
 
 		## end add - sourya
 		#-------------------------------------------------
-		## add - sourya
-		
-		#""" 
-		#if the couplet is already connected, as shown by the entries in Reachability_Graph_Mat
-		#then there is no need for any connection
-		#"""
-		#existing_conn = CheckExistingConn(src_taxa_label, dest_taxa_label, Reachability_Graph_Mat, reln_type, Output_Text_File)
-		#if (existing_conn == 0):
-			#"""
-			#there is no apparent existing relationship between the couplet
-			#"""
-			#"""
-			#Case 1 --- we check whether the support score is positive
-			#in such a case, we immediately process the relation
-			#provided the relation is not conflicting
-			#"""
-			#if (conn_score > 0):
-				#if (CheckTransitiveConflict(src_taxa_label, dest_taxa_label, Reachability_Graph_Mat, reln_type, Output_Text_File) == 0):
-					## process the relation and add it in the list of supported relations
-					#if (DEBUG_LEVEL >= 2):
-						#fp = open(Output_Text_File, 'a')    
-						#if (Single_Reln_no_Conflict_Queue_process == 1):
-							#queue_str = 'NON CONFLICTING QUEUE (higher priority)'
-						#else:
-							#queue_str = 'CONFLICTING QUEUE (lower priority)'
-						#fp.write('\n ==>>>>>>>>> NEW CONN --- ' + str(queue_str) + 'nodes to be connected: ' \
-							#+ str(src_taxa_label) + ' and ' + str(dest_taxa_label) + \
-									#' nodes indices: ' + str(COMPLETE_INPUT_TAXA_LIST.index(src_taxa_label)) \
-										#+ ' and ' + str(COMPLETE_INPUT_TAXA_LIST.index(dest_taxa_label)) + \
-									#' relation type: ' + str(reln_type) + ' conn score: ' + str(conn_score))
-						#fp.close()
-					
-					## also update the reachability graph information
-					#Reachability_Graph_Mat = AdjustReachGraph(Reachability_Graph_Mat, src_taxa_label, dest_taxa_label, reln_type)
-
-			#else:
-				#"""
-				#Case 2 --- here the support score is negative
-				#in such a case, we immediately process the relation
-				#provided the relation is not conflicting
-				#"""
-				#conn_done, connecting_reln_type = ReturnConnectingReln(src_taxa_label, dest_taxa_label, Reachability_Graph_Mat, Output_Text_File)
-				#if (conn_done == 1):
-					#"""
-					#the couplet is now related with the 'connecting_reln_type'
-					#update the Reachability_Graph_Mat also
-					#"""
-					#if (DEBUG_LEVEL >= 2):
-						#fp = open(Output_Text_File, 'a')    
-						#if (Single_Reln_no_Conflict_Queue_process == 1):
-							#queue_str = 'NON CONFLICTING QUEUE (higher priority)'
-						#else:
-							#queue_str = 'CONFLICTING QUEUE (lower priority)'
-						#fp.write('\n ==>>>>>>>>> NEW CONN --- ' + str(queue_str) + 'nodes to be connected: ' \
-							#+ str(src_taxa_label) + ' and ' + str(dest_taxa_label) + \
-									#' nodes indices: ' + str(COMPLETE_INPUT_TAXA_LIST.index(src_taxa_label)) \
-										#+ ' and ' + str(COMPLETE_INPUT_TAXA_LIST.index(dest_taxa_label)) + \
-									#' relation type: ' + str(connecting_reln_type))
-						#fp.close()
-					
-					## also update the reachability graph information
-					#Reachability_Graph_Mat = AdjustReachGraph(Reachability_Graph_Mat, src_taxa_label, dest_taxa_label, connecting_reln_type)
-
-				#else:
-					#"""
-					#no relation can be established between the couplet
-					#"""
-					#if (DEBUG_LEVEL >= 2):
-						#fp = open(Output_Text_File, 'a')    
-						#fp.write('\n Although the couplet is not connected, no relation can be established between them')
-						#fp.close()
-		
-		#else:
-			#"""
-			#already the couplet is connected - so print that information
-			#"""
-			#if (DEBUG_LEVEL >= 2):
-				#fp = open(Output_Text_File, 'a')    
-				#fp.write('\n The couplet (' + str(src_taxa_label) + ', ' + str(dest_taxa_label) + ') is already connected') 
-				#fp.close()
-			
-		## end add - sourya
-		#-------------------------------------------------
-		
 		# add - sourya
 		
-		""" 
-		if the couplet is already connected, as shown by the entries in Reachability_Graph_Mat
-		then there is no need for any connection
-		"""
-		existing_conn = CheckExistingConn(src_taxa_label, dest_taxa_label, Reachability_Graph_Mat, reln_type, Output_Text_File)
-		if (existing_conn == 0):
+		if (YES_DYNAMIC_RELN == 1):
+			""" 
+			if the couplet is already connected, as shown by the entries in Reachability_Graph_Mat
+			then there is no need for any connection
 			"""
-			there is no apparent existing relationship between the couplet
-			"""
-			"""
-			Case 1 --- we check whether the support score is positive
-			in such a case, we immediately process the relation
-			provided the relation is not conflicting
-			"""
-			if (conn_score > 0):
-				if (CheckTransitiveConflict(src_taxa_label, dest_taxa_label, Reachability_Graph_Mat, reln_type, Output_Text_File) == 0):
-					# process the relation and add it in the list of supported relations
-					if (DEBUG_LEVEL >= 2):
-						fp = open(Output_Text_File, 'a')    
-						if (Single_Reln_no_Conflict_Queue_process == 1):
-							queue_str = 'NON CONFLICTING QUEUE (higher priority)'
-						else:
-							queue_str = 'CONFLICTING QUEUE (lower priority)'
-						fp.write('\n ==>>>>>>>>> NEW CONN --- ' + str(queue_str) + 'nodes to be connected: ' \
-							+ str(src_taxa_label) + ' and ' + str(dest_taxa_label) + \
-									' nodes indices: ' + str(COMPLETE_INPUT_TAXA_LIST.index(src_taxa_label)) \
-										+ ' and ' + str(COMPLETE_INPUT_TAXA_LIST.index(dest_taxa_label)) + \
-									' relation type: ' + str(reln_type) + ' conn score: ' + str(conn_score))
-						fp.close()
-					
-					# also update the reachability graph information
-					Reachability_Graph_Mat = AdjustReachGraph(Reachability_Graph_Mat, src_taxa_label, dest_taxa_label, reln_type)
-					
-			else:
+			existing_conn = CheckExistingConn(src_taxa_label, dest_taxa_label, Reachability_Graph_Mat, reln_type, Output_Text_File)
+			if (existing_conn == 0):
 				"""
-				Case 2 --- here the support score is negative
-				in such a case, we first check if R3 can be considered as a relation between them
-				otherwise, proceed with the current relation
+				there is no apparent existing relationship between the couplet
 				"""
-				l = (src_taxa_label, dest_taxa_label)
-				reln_list = TaxaPair_Reln_Dict[l]._GetAllowedRelnList()
-				conn_done = 0	# serves as the flag variable
-				
-				if RELATION_R3 in reln_list:
-					if (TaxaPair_Reln_Dict[l]._Check_Reln_R3_Majority(Output_Text_File) == True):
-						if (CheckTransitiveConflict(src_taxa_label, dest_taxa_label, Reachability_Graph_Mat, RELATION_R3, Output_Text_File) == 0):
-							"""
-							the couplet is now related with the 'RELATION_R3'
-							update the Reachability_Graph_Mat also
-							"""
-							if (DEBUG_LEVEL >= 2):
-								fp = open(Output_Text_File, 'a')    
-								if (Single_Reln_no_Conflict_Queue_process == 1):
-									queue_str = 'NON CONFLICTING QUEUE (higher priority)'
-								else:
-									queue_str = 'CONFLICTING QUEUE (lower priority)'
-								fp.write('\n ==>>>>>>>>> NEW CONN --- ' + str(queue_str) + 'nodes to be connected: ' \
-									+ str(src_taxa_label) + ' and ' + str(dest_taxa_label) + \
-											' nodes indices: ' + str(COMPLETE_INPUT_TAXA_LIST.index(src_taxa_label)) \
-												+ ' and ' + str(COMPLETE_INPUT_TAXA_LIST.index(dest_taxa_label)) + \
-											' relation type: ' + str(RELATION_R3))
-								fp.close()
-							
-							# also update the reachability graph information
-							Reachability_Graph_Mat = AdjustReachGraph(Reachability_Graph_Mat, src_taxa_label, dest_taxa_label, RELATION_R3)
-							
-							conn_done = 1	# update the flag variable
-				
 				"""
-				otherwise, we check whether the current relation can be included 
+				Case 1 --- we check whether the support score is positive
+				in such a case, we immediately process the relation
+				provided the relation is not conflicting
 				"""
-				if (conn_done == 0):
+				if (conn_score > 0):
 					if (CheckTransitiveConflict(src_taxa_label, dest_taxa_label, Reachability_Graph_Mat, reln_type, Output_Text_File) == 0):
 						# process the relation and add it in the list of supported relations
 						if (DEBUG_LEVEL >= 2):
@@ -326,14 +186,156 @@ def Proc_Queue(Reachability_Graph_Mat, Single_Reln_no_Conflict_Queue_process, Ou
 						
 						# also update the reachability graph information
 						Reachability_Graph_Mat = AdjustReachGraph(Reachability_Graph_Mat, src_taxa_label, dest_taxa_label, reln_type)
-		else:
+
+				else:
+					"""
+					Case 2 --- here the support score is negative
+					in such a case, we check the relation which best suits the couplet
+					provided the relation is not conflicting
+					"""
+					conn_done, connecting_reln_type = ReturnConnectingReln(src_taxa_label, dest_taxa_label, Reachability_Graph_Mat, Output_Text_File)
+					if (conn_done == 1):
+						"""
+						the couplet is now related with the 'connecting_reln_type'
+						update the Reachability_Graph_Mat also
+						"""
+						if (DEBUG_LEVEL >= 2):
+							fp = open(Output_Text_File, 'a')    
+							if (Single_Reln_no_Conflict_Queue_process == 1):
+								queue_str = 'NON CONFLICTING QUEUE (higher priority)'
+							else:
+								queue_str = 'CONFLICTING QUEUE (lower priority)'
+							fp.write('\n ==>>>>>>>>> NEW CONN --- ' + str(queue_str) + 'nodes to be connected: ' \
+								+ str(src_taxa_label) + ' and ' + str(dest_taxa_label) + \
+										' nodes indices: ' + str(COMPLETE_INPUT_TAXA_LIST.index(src_taxa_label)) \
+											+ ' and ' + str(COMPLETE_INPUT_TAXA_LIST.index(dest_taxa_label)) + \
+										' relation type: ' + str(connecting_reln_type))
+							fp.close()
+						
+						# also update the reachability graph information
+						Reachability_Graph_Mat = AdjustReachGraph(Reachability_Graph_Mat, src_taxa_label, dest_taxa_label, connecting_reln_type)
+
+					else:
+						"""
+						no relation can be established between the couplet
+						"""
+						if (DEBUG_LEVEL >= 2):
+							fp = open(Output_Text_File, 'a')    
+							fp.write('\n Although the couplet is not connected, no relation can be established between them')
+							fp.close()
+			
+			else:
+				"""
+				already the couplet is connected - so print that information
+				"""
+				if (DEBUG_LEVEL >= 2):
+					fp = open(Output_Text_File, 'a')    
+					fp.write('\n The couplet (' + str(src_taxa_label) + ', ' + str(dest_taxa_label) + ') is already connected') 
+					fp.close()
+			
+		# end add - sourya
+		#-------------------------------------------------
+		
+		# add - sourya
+		
+		if (YES_DYNAMIC_RELN == 2):
+			""" 
+			if the couplet is already connected, as shown by the entries in Reachability_Graph_Mat
+			then there is no need for any connection
 			"""
-			already the couplet is connected - so print that information
-			"""
-			if (DEBUG_LEVEL >= 2):
-				fp = open(Output_Text_File, 'a')    
-				fp.write('\n The couplet (' + str(src_taxa_label) + ', ' + str(dest_taxa_label) + ') is already connected') 
-				fp.close()
+			existing_conn = CheckExistingConn(src_taxa_label, dest_taxa_label, Reachability_Graph_Mat, reln_type, Output_Text_File)
+			if (existing_conn == 0):
+				"""
+				there is no apparent existing relationship between the couplet
+				"""
+				"""
+				Case 1 --- we check whether the support score is positive
+				in such a case, we immediately process the relation
+				provided the relation is not conflicting
+				"""
+				if (conn_score > 0):
+					if (CheckTransitiveConflict(src_taxa_label, dest_taxa_label, Reachability_Graph_Mat, reln_type, Output_Text_File) == 0):
+						# process the relation and add it in the list of supported relations
+						if (DEBUG_LEVEL >= 2):
+							fp = open(Output_Text_File, 'a')    
+							if (Single_Reln_no_Conflict_Queue_process == 1):
+								queue_str = 'NON CONFLICTING QUEUE (higher priority)'
+							else:
+								queue_str = 'CONFLICTING QUEUE (lower priority)'
+							fp.write('\n ==>>>>>>>>> NEW CONN --- ' + str(queue_str) + 'nodes to be connected: ' \
+								+ str(src_taxa_label) + ' and ' + str(dest_taxa_label) + \
+										' nodes indices: ' + str(COMPLETE_INPUT_TAXA_LIST.index(src_taxa_label)) \
+											+ ' and ' + str(COMPLETE_INPUT_TAXA_LIST.index(dest_taxa_label)) + \
+										' relation type: ' + str(reln_type) + ' conn score: ' + str(conn_score))
+							fp.close()
+						
+						# also update the reachability graph information
+						Reachability_Graph_Mat = AdjustReachGraph(Reachability_Graph_Mat, src_taxa_label, dest_taxa_label, reln_type)
+						
+				else:
+					"""
+					Case 2 --- here the support score is negative
+					in such a case, we first check if R3 can be considered as a relation between them
+					otherwise, proceed with the current relation
+					"""
+					l = (src_taxa_label, dest_taxa_label)
+					reln_list = TaxaPair_Reln_Dict[l]._GetAllowedRelnList()
+					conn_done = 0	# serves as the flag variable
+					
+					if RELATION_R3 in reln_list:
+						if (TaxaPair_Reln_Dict[l]._Check_Reln_R3_Majority(Output_Text_File) == True):
+							if (CheckTransitiveConflict(src_taxa_label, dest_taxa_label, Reachability_Graph_Mat, RELATION_R3, Output_Text_File) == 0):
+								"""
+								the couplet is now related with the 'RELATION_R3'
+								update the Reachability_Graph_Mat also
+								"""
+								if (DEBUG_LEVEL >= 2):
+									fp = open(Output_Text_File, 'a')    
+									if (Single_Reln_no_Conflict_Queue_process == 1):
+										queue_str = 'NON CONFLICTING QUEUE (higher priority)'
+									else:
+										queue_str = 'CONFLICTING QUEUE (lower priority)'
+									fp.write('\n ==>>>>>>>>> NEW CONN --- ' + str(queue_str) + 'nodes to be connected: ' \
+										+ str(src_taxa_label) + ' and ' + str(dest_taxa_label) + \
+												' nodes indices: ' + str(COMPLETE_INPUT_TAXA_LIST.index(src_taxa_label)) \
+													+ ' and ' + str(COMPLETE_INPUT_TAXA_LIST.index(dest_taxa_label)) + \
+												' relation type: ' + str(RELATION_R3))
+									fp.close()
+								
+								# also update the reachability graph information
+								Reachability_Graph_Mat = AdjustReachGraph(Reachability_Graph_Mat, src_taxa_label, dest_taxa_label, RELATION_R3)
+								
+								conn_done = 1	# update the flag variable
+					
+					"""
+					otherwise, we check whether the current relation can be included 
+					"""
+					if (conn_done == 0):
+						if (CheckTransitiveConflict(src_taxa_label, dest_taxa_label, Reachability_Graph_Mat, reln_type, Output_Text_File) == 0):
+							# process the relation and add it in the list of supported relations
+							if (DEBUG_LEVEL >= 2):
+								fp = open(Output_Text_File, 'a')    
+								if (Single_Reln_no_Conflict_Queue_process == 1):
+									queue_str = 'NON CONFLICTING QUEUE (higher priority)'
+								else:
+									queue_str = 'CONFLICTING QUEUE (lower priority)'
+								fp.write('\n ==>>>>>>>>> NEW CONN --- ' + str(queue_str) + 'nodes to be connected: ' \
+									+ str(src_taxa_label) + ' and ' + str(dest_taxa_label) + \
+											' nodes indices: ' + str(COMPLETE_INPUT_TAXA_LIST.index(src_taxa_label)) \
+												+ ' and ' + str(COMPLETE_INPUT_TAXA_LIST.index(dest_taxa_label)) + \
+											' relation type: ' + str(reln_type) + ' conn score: ' + str(conn_score))
+								fp.close()
+							
+							# also update the reachability graph information
+							Reachability_Graph_Mat = AdjustReachGraph(Reachability_Graph_Mat, src_taxa_label, dest_taxa_label, reln_type)
+			else:
+				"""
+				already the couplet is connected - so print that information
+				"""
+				if (DEBUG_LEVEL >= 2):
+					fp = open(Output_Text_File, 'a')    
+					fp.write('\n The couplet (' + str(src_taxa_label) + ', ' + str(dest_taxa_label) + ') is already connected') 
+					fp.close()
 			
 		# end add - sourya
 		

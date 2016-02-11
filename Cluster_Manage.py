@@ -60,8 +60,23 @@ def FindClusterReln(clust1_key, clust2_key):
 				r1_level_val_ratio = TaxaPair_Reln_Dict[key1]._GetLevelValRatio(0)
 				r2_level_val_ratio = TaxaPair_Reln_Dict[key1]._GetLevelValRatio(1)
 				allowed_reln_list = TaxaPair_Reln_Dict[key1]._GetAllowedRelnList()
+				
+				## add - sourya
+				#if (len(clust1_spec_list) > 1) and (len(clust2_spec_list) == 1):
+					#if (RELATION_R1 in allowed_reln_list):
+						#if (round(r1_level_val_ratio, 2) >= R1R2Reln_MAJ_THRS_very_low):
+							#if (TaxaPair_Reln_Dict[key1]._CheckTargetRelnLevelConsensus(RELATION_R1, 1)):
+								#return 1
+						
+				#if (len(clust1_spec_list) == 1) and (len(clust2_spec_list) > 1):
+					#if (RELATION_R2 in allowed_reln_list):
+						#if (round(r2_level_val_ratio, 2) >= R1R2Reln_MAJ_THRS_very_low):
+							#if (TaxaPair_Reln_Dict[key1]._CheckTargetRelnLevelConsensus(RELATION_R2, 1)):
+								#return 2
+				## end add - sourya
 
-				if ((r1_freq + 2 * (pseudo_r1_freq - pseudo_r2_freq)) >= r4_freq) \
+				if (((r1_freq + 2 * (pseudo_r1_freq - pseudo_r2_freq)) >= r4_freq) \
+					or (TaxaPair_Reln_Dict[key1]._CheckTargetRelnLevelConsensus(RELATION_R1, 1))) \
 					and ((round(r1_level_val_ratio, 2) >= R1R2Reln_MAJ_THRS_low) and (RELATION_R1 in allowed_reln_list)):
 					#if (len(clust1_spec_list) == 1) and (len(clust2_spec_list) == 1):
 						#if (round(((r1_freq * 1.0) / TaxaPair_Reln_Dict[key1]._GetConsensusFreq()), 2) >= CONSENSUS_FREQ_RATIO_THR) \
@@ -72,7 +87,8 @@ def FindClusterReln(clust1_key, clust2_key):
 					else:
 						return 3
 
-				if ((r2_freq + 2 * (pseudo_r2_freq - pseudo_r1_freq)) >= r4_freq) \
+				if (((r2_freq + 2 * (pseudo_r2_freq - pseudo_r1_freq)) >= r4_freq) \
+					or (TaxaPair_Reln_Dict[key1]._CheckTargetRelnLevelConsensus(RELATION_R2, 1))) \
 					and ((round(r2_level_val_ratio, 2) >= R1R2Reln_MAJ_THRS_low) and (RELATION_R2 in allowed_reln_list)):
 					#if (len(clust1_spec_list) == 1) and (len(clust2_spec_list) == 1):
 						#if (round(((r2_freq * 1.0) / TaxaPair_Reln_Dict[key1]._GetConsensusFreq()), 2) >= CONSENSUS_FREQ_RATIO_THR) \
@@ -93,7 +109,22 @@ def FindClusterReln(clust1_key, clust2_key):
 				r2_level_val_ratio = TaxaPair_Reln_Dict[key2]._GetLevelValRatio(1)
 				allowed_reln_list = TaxaPair_Reln_Dict[key2]._GetAllowedRelnList()
 				
-				if ((r1_freq + 2 * (pseudo_r1_freq - pseudo_r2_freq)) >= r4_freq) \
+				## add - sourya
+				#if (len(clust1_spec_list) > 1) and (len(clust2_spec_list) == 1):
+					#if (RELATION_R2 in allowed_reln_list):
+						#if (round(r2_level_val_ratio, 2) >= R1R2Reln_MAJ_THRS_very_low):
+							#if (TaxaPair_Reln_Dict[key2]._CheckTargetRelnLevelConsensus(RELATION_R2, 1)):
+								#return 1
+						
+				#if (len(clust1_spec_list) == 1) and (len(clust2_spec_list) > 1):
+					#if (RELATION_R1 in allowed_reln_list):
+						#if (round(r1_level_val_ratio, 2) >= R1R2Reln_MAJ_THRS_very_low):
+							#if (TaxaPair_Reln_Dict[key2]._CheckTargetRelnLevelConsensus(RELATION_R1, 1)):
+								#return 2
+				## end add - sourya
+				
+				if (((r1_freq + 2 * (pseudo_r1_freq - pseudo_r2_freq)) >= r4_freq) \
+					or (TaxaPair_Reln_Dict[key2]._CheckTargetRelnLevelConsensus(RELATION_R1, 1))) \
 					and ((round(r1_level_val_ratio, 2) >= R1R2Reln_MAJ_THRS_low) and (RELATION_R1 in allowed_reln_list)):
 					#if (len(clust1_spec_list) == 1) and (len(clust2_spec_list) == 1):
 						#if (round(((r1_freq * 1.0) / TaxaPair_Reln_Dict[key2]._GetConsensusFreq()), 2) >= CONSENSUS_FREQ_RATIO_THR) \
@@ -104,7 +135,8 @@ def FindClusterReln(clust1_key, clust2_key):
 					else:
 						return 4
 
-				if ((r2_freq + 2 * (pseudo_r2_freq - pseudo_r1_freq)) >= r4_freq) \
+				if (((r2_freq + 2 * (pseudo_r2_freq - pseudo_r1_freq)) >= r4_freq) \
+					or (TaxaPair_Reln_Dict[key2]._CheckTargetRelnLevelConsensus(RELATION_R2, 1))) \
 					and ((round(r2_level_val_ratio, 2) >= R1R2Reln_MAJ_THRS_low) and (RELATION_R2 in allowed_reln_list)):
 					#if (len(clust1_spec_list) == 1) and (len(clust2_spec_list) == 1):
 						#if (round(((r2_freq * 1.0) / TaxaPair_Reln_Dict[key2]._GetConsensusFreq()), 2) >= CONSENSUS_FREQ_RATIO_THR) \

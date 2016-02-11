@@ -82,7 +82,7 @@ def PrintNewick(root_clust_node_idx):
 		at first, print the contents of this taxa cluster
 		if the cluster has more than one taxon, then use ( and ) to enclose the taxa list
 		"""
-		if (len(outnodes) > 0):
+		if (len(outnodes) > 0):	# and (len(spec_list) == 1):
 			Tree_Str_List = Tree_Str_List + '('
 			
 		if (len(spec_list) > 1):
@@ -119,8 +119,10 @@ def PrintNewick(root_clust_node_idx):
 			# at last, append one closing bracket, signifying the end of out edge cluster contents
 			Tree_Str_List = Tree_Str_List + ')'
 
-		if (len(outnodes) > 0):
+		if (len(outnodes) > 0):	# and (len(spec_list) == 1):
 			Tree_Str_List = Tree_Str_List + ')'
+		
+		
 		
 		## add - sourya
 		#single_tax_single_leaf_outnode = False
