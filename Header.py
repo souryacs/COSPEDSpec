@@ -43,11 +43,11 @@ queue storing relations of conflicting couplets
 """
 Cost_List_Taxa_Pair_Multi_Reln = []
 
-""" 
-queue storing relations of non-conflicting couplets
-provided that we use this queue
-"""
-Cost_List_Taxa_Pair_Single_Reln = [] 
+#""" 
+#queue storing relations of non-conflicting couplets
+#provided that we use this queue
+#"""
+#Cost_List_Taxa_Pair_Single_Reln = [] 
 
 """ 
 this list contains the complete set of taxa present in the input trees 
@@ -61,14 +61,14 @@ CURRENT_CLUST_IDX_LIST = []
 
 # this is the debug level
 # set for printing the necessary information
-DEBUG_LEVEL = 0
+DEBUG_LEVEL = 2
 
 MAJORITY_CONSENSUS_RATIO = 0.6
 LEVEL_COUNT_VAL_CONSENSUS_RATIO = 0.7
 
 # variables used to denote whether we use traditional NJ method
 # or use a variant of it, namely the agglomerative clustering
-TRADITIONAL_NJ = 1
+#TRADITIONAL_NJ = 1
 AGGLO_CLUST = 2
 
 """
@@ -78,10 +78,10 @@ according to their R3 consensus relation
 #Sibling_Couplet_List = []
 
 # error indicator 
-KEY_ABSENCE_INDICATOR = 3
+#KEY_ABSENCE_INDICATOR = 3
 
 # add - sourya
-MODE_PERCENT = 0.25	#0.5
+MODE_PERCENT = 0.5
 MODE_BIN_COUNT = 40
 
 #"""
@@ -99,7 +99,7 @@ for a non conflicting couplet with negative support score of the corresponding r
 #R1R2Reln_MAJ_THRS = 0.7
 R1R2Reln_MAJ_THRS_high = 0.8	#0.75
 R1R2Reln_MAJ_THRS_low = 0.7	#0.8
-R1R2Reln_MAJ_THRS_very_low = 0.65
+#R1R2Reln_MAJ_THRS_very_low = 0.65
 
 """
 this is a threshold corresponding to the selection of R3 relation
@@ -119,7 +119,15 @@ will be included in the score queue
 """
 PERCENT_MAX_FREQ = 0.5	#0.35
 
-CONSENSUS_FREQ_RATIO_THR = 0.7	#0.8
+#CONSENSUS_FREQ_RATIO_THR = 0.7	#0.8
+
+#PRIORITY_PERCENT = 0.1
+
+"""
+this list contains the set of clusters 
+which need to be processed for setting at least one directed out edge to another cluster
+"""
+Candidate_Out_Edge_Cluster_List = []
 
 #-----------------------------------------------------
 """ 
@@ -219,6 +227,8 @@ class Reln_TaxaPair(object):
 	this function returns the ratio of level value
 	@param: idx: 	if 0, returns ratio w.r.t r1
 							  if 1, returns ratio w.r.t r2
+							  if 3, returns ratio w.r.t r1 when a sibling is present
+							  if 4, returns ratio w.r.t r2 when a sibling is present
 	"""
 	def _GetLevelValRatio(self, idx):
 		level_val_r1 = self.ALL_Reln_Level_Diff_Val_Count[0]
@@ -228,77 +238,79 @@ class Reln_TaxaPair(object):
 				return (level_val_r1 * 1.0) / (level_val_r1 + level_val_r2)
 			else:
 				return 0
-		else:
+		else:	#if (idx == 1):
 			if ((level_val_r1 + level_val_r2) > 0):
 				return (level_val_r2 * 1.0) / (level_val_r1 + level_val_r2)
 			else:
 				return 0
+			
+		return 0
 	
-	"""
-	this function checks whether for a conflicting taxa pair with negative support score
-	R1 relation can be applied between this couplet
-	"""
-	def _Check_Reln_R1_Majority(self, outfile):
-		fr1 = self.freq_count[RELATION_R1]
-		fr2 = self.freq_count[RELATION_R2]
-		fr3 = self.freq_count[RELATION_R3]
-		fr4 = self.freq_count[RELATION_R4]
-		fpr1 = self.freq_R4_pseudo_R1R2[0]
-		fpr2 = self.freq_R4_pseudo_R1R2[1]
-		level_r1_count = self.ALL_Reln_Level_Diff_Info_Count[0]
-		sum_level_count = sum(self.ALL_Reln_Level_Diff_Info_Count)
-		r1_level_val_ratio = self._GetLevelValRatio(0)
+	#"""
+	#this function checks whether for a conflicting taxa pair with negative support score
+	#R1 relation can be applied between this couplet
+	#"""
+	#def _Check_Reln_R1_Majority(self, outfile):
+		#fr1 = self.freq_count[RELATION_R1]
+		#fr2 = self.freq_count[RELATION_R2]
+		#fr3 = self.freq_count[RELATION_R3]
+		#fr4 = self.freq_count[RELATION_R4]
+		#fpr1 = self.freq_R4_pseudo_R1R2[0]
+		#fpr2 = self.freq_R4_pseudo_R1R2[1]
+		#level_r1_count = self.ALL_Reln_Level_Diff_Info_Count[0]
+		#sum_level_count = sum(self.ALL_Reln_Level_Diff_Info_Count)
+		#r1_level_val_ratio = self._GetLevelValRatio(0)
 		
-		if (DEBUG_LEVEL >= 2):
-			fp = open(outfile, 'a')
-			fp.write('\n fr1: ' + str(fr1) + ' fr2: ' + str(fr2) + ' fr4: ' + str(fr4) + ' fr3: ' + str(fr3) \
-				+ ' fpr1: ' + str(fpr1) + ' fpr2: ' + str(fpr2) + ' level_r1_count: ' + str(level_r1_count) \
-					+ ' sum_level_count: ' + str(sum_level_count))
-			fp.write(' Ratio: ' + str(r1_level_val_ratio))  
-			fp.close()
+		#if (DEBUG_LEVEL >= 2):
+			#fp = open(outfile, 'a')
+			#fp.write('\n fr1: ' + str(fr1) + ' fr2: ' + str(fr2) + ' fr4: ' + str(fr4) + ' fr3: ' + str(fr3) \
+				#+ ' fpr1: ' + str(fpr1) + ' fpr2: ' + str(fpr2) + ' level_r1_count: ' + str(level_r1_count) \
+					#+ ' sum_level_count: ' + str(sum_level_count))
+			#fp.write(' Ratio: ' + str(r1_level_val_ratio))  
+			#fp.close()
 		
-		if (round(r1_level_val_ratio, 2) >= R1R2Reln_MAJ_THRS_high):
-			return True
+		#if (round(r1_level_val_ratio, 2) >= R1R2Reln_MAJ_THRS_high):
+			#return True
 		
-		if (round(((fr1 * 1.0) / self._GetConsensusFreq()), 2) >= CONSENSUS_FREQ_RATIO_THR):
-			if  (((fr1 + 2 * (fpr1 - fpr2)) > fr4) and ((fr1 + fpr1 - fpr2) > fr3) and ((fr1 + fpr1 - fpr2) > (fr2 + fpr2 - fpr1))) \
-				or (round(r1_level_val_ratio, 2) >= R1R2Reln_MAJ_THRS_low):
-				return True
+		#if (round(((fr1 * 1.0) / self._GetConsensusFreq()), 2) >= CONSENSUS_FREQ_RATIO_THR):
+			#if  (((fr1 + 2 * (fpr1 - fpr2)) > fr4) and ((fr1 + fpr1 - fpr2) > fr3) and ((fr1 + fpr1 - fpr2) > (fr2 + fpr2 - fpr1))) \
+				#or (round(r1_level_val_ratio, 2) >= R1R2Reln_MAJ_THRS_low):
+				#return True
 		
-		return False
+		#return False
 		
-	"""
-	this function checks whether for a conflicting taxa pair with negative support score
-	R2 relation can be applied between this couplet
-	"""
-	def _Check_Reln_R2_Majority(self, outfile):
-		fr1 = self.freq_count[RELATION_R1]
-		fr2 = self.freq_count[RELATION_R2]
-		fr3 = self.freq_count[RELATION_R3]
-		fr4 = self.freq_count[RELATION_R4]
-		fpr1 = self.freq_R4_pseudo_R1R2[0]
-		fpr2 = self.freq_R4_pseudo_R1R2[1]
-		level_r2_count = self.ALL_Reln_Level_Diff_Info_Count[1]
-		sum_level_count = sum(self.ALL_Reln_Level_Diff_Info_Count)
-		r2_level_val_ratio = self._GetLevelValRatio(1)
+	#"""
+	#this function checks whether for a conflicting taxa pair with negative support score
+	#R2 relation can be applied between this couplet
+	#"""
+	#def _Check_Reln_R2_Majority(self, outfile):
+		#fr1 = self.freq_count[RELATION_R1]
+		#fr2 = self.freq_count[RELATION_R2]
+		#fr3 = self.freq_count[RELATION_R3]
+		#fr4 = self.freq_count[RELATION_R4]
+		#fpr1 = self.freq_R4_pseudo_R1R2[0]
+		#fpr2 = self.freq_R4_pseudo_R1R2[1]
+		#level_r2_count = self.ALL_Reln_Level_Diff_Info_Count[1]
+		#sum_level_count = sum(self.ALL_Reln_Level_Diff_Info_Count)
+		#r2_level_val_ratio = self._GetLevelValRatio(1)
 		
-		if (DEBUG_LEVEL >= 2):
-			fp = open(outfile, 'a')
-			fp.write('\n fr1: ' + str(fr1) + ' fr2: ' + str(fr2) + ' fr4: ' + str(fr4) + ' fr3: ' + str(fr3) \
-				+ ' fpr1: ' + str(fpr1) + ' fpr2: ' + str(fpr2) + ' level_r2_count: ' + str(level_r2_count) \
-					+ ' sum_level_count: ' + str(sum_level_count))
-			fp.write(' Ratio: ' + str(r2_level_val_ratio))  
-			fp.close()
+		#if (DEBUG_LEVEL >= 2):
+			#fp = open(outfile, 'a')
+			#fp.write('\n fr1: ' + str(fr1) + ' fr2: ' + str(fr2) + ' fr4: ' + str(fr4) + ' fr3: ' + str(fr3) \
+				#+ ' fpr1: ' + str(fpr1) + ' fpr2: ' + str(fpr2) + ' level_r2_count: ' + str(level_r2_count) \
+					#+ ' sum_level_count: ' + str(sum_level_count))
+			#fp.write(' Ratio: ' + str(r2_level_val_ratio))  
+			#fp.close()
 		
-		if (round(r2_level_val_ratio, 2) >= R1R2Reln_MAJ_THRS_high):
-			return True
+		#if (round(r2_level_val_ratio, 2) >= R1R2Reln_MAJ_THRS_high):
+			#return True
 		
-		if (round(((fr2 * 1.0) / self._GetConsensusFreq()), 2) >= CONSENSUS_FREQ_RATIO_THR):
-			if  (((fr2 + 2 * (fpr2 - fpr1)) > fr4) and ((fr2 + fpr2 - fpr1) > fr3) and ((fr2 + fpr2 - fpr1) > (fr1 + fpr1 - fpr2))) \
-				or (round(r2_level_val_ratio, 2) >= R1R2Reln_MAJ_THRS_low):
-				return True
+		#if (round(((fr2 * 1.0) / self._GetConsensusFreq()), 2) >= CONSENSUS_FREQ_RATIO_THR):
+			#if  (((fr2 + 2 * (fpr2 - fpr1)) > fr4) and ((fr2 + fpr2 - fpr1) > fr3) and ((fr2 + fpr2 - fpr1) > (fr1 + fpr1 - fpr2))) \
+				#or (round(r2_level_val_ratio, 2) >= R1R2Reln_MAJ_THRS_low):
+				#return True
 
-		return False
+		#return False
 		
 	"""
 	this function checks whether for a conflicting taxa pair with negative support score
@@ -409,7 +421,6 @@ class Reln_TaxaPair(object):
 	#----------------------------------	
 	
 	def _AddFreqPseudoR1(self, idx, r=1):
-		# modified - sourya
 		self.freq_R4_pseudo_R1R2[idx] = self.freq_R4_pseudo_R1R2[idx] + r
 		
 	def _GetFreqPseudoR1(self, idx):
@@ -419,33 +430,6 @@ class Reln_TaxaPair(object):
 		for i in range(3):
 			self.ALL_Reln_Level_Diff_Val_Count[i] = (self.ALL_Reln_Level_Diff_Val_Count[i] * 1.0) / self.supporting_trees
 		
-	#"""
-	#this function checks whether a couplet has R4 as its consensus relation
-	#and frequencies of different relations can be swapped
-	#"""
-	#def _CheckSwapFreq(self):
-		#if (self._CheckTargetRelnConsensus(RELATION_R4)):
-			## R4 is its consensus relation
-			#if (((self.freq_count[RELATION_R1] + self.freq_R4_pseudo_R1R2[0] - self.freq_R4_pseudo_R1R2[1]) \
-				#> (self.freq_count[RELATION_R4] - self.freq_R4_pseudo_R1R2[0])) \
-					#and (self._CheckTargetRelnLevelConsensus(RELATION_R1, 1) == 1)):
-				#"""
-				#here R1 can be established as a consensus relation
-				#interchange the frequencies
-				#"""
-				#self.freq_count[RELATION_R1] = self.freq_count[RELATION_R1] + self.freq_R4_pseudo_R1R2[0]
-				#self.freq_count[RELATION_R4] = self.freq_count[RELATION_R4] - self.freq_R4_pseudo_R1R2[0]
-				
-			#if (((self.freq_count[RELATION_R2] + self.freq_R4_pseudo_R1R2[1] - self.freq_R4_pseudo_R1R2[0]) \
-				#> (self.freq_count[RELATION_R4] - self.freq_R4_pseudo_R1R2[1])) \
-					#and (self._CheckTargetRelnLevelConsensus(RELATION_R2, 1) == 1)):
-				#"""
-				#here R2 can be established as a consensus relation
-				#interchange the frequencies
-				#"""
-				#self.freq_count[RELATION_R2] = self.freq_count[RELATION_R2] + self.freq_R4_pseudo_R1R2[1]
-				#self.freq_count[RELATION_R4] = self.freq_count[RELATION_R4] - self.freq_R4_pseudo_R1R2[1]
-				
 	"""
 	this function computes the level difference (relation based) count 
 	# parameters:
@@ -499,7 +483,7 @@ class Reln_TaxaPair(object):
 		reln_array = [RELATION_R1, RELATION_R2, RELATION_R3]
 		src_reln_idx = reln_array.index(src_reln)
 		sum_level_count = sum(self.ALL_Reln_Level_Diff_Info_Count)
-		sum_level_val = sum(self.ALL_Reln_Level_Diff_Val_Count)
+		sum_level_val = self.ALL_Reln_Level_Diff_Val_Count[0] + self.ALL_Reln_Level_Diff_Val_Count[1]
 		if (src_reln_idx == 0) or (src_reln_idx == 1):
 			if (only_cons == 0):
 				if (self.ALL_Reln_Level_Diff_Info_Count[src_reln_idx] >= (MAJORITY_CONSENSUS_RATIO * sum_level_count)) and \
@@ -706,7 +690,7 @@ class Reln_TaxaPair(object):
 	"""
 	def _PrintRelnInfo(self, key, Output_Text_File):
 		fp = open(Output_Text_File, 'a')    
-		fp.write('\n taxa pair key: ' + str(key))
+		fp.write('\n\n\n taxa pair key: ' + str(key))
 		fp.write('\n relations [type/count/priority_reln/score]: ')
 		for i in range(4):
 			fp.write('\n [' + str(i) + '/' + str(self.freq_count[i]) + '/' + str(self.priority_reln[i]) + '/' + str(self.support_score[i]) + ']')
@@ -727,10 +711,11 @@ class Reln_TaxaPair(object):
 			fp.write('\n Level Val r1 reln ratio : ' + str((self.ALL_Reln_Level_Diff_Val_Count[0] * 1.0) / (self.ALL_Reln_Level_Diff_Val_Count[0] + self.ALL_Reln_Level_Diff_Val_Count[1])))
 			fp.write('\n Level Val r2 reln ratio : ' + str((self.ALL_Reln_Level_Diff_Val_Count[1] * 1.0) / (self.ALL_Reln_Level_Diff_Val_Count[0] + self.ALL_Reln_Level_Diff_Val_Count[1])))
 			fp.write('\n Level Val r3/r4 reln ratio : ' + str((math.fabs(self.ALL_Reln_Level_Diff_Val_Count[0] - self.ALL_Reln_Level_Diff_Val_Count[1])) / (self.ALL_Reln_Level_Diff_Val_Count[0] + self.ALL_Reln_Level_Diff_Val_Count[1])))
-		if (sum(self.ALL_Reln_Level_Diff_Info_Count) > 0):
-			fp.write('\n Level Count r1 reln ratio : ' + str((self.ALL_Reln_Level_Diff_Info_Count[0] * 1.0) / (sum(self.ALL_Reln_Level_Diff_Info_Count))))
-			fp.write('\n Level Count r2 reln ratio : ' + str((self.ALL_Reln_Level_Diff_Info_Count[1] * 1.0) / (sum(self.ALL_Reln_Level_Diff_Info_Count))))
-			fp.write('\n Level Count r3 reln ratio : ' + str((self.ALL_Reln_Level_Diff_Info_Count[2] * 1.0) / (sum(self.ALL_Reln_Level_Diff_Info_Count))))
+		#if (sum(self.ALL_Reln_Level_Diff_Info_Count) > 0):
+			#fp.write('\n Level Count r1 reln ratio : ' + str((self.ALL_Reln_Level_Diff_Info_Count[0] * 1.0) / (sum(self.ALL_Reln_Level_Diff_Info_Count))))
+			#fp.write('\n Level Count r2 reln ratio : ' + str((self.ALL_Reln_Level_Diff_Info_Count[1] * 1.0) / (sum(self.ALL_Reln_Level_Diff_Info_Count))))
+			#fp.write('\n Level Count r3 reln ratio : ' + str((self.ALL_Reln_Level_Diff_Info_Count[2] * 1.0) / (sum(self.ALL_Reln_Level_Diff_Info_Count))))
+
 		fp.close()
 
 	#------------------------------------------
@@ -793,6 +778,8 @@ class Cluster_node(object):
 		# this variable stores the NO edge list from this cluster
 		# each list element is the other cluster index 
 		self.no_edge_list = []
+		# this is a possible R1 reln list
+		self.possible_R1_list = []
 		# during initialization, append one tuple to this cluster
 		if inp_taxa is not None:
 			self._Append_taxa(inp_taxa)    
@@ -869,6 +856,20 @@ class Cluster_node(object):
 	def _RemoveNoEdge(self, dest_clust_idx):
 		if dest_clust_idx in self.no_edge_list:
 			self.no_edge_list.remove(dest_clust_idx)    
+			
+	#--------------------------------------------------------
+	# add - sourya
+	def _AddPossibleR1(self, dest_clust_idx):
+		if dest_clust_idx not in self.possible_R1_list:
+			self.possible_R1_list.append(dest_clust_idx)
+	
+	def _RemovePossibleR1(self, dest_clust_idx):
+		if dest_clust_idx in self.possible_R1_list:
+			self.possible_R1_list.remove(dest_clust_idx)
+			
+	def _GetPossibleR1List(self):
+		return self.possible_R1_list
+	#--------------------------------------------------------
 		
 	def _PrintClusterInfo(self, key, Output_Text_File):
 		fp = open(Output_Text_File, 'a')    
@@ -878,5 +879,6 @@ class Cluster_node(object):
 		#print 'its outdegree: ', self.outdegree
 		fp.write('\n out edge list: ' + str(self.out_edge_list))
 		fp.write('\n in edge list: ' + str(self.in_edge_list))
+		fp.write('\n Possible R1 list: ' + str(self.possible_R1_list))	# add - sourya
 		fp.close()    
     

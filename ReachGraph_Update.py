@@ -28,17 +28,13 @@ def Connect_ClusterPair(Reachability_Graph_Mat, nodeA_reach_mat_idx, nodeB_reach
 #-----------------------------------------------------
 """ this function updates the transitive closure of the cluster of nodes
 on inclusion ogf a new edge between a pair of clusters """
-def TransClosUpd(Reachability_Graph_Mat, nodeA_reach_mat_idx, nodeB_reach_mat_idx, taxaA_label, taxaB_label, reln_type):
+def TransClosUpd(Reachability_Graph_Mat, nodeA_reach_mat_idx, nodeB_reach_mat_idx, reln_type):
 	if (reln_type == RELATION_R1) or (reln_type == RELATION_R4):
 		src_reach_mat_idx = nodeA_reach_mat_idx
 		dest_reach_mat_idx = nodeB_reach_mat_idx
-		src_taxa_label = taxaA_label
-		dest_taxa_label = taxaB_label
 	elif (reln_type == RELATION_R2):
 		src_reach_mat_idx = nodeB_reach_mat_idx
 		dest_reach_mat_idx = nodeA_reach_mat_idx
-		src_taxa_label = taxaB_label
-		dest_taxa_label = taxaA_label    
 	else:
 		return
 		
@@ -206,18 +202,97 @@ def AdjustReachGraph(Reachability_Graph_Mat, taxaA_label, taxaB_label, reln_type
 		Connect_ClusterPair(Reachability_Graph_Mat, nodeA_reach_mat_idx, nodeB_reach_mat_idx, \
 			RELATION_R1, nodeA_clust_idx, nodeB_clust_idx)
 		# now perform the transitive closure on the derived reachability matrix  
-		TransClosUpd(Reachability_Graph_Mat, nodeA_reach_mat_idx, nodeB_reach_mat_idx, taxaA_label, taxaB_label, RELATION_R1)
+		TransClosUpd(Reachability_Graph_Mat, nodeA_reach_mat_idx, nodeB_reach_mat_idx, RELATION_R1)
 	elif (reln_type == RELATION_R2):
 		# connect the pair of clusters, along with updating the reachability matrix
 		Connect_ClusterPair(Reachability_Graph_Mat, nodeB_reach_mat_idx, nodeA_reach_mat_idx, \
 			RELATION_R1, nodeB_clust_idx, nodeA_clust_idx)
 		# now perform the transitive closure on the derived reachability matrix  
-		TransClosUpd(Reachability_Graph_Mat, nodeA_reach_mat_idx, nodeB_reach_mat_idx, taxaA_label, taxaB_label, RELATION_R2)    
+		TransClosUpd(Reachability_Graph_Mat, nodeA_reach_mat_idx, nodeB_reach_mat_idx, RELATION_R2)    
 	else:	#reln_type == RELATION_R4:
 		Connect_ClusterPair(Reachability_Graph_Mat, nodeA_reach_mat_idx, nodeB_reach_mat_idx, \
 			RELATION_R4, nodeA_clust_idx, nodeB_clust_idx)
 		# now perform the transitive closure on the derived reachability matrix  
-		TransClosUpd(Reachability_Graph_Mat, nodeA_reach_mat_idx, nodeB_reach_mat_idx, taxaA_label, taxaB_label, RELATION_R4)    
+		TransClosUpd(Reachability_Graph_Mat, nodeA_reach_mat_idx, nodeB_reach_mat_idx, RELATION_R4)    
 			
 	return Reachability_Graph_Mat
 
+#-------------------------------------------------------------
+# add - sourya
+
+"""
+this function processes all clusters having candidate out edge information
+"""
+def Process_Candidate_Out_Edge_Cluster_List(Reachability_Graph_Mat, DIST_MAT_TYPE):
+	
+	for cl in Candidate_Out_Edge_Cluster_List:
+		"""
+		check if the cluster cl has any directed out edge already
+		otherwise, place all its candidate R1 clusters as a child to its parent node
+		"""
+		if (Cluster_Info_Dict[cl]._Get_Outdegree() == 0):
+			"""
+			here, assign out edge from the parent cluster of cl to the candidate R1 clusters
+			"""
+			for parent_cl in Cluster_Info_Dict[cl]._GetInEdgeList():
+				parent_cl_reach_mat_idx = CURRENT_CLUST_IDX_LIST.index(parent_cl)
+				for x in Cluster_Info_Dict[cl]._GetPossibleR1List():
+					x_reach_mat_idx = CURRENT_CLUST_IDX_LIST.index(x)
+					# connect the pair of clusters, along with updating the reachability matrix
+					Connect_ClusterPair(Reachability_Graph_Mat, parent_cl_reach_mat_idx, x_reach_mat_idx, RELATION_R1, parent_cl, x)
+					# now perform the transitive closure on the derived reachability matrix  
+					TransClosUpd(Reachability_Graph_Mat, parent_cl_reach_mat_idx, x_reach_mat_idx, RELATION_R1)
+		else:
+			"""
+			explore children of the cluster cl
+			and compare its XL with the new cluster
+			"""
+			cl_reach_mat_idx = CURRENT_CLUST_IDX_LIST.index(cl)
+			
+			for x in Cluster_Info_Dict[cl]._GetPossibleR1List():
+				x_reach_mat_idx = CURRENT_CLUST_IDX_LIST.index(x)
+				"""
+				excess gene count between the cluster x and the cluster cl
+				"""
+				xl_cl_x = FindAvgXL(Cluster_Info_Dict[cl]._GetSpeciesList(), Cluster_Info_Dict[x]._GetSpeciesList(), DIST_MAT_TYPE, True)
+				"""
+				this is the average of excess gene count between x and every child of cl
+				"""
+				xl_x_childcl = 0
+				"""
+				this is the average of excess gene count between cl and every child of cl
+				"""
+				xl_cl_childcl = 0
+				
+				for child_cl in Cluster_Info_Dict[cl]._GetOutEdgeList():
+					xl_x_childcl = xl_x_childcl + FindAvgXL(Cluster_Info_Dict[child_cl]._GetSpeciesList(), \
+						Cluster_Info_Dict[x]._GetSpeciesList(), DIST_MAT_TYPE, True)
+					xl_cl_childcl = xl_cl_childcl + FindAvgXL(Cluster_Info_Dict[child_cl]._GetSpeciesList(), \
+						Cluster_Info_Dict[cl]._GetSpeciesList(), DIST_MAT_TYPE, True)
+				
+				xl_x_childcl = (xl_x_childcl * 1.0) / len(Cluster_Info_Dict[cl]._GetOutEdgeList())
+				xl_cl_childcl = (xl_cl_childcl * 1.0) / len(Cluster_Info_Dict[cl]._GetOutEdgeList())
+				
+				if (xl_x_childcl <= xl_cl_x) and (xl_x_childcl <= xl_cl_childcl):
+					"""
+					x can be placed as the child of cl
+					"""
+					# connect the pair of clusters, along with updating the reachability matrix
+					Connect_ClusterPair(Reachability_Graph_Mat, cl_reach_mat_idx, x_reach_mat_idx, RELATION_R1, cl, x)
+					# now perform the transitive closure on the derived reachability matrix  
+					TransClosUpd(Reachability_Graph_Mat, cl_reach_mat_idx, x_reach_mat_idx, RELATION_R1)
+				else:
+					"""
+					here, assign out edge from the parent cluster of cl to the candidate R1 clusters
+					"""
+					for parent_cl in Cluster_Info_Dict[cl]._GetInEdgeList():
+						parent_cl_reach_mat_idx = CURRENT_CLUST_IDX_LIST.index(parent_cl)
+						for x in Cluster_Info_Dict[cl]._GetPossibleR1List():
+							x_reach_mat_idx = CURRENT_CLUST_IDX_LIST.index(x)
+							# connect the pair of clusters, along with updating the reachability matrix
+							Connect_ClusterPair(Reachability_Graph_Mat, parent_cl_reach_mat_idx, x_reach_mat_idx, RELATION_R1, parent_cl, x)
+							# now perform the transitive closure on the derived reachability matrix  
+							TransClosUpd(Reachability_Graph_Mat, parent_cl_reach_mat_idx, x_reach_mat_idx, RELATION_R1)
+					
+					
+				

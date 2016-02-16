@@ -103,14 +103,6 @@ def parse_options():
 				help="1 - Use priority measure based selection (higher value)\
 				2 - Use XL based selection (lower value)")     
 
-	parser.add_option("-y", "--yesdynamicreln", \
-				type="int", \
-				action="store", \
-				dest="Yes_Dynamic_Reln", \
-				default=2, \
-				help="1 - For < 0 support score, consider all relations\
-				2 - Use relation of higher support score (conventional)")     
-	
 	parser.add_option("-r", "--ROOT", \
 			type="string", \
 			action="store", \
@@ -145,8 +137,6 @@ def main():
 	
 	MPP_SOLVE_METRIC = opts.MPP_solve_metric
 	
-	YES_DYNAMIC_RELN = opts.Yes_Dynamic_Reln
-	
 	if (INPUT_FILENAME == ""):
 		print '******** THERE IS NO INPUT FILE SPECIFIED - RETURN **********'
 		return
@@ -155,30 +145,23 @@ def main():
 		
 	""" 
 	according to the location of input filename
-	adjust the locations of the output files as well
+	adjust the directory containing output text file
 	"""
 	k = INPUT_FILENAME.rfind("/")
 	if (k == -1):
 		dir_of_inp_file = './'
 	else:
 		dir_of_inp_file = INPUT_FILENAME[:(k+1)]
-	if (DEBUG_LEVEL > 1):
-		print 'dir_of_inp_file: ', dir_of_inp_file  
+	#if (DEBUG_LEVEL > 1):
+		#print 'dir_of_inp_file: ', dir_of_inp_file  
 			
 	if (OUTPUT_FILENAME == ""):
 		dir_of_curr_exec = dir_of_inp_file + 'COSPEDSpec' + '_D' + str(DIST_MAT_TYPE) \
-			+ '_U' + str(DIST_MAT_UPDATE) + '_C' + str(NJ_MERGE_CLUST) + '_X' + str(MPP_SOLVE_METRIC) + '_Y' + str(YES_DYNAMIC_RELN)
-		""" 
-		create the directory
-		"""
+			+ '_U' + str(DIST_MAT_UPDATE) + '_C' + str(NJ_MERGE_CLUST) + '_X' + str(MPP_SOLVE_METRIC)
+		# create the directory
 		if (os.path.isdir(dir_of_curr_exec) == False):
 			mkdr_cmd = 'mkdir ' + dir_of_curr_exec
 			os.system(mkdr_cmd)                     
-		""" 
-		location of the output text file (where results would be written)
-		"""
-		Output_Text_File = dir_of_curr_exec + '/' + 'COSPEDSpec_Complete_Desription.txt'
-		print 'Output_Text_File: ', Output_Text_File      
 	else:
 		""" 
 		when we have specified the output file 
@@ -189,8 +172,13 @@ def main():
 			dir_of_curr_exec = './'
 		else:
 			dir_of_curr_exec = OUTPUT_FILENAME[:(k1+1)]
-		Output_Text_File = dir_of_curr_exec + '/' + 'COSPEDSpec_Complete_Desription.txt'
-		print 'Output_Text_File: ', Output_Text_File
+
+	"""
+	specify the output text file
+	where the results will be printed
+	"""
+	Output_Text_File = dir_of_curr_exec + '/' + 'COSPEDSpec_Complete_Desription.txt'
+	print 'Output_Text_File: ', Output_Text_File
 		
 	# open the output text file
 	fp = open(Output_Text_File, 'w')    
@@ -198,7 +186,7 @@ def main():
 	#fp.write('\n ================ status of options ================= (1 means ON)')
 	#fp.write('\n ROOTED_TREE: ' + str(ROOTED_TREE))
 	#fp.write('\n PRESERVE_UNDERSCORE: ' + str(PRESERVE_UNDERSCORE))
-	fp.write('\n NO_OF_QUEUES: ' + str(NO_OF_QUEUES))
+	#fp.write('\n NO_OF_QUEUES: ' + str(NO_OF_QUEUES))
 	fp.write('\n ===>>>  processing the file now ======== ')
 			
 	# note the program beginning time 
@@ -210,10 +198,9 @@ def main():
 	individual elements of this collection is a source tree 
 	"""
 	Gene_TreeList = Read_Input_Treelist(ROOTED_TREE, PRESERVE_UNDERSCORE, INPUT_FILE_FORMAT, INPUT_FILENAME)  
-
 	#-------------------------------------
 	""" 
-	from the input source trees, note the number of taxa (total)
+	from the input trees, note the number of taxa (total)
 	and also define the class instances corresponding to single taxa
 	"""
 	for tr_idx in range(len(Gene_TreeList)):
@@ -252,8 +239,7 @@ def main():
 		
 	#------------------------------------------------------------
 	""" 
-	this section contains the code to estimate the supertree 
-	from the input treelist 
+	here, we process all the couplets to extract couplet statistics
 	"""  
 	for l in TaxaPair_Reln_Dict:
 		"""
@@ -272,17 +258,6 @@ def main():
 		single_edge_exist = single_edge_exist_list[0]
 		reln_type = single_edge_exist_list[1]
 		#print 'taxa pair: ', l, '  single_edge_exist: ', single_edge_exist, ' consensus_reln_type: ', reln_type
-
-		##---------------------------------------
-		## add - sourya
-		#"""
-		#here we check and redistribute the frequency based on the consensus relation R4
-		#and the count of pseudo R1 and R2 relations
-		#"""
-		#TaxaPair_Reln_Dict[l]._CheckSwapFreq()
-
-		## end add - sourya
-		##---------------------------------------
 
 		"""
 		first set the priority values of this couplet
@@ -334,27 +309,6 @@ def main():
 				#Cost_List_Taxa_Pair_Multi_Reln.append(sublist)
 		
 		# end comment - sourya
-		
-		## add - sourya
-		#"""
-		#we have added a new condition for insertion of support scores and relations in the queue
-		#a relation having frequency 10% of the total number of supported trees will be included
-		#Note: this implementation requires following conditions to be true
-		#1) integral frequency count and support tree count to be maintained
-		#2) NO_OF_QUEUES to be set as 1
-		#"""
-		#for reln_type in range(4):
-			#if (TaxaPair_Reln_Dict[l]._GetEdgeWeight(reln_type) >= (RELN_SUPPORT_THRS * TaxaPair_Reln_Dict[l]._GetNoSupportTrees())):
-				#"""
-				#add this relation as the allowed relation for this couplet
-				#"""
-				#TaxaPair_Reln_Dict[l]._AddAllowedReln(reln_type)
-				#"""
-				#add this score in the queue
-				#"""
-				#sublist = [l[0], l[1], reln_type, TaxaPair_Reln_Dict[l]._GetEdgeCost_ConnReln(reln_type)]
-				#Cost_List_Taxa_Pair_Multi_Reln.append(sublist)
-		## end add - sourya
 		
 		# add - sourya
 		"""
@@ -408,8 +362,6 @@ def main():
 
 	# this information is printed to know the maximum possible iterations that the while loops will undergo
 	if (DEBUG_LEVEL > 1):
-		if (NO_OF_QUEUES == 2):
-			fp.write('\n length of non-conflicting priority queue: ' + str(len(Cost_List_Taxa_Pair_Single_Reln)))
 		fp.write('\n length of conflicting priority queue : ' + str(len(Cost_List_Taxa_Pair_Multi_Reln)))
 
 	fp.close()
@@ -421,23 +373,60 @@ def main():
 	"""
 	# sorting the conflicting queue
 	Sort_Priority_Queue(Cost_List_Taxa_Pair_Multi_Reln)
-	# if we are allowed to use two distinct queues, then sort the non conflicting queue also
-	if (NO_OF_QUEUES == 2):
-		Sort_Priority_Queue(Cost_List_Taxa_Pair_Single_Reln)
 
 	data_initialize_timestamp = time.time()	# note the timestamp
 
 	#------------------------------------------------------------
+	# add - sourya
 	"""
-	process the non-conflicting queue first, provided we use this queue
+	here, we first process all couplets which will have R3 relation (sibling)
+	apply the sibling relation
+	also adjust the clusters, and also the reachability matrix contents
 	"""
-	if (NO_OF_QUEUES == 2):
-		Reachability_Graph_Mat = Proc_Queue(Reachability_Graph_Mat, 1, Output_Text_File, YES_DYNAMIC_RELN)
-	""" 
-	then we process the conflicting queue (couplets having multiple relations supported)
+	for l in TaxaPair_Reln_Dict:
+		reln_list = TaxaPair_Reln_Dict[l]._GetAllowedRelnList()
+		if RELATION_R3 in reln_list:
+			if (TaxaPair_Reln_Dict[l]._Check_Reln_R3_Majority(Output_Text_File) == True):
+				"""
+				the couplet is now related with the 'RELATION_R3'
+				update the Reachability_Graph_Mat also
+				"""
+				if (DEBUG_LEVEL >= 2):
+					fp = open(Output_Text_File, 'a')    
+					fp.write('\n ==>>>>>>>>> NEW CONN --- nodes to be connected: ' \
+						+ str(l[0]) + ' and ' + str(l[1]) + ' relation type: ' + str(RELATION_R3))
+					fp.close()
+				
+				# also update the reachability graph information
+				Reachability_Graph_Mat = AdjustReachGraph(Reachability_Graph_Mat, l[0], l[1], RELATION_R3)
+	
+	
+	# print the cluster information 
+	if (DEBUG_LEVEL >= 2):
+		fp = open(Output_Text_File, 'a')
+		fp.write('\n **** total number of clusters: ' + str(len(CURRENT_CLUST_IDX_LIST)))
+		fp.write('\n CURRENT_CLUST_IDX_LIST contents: ')
+		fp.write(str(CURRENT_CLUST_IDX_LIST))
+		fp.write('\n ========== cluster information after R3 relation set =============')
+		fp.close()
+		for i in Cluster_Info_Dict:
+			#print 'printing the information for cluster node: ', i
+			Cluster_Info_Dict[i]._PrintClusterInfo(i, Output_Text_File)
+	
+	#------------------------------------------------------------
+	# add - sourya
 	"""
-	Reachability_Graph_Mat = Proc_Queue(Reachability_Graph_Mat, 0, Output_Text_File, YES_DYNAMIC_RELN)
+	here we set the directed edges between individual clusters
+	corresponding to the relations R1, R2, and R4
+	first we process the couplets and relations having positive support score
+	"""
+	Reachability_Graph_Mat = Proc_Queue_Pos_Score_R1R2(Reachability_Graph_Mat, Output_Text_File)
 
+	""" 
+	we process the conflicting queue (couplets having multiple relations supported)
+	"""
+	#Reachability_Graph_Mat = Proc_Queue(Reachability_Graph_Mat, Output_Text_File)
+	#------------------------------------------------------------
 	# we print the final connection status for all the tree nodes
 	if (DEBUG_LEVEL > 2):
 		for l in Taxa_Info_Dict:
@@ -458,64 +447,83 @@ def main():
 
 	# note the timestamp
 	reachability_graph_form_timestamp = time.time()  
-	#------------------------------------------------------------
+	
 	# add - sourya
-	"""
-	here we check pair wise clusters
-	which are not related by any edge (relation R1 or R2)
-	for each such pair of clustters, we check whether there is a pseudo R1 / R2 connection that exists
-	"""
-	for i in range(len(CURRENT_CLUST_IDX_LIST) - 1):
-		for j in range((i + 1), len(CURRENT_CLUST_IDX_LIST)):
-			if (Reachability_Graph_Mat[i][j] == 2):
-				"""
-				current cluster pairs are related by R4 relation
-				"""
-				clust1_key = CURRENT_CLUST_IDX_LIST[i]
-				clust2_key = CURRENT_CLUST_IDX_LIST[j]
-				reln_type = FindClusterReln(clust1_key, clust2_key)
-				if (reln_type == 1):
-					if (DEBUG_LEVEL >= 2):
-						fp = open(Output_Text_File, 'a')
-						fp.write('\n\n *** Directed out edge from the cluster: ' + str(clust1_key) + ' to the cluster : ' + str(clust2_key))
-						fp.close()
-					ConnectClustPairOutEdge(Reachability_Graph_Mat, clust1_key, clust2_key)
-				elif (reln_type == 3):
-					if (DEBUG_LEVEL >= 2):
-						fp = open(Output_Text_File, 'a')
-						fp.write('\n\n *** Directed out edge from the parent(s) of cluster: ' + str(clust1_key) + ' to the cluster : ' + str(clust2_key))
-						fp.close()
-					# add out edge from the parents of clust1_key to the clust2_key
-					for x in Cluster_Info_Dict[clust1_key]._GetInEdgeList():
-						ConnectClustPairOutEdge(Reachability_Graph_Mat, x, clust2_key)
-				elif (reln_type == 2):
-					if (DEBUG_LEVEL >= 2):
-						fp = open(Output_Text_File, 'a')
-						fp.write('\n\n *** Directed out edge from the cluster: ' + str(clust2_key) + ' to the cluster : ' + str(clust1_key))
-						fp.close()
-					ConnectClustPairOutEdge(Reachability_Graph_Mat, clust2_key, clust1_key)
-				elif (reln_type == 4):
-					if (DEBUG_LEVEL >= 2):
-						fp = open(Output_Text_File, 'a')
-						fp.write('\n\n *** Directed out edge from the parent(s) of cluster: ' + str(clust2_key) + ' to the cluster : ' + str(clust1_key))
-						fp.close()
-					# add out edge from the parents of clust2_key to the clust1_key
-					for x in Cluster_Info_Dict[clust2_key]._GetInEdgeList():
-						ConnectClustPairOutEdge(Reachability_Graph_Mat, x, clust1_key)
-
-	# print the cluster information 
 	if (DEBUG_LEVEL >= 2):
 		fp = open(Output_Text_File, 'a')
-		fp.write('\n **** total number of clusters: ' + str(len(CURRENT_CLUST_IDX_LIST)))
-		fp.write('\n CURRENT_CLUST_IDX_LIST contents: ')
-		fp.write(str(CURRENT_CLUST_IDX_LIST))    
-		fp.write('\n ========== cluster information after pseudo R1 / R2 relation addition =============')
+		fp.write('\n\n\n Contents of Candidate_Out_Edge_Cluster_List: ' + str(Candidate_Out_Edge_Cluster_List)) 
 		fp.close()
-		for i in Cluster_Info_Dict:
-			#print 'printing the information for cluster node: ', i
-			Cluster_Info_Dict[i]._PrintClusterInfo(i, Output_Text_File)
-	
 	# end add - sourya
+	#------------------------------------------------------------
+	"""
+	now we process all the elements of the Candidate_Out_Edge_Cluster_List one by one
+	"""
+	Reachability_Graph_Mat = Process_Candidate_Out_Edge_Cluster_List(Reachability_Graph_Mat, DIST_MAT_TYPE)
+	
+	
+					
+		
+	
+	
+	
+	##------------------------------------------------------------
+	## add - sourya
+	#"""
+	#here we check pair wise clusters
+	#which are not related by any edge (relation R1 or R2)
+	#for each such pair of clustters, we check whether there is a pseudo R1 / R2 connection that exists
+	#"""
+	#for i in range(len(CURRENT_CLUST_IDX_LIST) - 1):
+		#for j in range((i + 1), len(CURRENT_CLUST_IDX_LIST)):
+			#if (Reachability_Graph_Mat[i][j] == 2):
+				#"""
+				#current cluster pairs are related by R4 relation
+				#"""
+				#clust1_key = CURRENT_CLUST_IDX_LIST[i]
+				#clust2_key = CURRENT_CLUST_IDX_LIST[j]
+				#reln_type = FindClusterReln(clust1_key, clust2_key)
+				#if (reln_type == 1):
+					#if (DEBUG_LEVEL >= 2):
+						#fp = open(Output_Text_File, 'a')
+						#fp.write('\n\n *** Directed out edge from the cluster: ' + str(clust1_key) + ' to the cluster : ' + str(clust2_key))
+						#fp.close()
+					#ConnectClustPairOutEdge(Reachability_Graph_Mat, clust1_key, clust2_key)
+				#elif (reln_type == 3):
+					#if (DEBUG_LEVEL >= 2):
+						#fp = open(Output_Text_File, 'a')
+						#fp.write('\n\n *** Directed out edge from the parent(s) of cluster: ' + str(clust1_key) + ' to the cluster : ' + str(clust2_key))
+						#fp.close()
+					## add out edge from the parents of clust1_key to the clust2_key
+					#for x in Cluster_Info_Dict[clust1_key]._GetInEdgeList():
+						#ConnectClustPairOutEdge(Reachability_Graph_Mat, x, clust2_key)
+				#elif (reln_type == 2):
+					#if (DEBUG_LEVEL >= 2):
+						#fp = open(Output_Text_File, 'a')
+						#fp.write('\n\n *** Directed out edge from the cluster: ' + str(clust2_key) + ' to the cluster : ' + str(clust1_key))
+						#fp.close()
+					#ConnectClustPairOutEdge(Reachability_Graph_Mat, clust2_key, clust1_key)
+				#elif (reln_type == 4):
+					#if (DEBUG_LEVEL >= 2):
+						#fp = open(Output_Text_File, 'a')
+						#fp.write('\n\n *** Directed out edge from the parent(s) of cluster: ' + str(clust2_key) + ' to the cluster : ' + str(clust1_key))
+						#fp.close()
+					## add out edge from the parents of clust2_key to the clust1_key
+					#for x in Cluster_Info_Dict[clust2_key]._GetInEdgeList():
+						#ConnectClustPairOutEdge(Reachability_Graph_Mat, x, clust1_key)
+
+	## print the cluster information 
+	#if (DEBUG_LEVEL >= 2):
+		#fp = open(Output_Text_File, 'a')
+		#fp.write('\n **** total number of clusters: ' + str(len(CURRENT_CLUST_IDX_LIST)))
+		#fp.write('\n CURRENT_CLUST_IDX_LIST contents: ')
+		#fp.write(str(CURRENT_CLUST_IDX_LIST))    
+		#fp.write('\n ========== cluster information after pseudo R1 / R2 relation addition =============')
+		#fp.close()
+		#for i in Cluster_Info_Dict:
+			##print 'printing the information for cluster node: ', i
+			#Cluster_Info_Dict[i]._PrintClusterInfo(i, Output_Text_File)
+	
+	## end add - sourya
 	#----------------------------------------------  
 	""" 
 	after processing above queue, taxa subsets (clusters) are formed (r3 relation)
@@ -625,72 +633,72 @@ def main():
 	outfile.write(Supertree_without_branch_len.as_newick_string())
 	outfile.close()
 
-	#--------------------------------------------------------------
-	fp = open(Output_Text_File, 'a')
-	fp.write('\n --- user provided option for producing strict binary supertree')
-	fp.close()
+	##--------------------------------------------------------------
+	#fp = open(Output_Text_File, 'a')
+	#fp.write('\n --- user provided option for producing strict binary supertree')
+	#fp.close()
 
-	""" 
-	this function removes all multifurcating clusters and produces binary tree 
-	it also solves the problem C3, as mentioned in the manuscript
-	"""
-	Refine_Supertree_Binary_Form(Supertree_without_branch_len, Output_Text_File, NJ_RULE_USED, DIST_MAT_TYPE, DIST_MAT_UPDATE, NJ_MERGE_CLUST)
+	#""" 
+	#this function removes all multifurcating clusters and produces binary tree 
+	#it also solves the problem C3, as mentioned in the manuscript
+	#"""
+	#Refine_Supertree_Binary_Form(Supertree_without_branch_len, Output_Text_File, NJ_RULE_USED, DIST_MAT_TYPE, DIST_MAT_UPDATE, NJ_MERGE_CLUST)
 
-	fp = open(Output_Text_File, 'a')
-	fp.write('\n --- after binary refinement --- output tree without branch length (in newick format): ' + \
-		Supertree_without_branch_len.as_newick_string())    
-	fp.close()
+	#fp = open(Output_Text_File, 'a')
+	#fp.write('\n --- after binary refinement --- output tree without branch length (in newick format): ' + \
+		#Supertree_without_branch_len.as_newick_string())    
+	#fp.close()
 
-	# final timestamp
-	binary_refinement_timestamp = time.time()      
+	## final timestamp
+	#binary_refinement_timestamp = time.time()      
 
-	#--------------------------------------------------------------  
-	# write this tree on a separate text file
-	if (OUTPUT_FILENAME == ""):
-		out_treefilename = dir_of_curr_exec + '/' + 'outtree_Newick.tre'
-	else:
-		out_treefilename = OUTPUT_FILENAME
+	##--------------------------------------------------------------  
+	## write this tree on a separate text file
+	#if (OUTPUT_FILENAME == ""):
+		#out_treefilename = dir_of_curr_exec + '/' + 'outtree_Newick.tre'
+	#else:
+		#out_treefilename = OUTPUT_FILENAME
 
-	# we write the unweighted supertree
-	outfile = open(out_treefilename, 'w')
-	outfile.write(Supertree_without_branch_len.as_newick_string())
-	outfile.close()
+	## we write the unweighted supertree
+	#outfile = open(out_treefilename, 'w')
+	#outfile.write(Supertree_without_branch_len.as_newick_string())
+	#outfile.close()
 
-	# add  -sourya
-	"""
-	if user specifies one outgroup taxon name for rooting the tree, 
-	we should reroot the tree and save it
-	"""
-	if (OUTGROUP_TAXON_NAME != ""):
-		# first we root the tree using the specified outgroup node
-		outgroup_node = Supertree_without_branch_len.find_node_with_taxon_label(OUTGROUP_TAXON_NAME)
-		if (outgroup_node is not None):
-			Supertree_without_branch_len.to_outgroup_position(outgroup_node, update_splits=False)
+	## add  -sourya
+	#"""
+	#if user specifies one outgroup taxon name for rooting the tree, 
+	#we should reroot the tree and save it
+	#"""
+	#if (OUTGROUP_TAXON_NAME != ""):
+		## first we root the tree using the specified outgroup node
+		#outgroup_node = Supertree_without_branch_len.find_node_with_taxon_label(OUTGROUP_TAXON_NAME)
+		#if (outgroup_node is not None):
+			#Supertree_without_branch_len.to_outgroup_position(outgroup_node, update_splits=False)
 		
-		out_treefilename = dir_of_curr_exec + '/' + 'outtree_Newick.tre.rooted'
+		#out_treefilename = dir_of_curr_exec + '/' + 'outtree_Newick.tre.rooted'
 
-		# we write the unweighted supertree
-		outfile = open(out_treefilename, 'w')
-		outfile.write(Supertree_without_branch_len.as_newick_string())	
-		outfile.close()
-	# end add  -sourya
+		## we write the unweighted supertree
+		#outfile = open(out_treefilename, 'w')
+		#outfile.write(Supertree_without_branch_len.as_newick_string())	
+		#outfile.close()
+	## end add  -sourya
 
-	# we write the time associated with the execution of this method
-	time_info_filename = dir_of_curr_exec + '/' + 'timing_info.txt'
-	fp = open(time_info_filename, 'w')
-	fp.write('\n \n\n ===============>>>>>>>>>>>>>>> TIME TAKEN BY THE METHOD (in seconds) ')
-	fp.write('\n \n reading the data: ' + str(data_read_timestamp - start_timestamp) + \
-	'\n initialization of the structure: ' + str(data_initialize_timestamp - data_read_timestamp) + \
-	'\n formation of the reachability graph (cluster) (after loop): ' + \
-				str(reachability_graph_form_timestamp - data_initialize_timestamp) + \
-	'\n multiple parent (related) problem: ' + \
-				str(cluster_of_node_refine_species_timestamp1 - reachability_graph_form_timestamp) + \
-	'\n newick string formation for non branch length trees: ' + \
-				str(data_process_timestamp - cluster_of_node_refine_species_timestamp1) + \
-	'\n refining tree for producing strict binary species tree: ' + \
-				str(binary_refinement_timestamp - data_process_timestamp))
-	fp.write('\n \n Total time taken (in seconds) : ' + str(binary_refinement_timestamp - start_timestamp))
-	fp.close()
+	## we write the time associated with the execution of this method
+	#time_info_filename = dir_of_curr_exec + '/' + 'timing_info.txt'
+	#fp = open(time_info_filename, 'w')
+	#fp.write('\n \n\n ===============>>>>>>>>>>>>>>> TIME TAKEN BY THE METHOD (in seconds) ')
+	#fp.write('\n \n reading the data: ' + str(data_read_timestamp - start_timestamp) + \
+	#'\n initialization of the structure: ' + str(data_initialize_timestamp - data_read_timestamp) + \
+	#'\n formation of the reachability graph (cluster) (after loop): ' + \
+				#str(reachability_graph_form_timestamp - data_initialize_timestamp) + \
+	#'\n multiple parent (related) problem: ' + \
+				#str(cluster_of_node_refine_species_timestamp1 - reachability_graph_form_timestamp) + \
+	#'\n newick string formation for non branch length trees: ' + \
+				#str(data_process_timestamp - cluster_of_node_refine_species_timestamp1) + \
+	#'\n refining tree for producing strict binary species tree: ' + \
+				#str(binary_refinement_timestamp - data_process_timestamp))
+	#fp.write('\n \n Total time taken (in seconds) : ' + str(binary_refinement_timestamp - start_timestamp))
+	#fp.close()
 
 	#--------------------------------------------------------------  
 	# delete the storage variables associated with the current execution 
@@ -703,8 +711,8 @@ def main():
 	# clear the lists associated
 	if (len(Cost_List_Taxa_Pair_Multi_Reln) > 0):
 		Cost_List_Taxa_Pair_Multi_Reln[:] = []
-	if (len(Cost_List_Taxa_Pair_Single_Reln) > 0):
-		Cost_List_Taxa_Pair_Single_Reln[:] = []
+	#if (len(Cost_List_Taxa_Pair_Single_Reln) > 0):
+		#Cost_List_Taxa_Pair_Single_Reln[:] = []
 	if (len(COMPLETE_INPUT_TAXA_LIST) > 0):
 		COMPLETE_INPUT_TAXA_LIST[:] = []
 	if (len(CURRENT_CLUST_IDX_LIST) > 0):

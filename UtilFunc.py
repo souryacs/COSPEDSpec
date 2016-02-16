@@ -206,11 +206,12 @@ def DefineLeafPairReln(xl_val, ratio_val, lca_level, node1, node2, reln_type, Cu
 		TaxaPair_Reln_Dict[key1]._AddSupportingTree()
 		TaxaPair_Reln_Dict[key1]._AddXLVal(xl_val)
 		TaxaPair_Reln_Dict[key1]._AddEdgeCount(reln_type, ratio_val)	#sourya
+		# modified - sourya
 		if (node1_level < node2_level):
 			TaxaPair_Reln_Dict[key1]._IncrAllRelnLevelDiffInfoCount(0, ((node2_level - node1_level) * 1.0) / Curr_tree_taxa_count)
 		elif (node1_level > node2_level):
 			TaxaPair_Reln_Dict[key1]._IncrAllRelnLevelDiffInfoCount(1, ((node1_level - node2_level) * 1.0) / Curr_tree_taxa_count)
-		else:
+		else:	#if (node1_level == node2_level):
 			TaxaPair_Reln_Dict[key1]._IncrAllRelnLevelDiffInfoCount(2, 0)
 		#-----------------------
 		# add - sourya
@@ -224,11 +225,12 @@ def DefineLeafPairReln(xl_val, ratio_val, lca_level, node1, node2, reln_type, Cu
 		TaxaPair_Reln_Dict[key2]._AddSupportingTree()
 		TaxaPair_Reln_Dict[key2]._AddXLVal(xl_val)
 		TaxaPair_Reln_Dict[key2]._AddEdgeCount(Complementary_Reln(reln_type), ratio_val)	#sourya
+		# modified - sourya
 		if (node1_level < node2_level):
 			TaxaPair_Reln_Dict[key2]._IncrAllRelnLevelDiffInfoCount(1, ((node2_level - node1_level) * 1.0) / Curr_tree_taxa_count)
 		elif (node1_level > node2_level):
 			TaxaPair_Reln_Dict[key2]._IncrAllRelnLevelDiffInfoCount(0, ((node1_level - node2_level) * 1.0) / Curr_tree_taxa_count)
-		else:
+		else:	#if (node1_level == node2_level):
 			TaxaPair_Reln_Dict[key2]._IncrAllRelnLevelDiffInfoCount(2, 0)
 		#-----------------------
 		# add - sourya
@@ -243,11 +245,12 @@ def DefineLeafPairReln(xl_val, ratio_val, lca_level, node1, node2, reln_type, Cu
 		TaxaPair_Reln_Dict[key1]._AddSupportingTree()
 		TaxaPair_Reln_Dict[key1]._AddXLVal(xl_val)
 		TaxaPair_Reln_Dict[key1]._AddEdgeCount(reln_type, ratio_val)	#sourya
+		# modified - sourya
 		if (node1_level < node2_level):
 			TaxaPair_Reln_Dict[key1]._IncrAllRelnLevelDiffInfoCount(0, ((node2_level - node1_level) * 1.0) / Curr_tree_taxa_count)
 		elif (node1_level > node2_level):
 			TaxaPair_Reln_Dict[key1]._IncrAllRelnLevelDiffInfoCount(1, ((node1_level - node2_level) * 1.0) / Curr_tree_taxa_count)
-		else:
+		else:	#if (node1_level == node2_level):
 			TaxaPair_Reln_Dict[key1]._IncrAllRelnLevelDiffInfoCount(2, 0)
 		#-----------------------
 		# add - sourya
@@ -368,13 +371,13 @@ def Write_Output_Tree(Inp_Tree, outfile, FILE_FORMAT, Suppress_Root=False, Unquo
 def Node_Label(inp_node):
 	return str(inp_node.as_newick_string(suppress_edge_lengths=True))
 
-#-----------------------------------------------------
-# this is the taxa list generated from current internal node
-def GetTaxaUnderInternalNode(curr_node):
-	taxa_list_from_curr_internal_node = []
-	for n in curr_node.leaf_nodes():
-		taxa_list_from_curr_internal_node.append(n.taxon.label)
-	return taxa_list_from_curr_internal_node
+##-----------------------------------------------------
+## this is the taxa list generated from current internal node
+#def GetTaxaUnderInternalNode(curr_node):
+	#taxa_list_from_curr_internal_node = []
+	#for n in curr_node.leaf_nodes():
+		#taxa_list_from_curr_internal_node.append(n.taxon.label)
+	#return taxa_list_from_curr_internal_node
 
 #----------------------------------------
 def Complementary_Reln(inp_reln):
@@ -384,3 +387,46 @@ def Complementary_Reln(inp_reln):
     return RELATION_R2
   else:
     return RELATION_R1
+
+#------------------------------------------------
+"""
+this function computes average XL information between a pair of taxa clusters
+@param type_of_output: if 0, computes the average of XL measures
+													1, returns the minimum of XL measures
+													2, returns the maximum of XL measures
+"""
+def FindAvgXL(taxa_clust1, taxa_clust2, DIST_MAT_TYPE, single_elem, type_of_output=0):
+	if (single_elem == False):
+		curr_taxa_pair_list = []
+	
+	for x1 in taxa_clust1:
+		for x2 in taxa_clust2:  
+			key1 = (x1, x2)
+			key2 = (x2, x1)
+			#print 'key1: ', key1, ' key2: ', key2
+			if key1 in TaxaPair_Reln_Dict:
+				val = TaxaPair_Reln_Dict[key1]._GetNormalizedXLSumGeneTrees(DIST_MAT_TYPE)
+				if (single_elem == False):
+					curr_taxa_pair_list.append(val)
+				else:
+					return val
+			elif key2 in TaxaPair_Reln_Dict:
+				val = TaxaPair_Reln_Dict[key2]._GetNormalizedXLSumGeneTrees(DIST_MAT_TYPE)
+				if (single_elem == False):
+					curr_taxa_pair_list.append(val)
+				else:
+					return val
+	
+	# average of this pairwise list is used as the XL approximation
+	if (single_elem == False):
+		if (len(curr_taxa_pair_list) > 0):
+			if (type_of_output == 0):
+				return (sum(curr_taxa_pair_list) * 1.0) / len(curr_taxa_pair_list)
+			elif (type_of_output == 1):
+				return min(curr_taxa_pair_list)
+			else:
+				return max(curr_taxa_pair_list)
+		else:
+			return 0
+	
+	return 0

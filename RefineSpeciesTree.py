@@ -5,49 +5,6 @@ from Header import *
 import UtilFunc
 from UtilFunc import *
 
-#------------------------------------------------
-"""
-this function computes average XL information between a pair of taxa clusters
-@param type_of_output: if 0, computes the average of XL measures
-													1, returns the minimum of XL measures
-													2, returns the maximum of XL measures
-"""
-def FindAvgXL(taxa_clust1, taxa_clust2, DIST_MAT_TYPE, single_elem, type_of_output=0):
-	if (single_elem == False):
-		curr_taxa_pair_list = []
-	
-	for x1 in taxa_clust1:
-		for x2 in taxa_clust2:  
-			key1 = (x1, x2)
-			key2 = (x2, x1)
-			#print 'key1: ', key1, ' key2: ', key2
-			if key1 in TaxaPair_Reln_Dict:
-				val = TaxaPair_Reln_Dict[key1]._GetNormalizedXLSumGeneTrees(DIST_MAT_TYPE)
-				if (single_elem == False):
-					curr_taxa_pair_list.append(val)
-				else:
-					return val
-			elif key2 in TaxaPair_Reln_Dict:
-				val = TaxaPair_Reln_Dict[key2]._GetNormalizedXLSumGeneTrees(DIST_MAT_TYPE)
-				if (single_elem == False):
-					curr_taxa_pair_list.append(val)
-				else:
-					return val
-	
-	# average of this pairwise list is used as the XL approximation
-	if (single_elem == False):
-		if (len(curr_taxa_pair_list) > 0):
-			if (type_of_output == 0):
-				return (sum(curr_taxa_pair_list) * 1.0) / len(curr_taxa_pair_list)
-			elif (type_of_output == 1):
-				return min(curr_taxa_pair_list)
-			else:
-				return max(curr_taxa_pair_list)
-		else:
-			return 0
-	
-	return 0
-
 #-------------------------------------------
 """
 this function fills the distance matrix using normalized excess gene count
