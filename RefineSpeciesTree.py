@@ -18,39 +18,11 @@ def Fill_DistMat_SingleEntry(DistMat, no_of_clust, clust_species_list, DIST_MAT_
 	check and explore each pair of taxa clusters
 	"""
 	for i in range(no_of_clust - 1):
-		#"""
-		#arrange elements of clust_species_list[i] 
-		#in preorder manner
-		#"""
-		## this is the MRCA node corresponding to the clust_species_list[i]
-		#clust_i_mrca_node = Curr_tree.mrca(taxon_labels=clust_species_list[i])
-		#clust_i_preorder_taxa_list = []
-		#for n in clust_i_mrca_node.preorder_iter():
-			#if (n.is_leaf() == True):
-				#if n.taxon.label in clust_species_list[i]:
-					#clust_i_preorder_taxa_list.append(n.taxon.label)
-		
 		for j in range(i+1, no_of_clust):
-			#"""
-			#clust_species_list[i] and clust_species_list[j]
-			#contain two taxa list of one or more elements
-			#"""
-			#""" 
-			#first we arrange elements of clust_species_list[i] and clust_species_list[j] 
-			#in preorder manner
-			#"""
-			## this is the MRCA node corresponding to the clust_species_list[j]
-			#clust_j_mrca_node = Curr_tree.mrca(taxon_labels=clust_species_list[j])
-	
-			
-			#clust_j_preorder_taxa_list = []
-	
-	
-			#for n in clust_j_mrca_node.preorder_iter():
-				#if (n.is_leaf() == True):
-					#if n.taxon.label in clust_species_list[j]:
-						#clust_j_preorder_taxa_list.append(n.taxon.label)
-
+			"""
+			clust_species_list[i] and clust_species_list[j]
+			contain two taxa list of one or more elements
+			"""
 			entry = FindAvgXL(clust_species_list[i], clust_species_list[j], DIST_MAT_TYPE, True, type_of_output)
 			DistMat[j][i] = DistMat[i][j] = entry
 

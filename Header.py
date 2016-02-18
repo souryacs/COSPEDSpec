@@ -121,7 +121,7 @@ PERCENT_MAX_FREQ = 0.5	#0.35
 
 #CONSENSUS_FREQ_RATIO_THR = 0.7	#0.8
 
-#PRIORITY_PERCENT = 0.1
+PRIORITY_PERCENT = 0.1
 
 """
 this list contains the set of clusters 

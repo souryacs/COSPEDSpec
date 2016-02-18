@@ -87,7 +87,7 @@ def parse_options():
 				2 - Min operator \
 				3 - Max operator")     
 	
-	parser.add_option("-c", "--njmerge", \
+	parser.add_option("-n", "--njmerge", \
 				type="int", \
 				action="store", \
 				dest="nj_merge_clust", \
@@ -157,7 +157,7 @@ def main():
 			
 	if (OUTPUT_FILENAME == ""):
 		dir_of_curr_exec = dir_of_inp_file + 'COSPEDSpec' + '_D' + str(DIST_MAT_TYPE) \
-			+ '_U' + str(DIST_MAT_UPDATE) + '_C' + str(NJ_MERGE_CLUST) + '_X' + str(MPP_SOLVE_METRIC)
+			+ '_U' + str(DIST_MAT_UPDATE) + '_N' + str(NJ_MERGE_CLUST)
 		# create the directory
 		if (os.path.isdir(dir_of_curr_exec) == False):
 			mkdr_cmd = 'mkdir ' + dir_of_curr_exec
@@ -375,7 +375,6 @@ def main():
 	Sort_Priority_Queue(Cost_List_Taxa_Pair_Multi_Reln)
 
 	data_initialize_timestamp = time.time()	# note the timestamp
-
 	#------------------------------------------------------------
 	# add - sourya
 	"""
@@ -388,18 +387,21 @@ def main():
 		if RELATION_R3 in reln_list:
 			if (TaxaPair_Reln_Dict[l]._Check_Reln_R3_Majority(Output_Text_File) == True):
 				"""
-				the couplet is now related with the 'RELATION_R3'
+				the couplet can related with the 'RELATION_R3' 
+				provided the relation is not established earlier
+				or the relation does not generate any conflict
 				update the Reachability_Graph_Mat also
 				"""
-				if (DEBUG_LEVEL >= 2):
-					fp = open(Output_Text_File, 'a')    
-					fp.write('\n ==>>>>>>>>> NEW CONN --- nodes to be connected: ' \
-						+ str(l[0]) + ' and ' + str(l[1]) + ' relation type: ' + str(RELATION_R3))
-					fp.close()
-				
-				# also update the reachability graph information
-				Reachability_Graph_Mat = AdjustReachGraph(Reachability_Graph_Mat, l[0], l[1], RELATION_R3)
-	
+				clust1 = Taxa_Info_Dict[l[0]]._Get_Taxa_Part_Clust_Idx()
+				clust2 = Taxa_Info_Dict[l[1]]._Get_Taxa_Part_Clust_Idx()
+				if (CheckExistingConn(clust1, clust2, Reachability_Graph_Mat, RELATION_R3, Output_Text_File) == 0):
+					if (CheckTransitiveConflict(clust1, clust2, Reachability_Graph_Mat, reln_type, Output_Text_File) == 0):
+						if (DEBUG_LEVEL >= 2):
+							fp = open(Output_Text_File, 'a')    
+							fp.write('\n ==>>>>>>>>> NEW CONN --- nodes to be connected: ' \
+								+ str(l[0]) + ' and ' + str(l[1]) + ' relation type: ' + str(RELATION_R3))
+							fp.close()
+						Reachability_Graph_Mat = AdjustReachGraph(Reachability_Graph_Mat, clust1, clust2, RELATION_R3)
 	
 	# print the cluster information 
 	if (DEBUG_LEVEL >= 2):
@@ -458,13 +460,7 @@ def main():
 	"""
 	now we process all the elements of the Candidate_Out_Edge_Cluster_List one by one
 	"""
-	Reachability_Graph_Mat = Process_Candidate_Out_Edge_Cluster_List(Reachability_Graph_Mat, DIST_MAT_TYPE)
-	
-	
-					
-		
-	
-	
+	Reachability_Graph_Mat = Process_Candidate_Out_Edge_Cluster_List(Reachability_Graph_Mat, DIST_MAT_TYPE, Output_Text_File)
 	
 	##------------------------------------------------------------
 	## add - sourya
@@ -633,72 +629,72 @@ def main():
 	outfile.write(Supertree_without_branch_len.as_newick_string())
 	outfile.close()
 
-	##--------------------------------------------------------------
-	#fp = open(Output_Text_File, 'a')
-	#fp.write('\n --- user provided option for producing strict binary supertree')
-	#fp.close()
+	#--------------------------------------------------------------
+	fp = open(Output_Text_File, 'a')
+	fp.write('\n --- user provided option for producing strict binary supertree')
+	fp.close()
 
-	#""" 
-	#this function removes all multifurcating clusters and produces binary tree 
-	#it also solves the problem C3, as mentioned in the manuscript
-	#"""
-	#Refine_Supertree_Binary_Form(Supertree_without_branch_len, Output_Text_File, NJ_RULE_USED, DIST_MAT_TYPE, DIST_MAT_UPDATE, NJ_MERGE_CLUST)
+	""" 
+	this function removes all multifurcating clusters and produces binary tree 
+	it also solves the problem C3, as mentioned in the manuscript
+	"""
+	Refine_Supertree_Binary_Form(Supertree_without_branch_len, Output_Text_File, NJ_RULE_USED, DIST_MAT_TYPE, DIST_MAT_UPDATE, NJ_MERGE_CLUST)
 
-	#fp = open(Output_Text_File, 'a')
-	#fp.write('\n --- after binary refinement --- output tree without branch length (in newick format): ' + \
-		#Supertree_without_branch_len.as_newick_string())    
-	#fp.close()
+	fp = open(Output_Text_File, 'a')
+	fp.write('\n --- after binary refinement --- output tree without branch length (in newick format): ' + \
+		Supertree_without_branch_len.as_newick_string())    
+	fp.close()
 
-	## final timestamp
-	#binary_refinement_timestamp = time.time()      
+	# final timestamp
+	binary_refinement_timestamp = time.time()      
 
-	##--------------------------------------------------------------  
-	## write this tree on a separate text file
-	#if (OUTPUT_FILENAME == ""):
-		#out_treefilename = dir_of_curr_exec + '/' + 'outtree_Newick.tre'
-	#else:
-		#out_treefilename = OUTPUT_FILENAME
+	#--------------------------------------------------------------  
+	# write this tree on a separate text file
+	if (OUTPUT_FILENAME == ""):
+		out_treefilename = dir_of_curr_exec + '/' + 'outtree_Newick.tre'
+	else:
+		out_treefilename = OUTPUT_FILENAME
 
-	## we write the unweighted supertree
-	#outfile = open(out_treefilename, 'w')
-	#outfile.write(Supertree_without_branch_len.as_newick_string())
-	#outfile.close()
+	# we write the unweighted supertree
+	outfile = open(out_treefilename, 'w')
+	outfile.write(Supertree_without_branch_len.as_newick_string())
+	outfile.close()
 
-	## add  -sourya
-	#"""
-	#if user specifies one outgroup taxon name for rooting the tree, 
-	#we should reroot the tree and save it
-	#"""
-	#if (OUTGROUP_TAXON_NAME != ""):
-		## first we root the tree using the specified outgroup node
-		#outgroup_node = Supertree_without_branch_len.find_node_with_taxon_label(OUTGROUP_TAXON_NAME)
-		#if (outgroup_node is not None):
-			#Supertree_without_branch_len.to_outgroup_position(outgroup_node, update_splits=False)
+	# add  -sourya
+	"""
+	if user specifies one outgroup taxon name for rooting the tree, 
+	we should reroot the tree and save it
+	"""
+	if (OUTGROUP_TAXON_NAME != ""):
+		# first we root the tree using the specified outgroup node
+		outgroup_node = Supertree_without_branch_len.find_node_with_taxon_label(OUTGROUP_TAXON_NAME)
+		if (outgroup_node is not None):
+			Supertree_without_branch_len.to_outgroup_position(outgroup_node, update_splits=False)
 		
-		#out_treefilename = dir_of_curr_exec + '/' + 'outtree_Newick.tre.rooted'
+		out_treefilename = dir_of_curr_exec + '/' + 'outtree_Newick.tre.rooted'
 
-		## we write the unweighted supertree
-		#outfile = open(out_treefilename, 'w')
-		#outfile.write(Supertree_without_branch_len.as_newick_string())	
-		#outfile.close()
-	## end add  -sourya
+		# we write the unweighted supertree
+		outfile = open(out_treefilename, 'w')
+		outfile.write(Supertree_without_branch_len.as_newick_string())	
+		outfile.close()
+	# end add  -sourya
 
-	## we write the time associated with the execution of this method
-	#time_info_filename = dir_of_curr_exec + '/' + 'timing_info.txt'
-	#fp = open(time_info_filename, 'w')
-	#fp.write('\n \n\n ===============>>>>>>>>>>>>>>> TIME TAKEN BY THE METHOD (in seconds) ')
-	#fp.write('\n \n reading the data: ' + str(data_read_timestamp - start_timestamp) + \
-	#'\n initialization of the structure: ' + str(data_initialize_timestamp - data_read_timestamp) + \
-	#'\n formation of the reachability graph (cluster) (after loop): ' + \
-				#str(reachability_graph_form_timestamp - data_initialize_timestamp) + \
-	#'\n multiple parent (related) problem: ' + \
-				#str(cluster_of_node_refine_species_timestamp1 - reachability_graph_form_timestamp) + \
-	#'\n newick string formation for non branch length trees: ' + \
-				#str(data_process_timestamp - cluster_of_node_refine_species_timestamp1) + \
-	#'\n refining tree for producing strict binary species tree: ' + \
-				#str(binary_refinement_timestamp - data_process_timestamp))
-	#fp.write('\n \n Total time taken (in seconds) : ' + str(binary_refinement_timestamp - start_timestamp))
-	#fp.close()
+	# we write the time associated with the execution of this method
+	time_info_filename = dir_of_curr_exec + '/' + 'timing_info.txt'
+	fp = open(time_info_filename, 'w')
+	fp.write('\n \n\n ===============>>>>>>>>>>>>>>> TIME TAKEN BY THE METHOD (in seconds) ')
+	fp.write('\n \n reading the data: ' + str(data_read_timestamp - start_timestamp) + \
+	'\n initialization of the structure: ' + str(data_initialize_timestamp - data_read_timestamp) + \
+	'\n formation of the reachability graph (cluster) (after loop): ' + \
+				str(reachability_graph_form_timestamp - data_initialize_timestamp) + \
+	'\n multiple parent (related) problem: ' + \
+				str(cluster_of_node_refine_species_timestamp1 - reachability_graph_form_timestamp) + \
+	'\n newick string formation for non branch length trees: ' + \
+				str(data_process_timestamp - cluster_of_node_refine_species_timestamp1) + \
+	'\n refining tree for producing strict binary species tree: ' + \
+				str(binary_refinement_timestamp - data_process_timestamp))
+	fp.write('\n \n Total time taken (in seconds) : ' + str(binary_refinement_timestamp - start_timestamp))
+	fp.close()
 
 	#--------------------------------------------------------------  
 	# delete the storage variables associated with the current execution 

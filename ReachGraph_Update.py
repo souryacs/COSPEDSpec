@@ -117,7 +117,7 @@ this function merges two clusters
 basically the cluster src_clust_idx will be merged to the dest_clust_idx
 so all the entries concerning src_clust_idx will now point to the dest_clust_idx
 """
-def Merge_Clusters(Reachability_Graph_Mat, dest_taxa_label, src_taxa_label, dest_clust_idx, src_clust_idx, \
+def Merge_Clusters(Reachability_Graph_Mat, dest_clust_idx, src_clust_idx, \
 		    dest_clust_reach_mat_idx, src_clust_reach_mat_idx):
 	
 	""" 
@@ -164,10 +164,10 @@ def Merge_Clusters(Reachability_Graph_Mat, dest_taxa_label, src_taxa_label, dest
 #-----------------------------------------------------
 """ this function updates the reachability graph 
 on the basis of input edge type between input 2 taxa """
-def AdjustReachGraph(Reachability_Graph_Mat, taxaA_label, taxaB_label, reln_type):    
+def AdjustReachGraph(Reachability_Graph_Mat, nodeA_clust_idx, nodeB_clust_idx, reln_type):    
 
-	nodeA_clust_idx = Taxa_Info_Dict[taxaA_label]._Get_Taxa_Part_Clust_Idx()
-	nodeB_clust_idx = Taxa_Info_Dict[taxaB_label]._Get_Taxa_Part_Clust_Idx()
+	#nodeA_clust_idx = Taxa_Info_Dict[taxaA_label]._Get_Taxa_Part_Clust_Idx()
+	#nodeB_clust_idx = Taxa_Info_Dict[taxaB_label]._Get_Taxa_Part_Clust_Idx()
 
 	# perform cluster merging operation (content shifting plus transitive closure)
 	nodeA_reach_mat_idx = CURRENT_CLUST_IDX_LIST.index(nodeA_clust_idx)
@@ -179,7 +179,7 @@ def AdjustReachGraph(Reachability_Graph_Mat, taxaA_label, taxaB_label, reln_type
 		# keep the minimum cluster index intact
 		# merge two clusters
 		if (nodeA_clust_idx > nodeB_clust_idx):
-			Merge_Clusters(Reachability_Graph_Mat, taxaB_label, taxaA_label, nodeB_clust_idx, nodeA_clust_idx, nodeB_reach_mat_idx, nodeA_reach_mat_idx)
+			Merge_Clusters(Reachability_Graph_Mat, nodeB_clust_idx, nodeA_clust_idx, nodeB_reach_mat_idx, nodeA_reach_mat_idx)
 			# delete the index of nodeA_clust_idx from the reachability matrix
 			Reachability_Graph_Mat = numpy.delete(Reachability_Graph_Mat, (nodeA_reach_mat_idx), axis=0)	# delete the row
 			Reachability_Graph_Mat = numpy.delete(Reachability_Graph_Mat, (nodeA_reach_mat_idx), axis=1)	# delete the column
@@ -188,7 +188,7 @@ def AdjustReachGraph(Reachability_Graph_Mat, taxaA_label, taxaB_label, reln_type
 			# also remove the cluster key from the dictionary
 			Cluster_Info_Dict.pop(nodeA_clust_idx, None)          
 		else:
-			Merge_Clusters(Reachability_Graph_Mat, taxaA_label, taxaB_label, nodeA_clust_idx, nodeB_clust_idx, nodeA_reach_mat_idx, nodeB_reach_mat_idx)    
+			Merge_Clusters(Reachability_Graph_Mat, nodeA_clust_idx, nodeB_clust_idx, nodeA_reach_mat_idx, nodeB_reach_mat_idx)    
 			# delete the index of nodeB_clust_idx from the reachability matrix
 			Reachability_Graph_Mat = numpy.delete(Reachability_Graph_Mat, (nodeB_reach_mat_idx), axis=0)	# delete the row
 			Reachability_Graph_Mat = numpy.delete(Reachability_Graph_Mat, (nodeB_reach_mat_idx), axis=1)	# delete the column
@@ -217,82 +217,3 @@ def AdjustReachGraph(Reachability_Graph_Mat, taxaA_label, taxaB_label, reln_type
 			
 	return Reachability_Graph_Mat
 
-#-------------------------------------------------------------
-# add - sourya
-
-"""
-this function processes all clusters having candidate out edge information
-"""
-def Process_Candidate_Out_Edge_Cluster_List(Reachability_Graph_Mat, DIST_MAT_TYPE):
-	
-	for cl in Candidate_Out_Edge_Cluster_List:
-		"""
-		check if the cluster cl has any directed out edge already
-		otherwise, place all its candidate R1 clusters as a child to its parent node
-		"""
-		if (Cluster_Info_Dict[cl]._Get_Outdegree() == 0):
-			"""
-			here, assign out edge from the parent cluster of cl to the candidate R1 clusters
-			"""
-			for parent_cl in Cluster_Info_Dict[cl]._GetInEdgeList():
-				parent_cl_reach_mat_idx = CURRENT_CLUST_IDX_LIST.index(parent_cl)
-				for x in Cluster_Info_Dict[cl]._GetPossibleR1List():
-					x_reach_mat_idx = CURRENT_CLUST_IDX_LIST.index(x)
-					# connect the pair of clusters, along with updating the reachability matrix
-					Connect_ClusterPair(Reachability_Graph_Mat, parent_cl_reach_mat_idx, x_reach_mat_idx, RELATION_R1, parent_cl, x)
-					# now perform the transitive closure on the derived reachability matrix  
-					TransClosUpd(Reachability_Graph_Mat, parent_cl_reach_mat_idx, x_reach_mat_idx, RELATION_R1)
-		else:
-			"""
-			explore children of the cluster cl
-			and compare its XL with the new cluster
-			"""
-			cl_reach_mat_idx = CURRENT_CLUST_IDX_LIST.index(cl)
-			
-			for x in Cluster_Info_Dict[cl]._GetPossibleR1List():
-				x_reach_mat_idx = CURRENT_CLUST_IDX_LIST.index(x)
-				"""
-				excess gene count between the cluster x and the cluster cl
-				"""
-				xl_cl_x = FindAvgXL(Cluster_Info_Dict[cl]._GetSpeciesList(), Cluster_Info_Dict[x]._GetSpeciesList(), DIST_MAT_TYPE, True)
-				"""
-				this is the average of excess gene count between x and every child of cl
-				"""
-				xl_x_childcl = 0
-				"""
-				this is the average of excess gene count between cl and every child of cl
-				"""
-				xl_cl_childcl = 0
-				
-				for child_cl in Cluster_Info_Dict[cl]._GetOutEdgeList():
-					xl_x_childcl = xl_x_childcl + FindAvgXL(Cluster_Info_Dict[child_cl]._GetSpeciesList(), \
-						Cluster_Info_Dict[x]._GetSpeciesList(), DIST_MAT_TYPE, True)
-					xl_cl_childcl = xl_cl_childcl + FindAvgXL(Cluster_Info_Dict[child_cl]._GetSpeciesList(), \
-						Cluster_Info_Dict[cl]._GetSpeciesList(), DIST_MAT_TYPE, True)
-				
-				xl_x_childcl = (xl_x_childcl * 1.0) / len(Cluster_Info_Dict[cl]._GetOutEdgeList())
-				xl_cl_childcl = (xl_cl_childcl * 1.0) / len(Cluster_Info_Dict[cl]._GetOutEdgeList())
-				
-				if (xl_x_childcl <= xl_cl_x) and (xl_x_childcl <= xl_cl_childcl):
-					"""
-					x can be placed as the child of cl
-					"""
-					# connect the pair of clusters, along with updating the reachability matrix
-					Connect_ClusterPair(Reachability_Graph_Mat, cl_reach_mat_idx, x_reach_mat_idx, RELATION_R1, cl, x)
-					# now perform the transitive closure on the derived reachability matrix  
-					TransClosUpd(Reachability_Graph_Mat, cl_reach_mat_idx, x_reach_mat_idx, RELATION_R1)
-				else:
-					"""
-					here, assign out edge from the parent cluster of cl to the candidate R1 clusters
-					"""
-					for parent_cl in Cluster_Info_Dict[cl]._GetInEdgeList():
-						parent_cl_reach_mat_idx = CURRENT_CLUST_IDX_LIST.index(parent_cl)
-						for x in Cluster_Info_Dict[cl]._GetPossibleR1List():
-							x_reach_mat_idx = CURRENT_CLUST_IDX_LIST.index(x)
-							# connect the pair of clusters, along with updating the reachability matrix
-							Connect_ClusterPair(Reachability_Graph_Mat, parent_cl_reach_mat_idx, x_reach_mat_idx, RELATION_R1, parent_cl, x)
-							# now perform the transitive closure on the derived reachability matrix  
-							TransClosUpd(Reachability_Graph_Mat, parent_cl_reach_mat_idx, x_reach_mat_idx, RELATION_R1)
-					
-					
-				
