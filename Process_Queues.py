@@ -76,20 +76,24 @@ def Process_Candidate_Out_Edge_Cluster_List(Reachability_Graph_Mat, DIST_MAT_TYP
 						"""
 						this is the average of excess gene count between x and every child of cl
 						"""
-						xl_x_childcl = 0
+						xl_x_childcl_list = []	#0	# modify - sourya
 						"""
 						this is the average of excess gene count between cl and every child of cl
 						"""
-						xl_cl_childcl = 0
+						xl_cl_childcl_list = []	#0	# modify - sourya
 						
 						for child_cl in Cluster_Info_Dict[cl]._GetOutEdgeList():
 							curr_xl_x_childcl = FindAvgXL(Cluster_Info_Dict[child_cl]._GetSpeciesList(), \
 								Cluster_Info_Dict[x]._GetSpeciesList(), DIST_MAT_TYPE, True)
-							xl_x_childcl = xl_x_childcl + curr_xl_x_childcl
+							# modify - sourya
+							#xl_x_childcl = xl_x_childcl + curr_xl_x_childcl
+							xl_x_childcl_list.append(curr_xl_x_childcl)
 							
 							curr_xl_cl_childcl = FindAvgXL(Cluster_Info_Dict[child_cl]._GetSpeciesList(), \
 								Cluster_Info_Dict[cl]._GetSpeciesList(), DIST_MAT_TYPE, True)
-							xl_cl_childcl = xl_cl_childcl + curr_xl_cl_childcl
+							# modify - sourya
+							#xl_cl_childcl = xl_cl_childcl + curr_xl_cl_childcl
+							xl_cl_childcl_list.append(curr_xl_cl_childcl)
 							
 							if (DEBUG_LEVEL >= 2):
 								fp = open(Output_Text_File, 'a')
@@ -99,13 +103,17 @@ def Process_Candidate_Out_Edge_Cluster_List(Reachability_Graph_Mat, DIST_MAT_TYP
 									+ '  and the cluster ' + str(cl) + ' is: ' + str(curr_xl_cl_childcl)) 
 								fp.close()
 							
-						xl_x_childcl = (xl_x_childcl * 1.0) / len(Cluster_Info_Dict[cl]._GetOutEdgeList())
-						xl_cl_childcl = (xl_cl_childcl * 1.0) / len(Cluster_Info_Dict[cl]._GetOutEdgeList())
+						# modify - sourya
+						#xl_x_childcl = (xl_x_childcl * 1.0) / len(Cluster_Info_Dict[cl]._GetOutEdgeList())
+						#xl_cl_childcl = (xl_cl_childcl * 1.0) / len(Cluster_Info_Dict[cl]._GetOutEdgeList())
+						# instead of taking the average, we take the minimum
+						xl_x_childcl = min(xl_x_childcl_list)
+						xl_cl_childcl = min(xl_cl_childcl_list)
 
 						if (DEBUG_LEVEL >= 2):
 							fp = open(Output_Text_File, 'a')
-							fp.write('\n FINAL Average excess gene count between (child) clusters and the cluster ' + str(x) + ' is: ' + str(xl_x_childcl)) 
-							fp.write('\n FINAL Average excess gene count between clusters and the cluster ' + str(cl) + ' is: ' + str(xl_cl_childcl)) 
+							fp.write('\n FINAL Min excess gene count between (child) clusters and the cluster ' + str(x) + ' is: ' + str(xl_x_childcl)) 
+							fp.write('\n FINAL Min excess gene count between clusters and the cluster ' + str(cl) + ' is: ' + str(xl_cl_childcl)) 
 							fp.close()
 						
 						if (xl_x_childcl < ((xl_cl_x + xl_cl_childcl) / 2.0)):
@@ -254,6 +262,170 @@ def Proc_Queue_Pos_Score_R1R2(Reachability_Graph_Mat, Output_Text_File):
 
 #-------------------------------------------------------
 """
+this function checks whether a cluster pair can be related by R1 or R2 relation
+even if R4 relation is predominant among them
+provided no conflict is induced
+Here the source taxa cluster has cardinality > 1
+"""
+def CheckHiddenR1R2Reln(Reachability_Graph_Mat, src_taxa_clust_idx, dest_taxa_clust_idx, Output_Text_File):
+	"""
+	find the taxa list of respective clusters
+	"""
+	src_cluster_taxa_list = Cluster_Info_Dict[src_taxa_clust_idx]._GetSpeciesList()
+	dest_cluster_taxa_list = Cluster_Info_Dict[dest_taxa_clust_idx]._GetSpeciesList()
+
+	# add - sourya
+	"""
+	explore all key pairs of the cluster pair
+	for R1 / R2 relation establishment, every key pair should have R1/R2 within their set of allowed relations
+	"""
+	src_to_dest_cluster_R1_allowed = True
+	dest_to_src_cluster_R1_allowed = True
+	for t1 in src_cluster_taxa_list:
+		for t2 in dest_cluster_taxa_list:
+			key1 = (t1, t2)
+			key2 = (t2, t1)
+			if key1 in TaxaPair_Reln_Dict:
+				allowed_reln_list = TaxaPair_Reln_Dict[key1]._GetAllowedRelnList()
+				if RELATION_R1 not in allowed_reln_list:
+					src_to_dest_cluster_R1_allowed = False
+				if RELATION_R2 not in allowed_reln_list:
+					dest_to_src_cluster_R1_allowed = False
+				
+			if key2 in TaxaPair_Reln_Dict:
+				allowed_reln_list = TaxaPair_Reln_Dict[key2]._GetAllowedRelnList()
+				if RELATION_R2 not in allowed_reln_list:
+					src_to_dest_cluster_R1_allowed = False
+				if RELATION_R1 not in allowed_reln_list:
+					dest_to_src_cluster_R1_allowed = False
+				
+			if (src_to_dest_cluster_R1_allowed == False) and (dest_to_src_cluster_R1_allowed == False):
+				break
+	
+	# end add - sourya
+	#----------------------------------------------------------
+	"""
+	case A - src cluster size > 1
+	dest cluster size = 1
+	R1 relation from src cluster to dest cluster is sought
+	"""
+	if (len(src_cluster_taxa_list) > 1) and (len(dest_cluster_taxa_list) == 1):
+		if (src_to_dest_cluster_R1_allowed == True):
+			res = CheckR1Reln(src_cluster_taxa_list, dest_cluster_taxa_list)
+			if (res == 1):
+				if (CheckTransitiveConflict(src_taxa_clust_idx, dest_taxa_clust_idx, \
+								Reachability_Graph_Mat, RELATION_R1, Output_Text_File) == 0):
+					return 1, RELATION_R1
+			elif (res == 2):
+				Cluster_Info_Dict[src_taxa_clust_idx]._AddPossibleR1(dest_taxa_clust_idx)
+				if src_taxa_clust_idx not in Candidate_Out_Edge_Cluster_List:
+					Candidate_Out_Edge_Cluster_List.append(src_taxa_clust_idx)
+				return 0, RELATION_R4
+
+	"""
+	case B - src cluster size = 1
+	dest cluster size > 1
+	R2 relation from src cluster to dest cluster is sought
+	"""
+	if (len(src_cluster_taxa_list) == 1) and (len(dest_cluster_taxa_list) > 1):
+		if (dest_to_src_cluster_R1_allowed == True):
+			res = CheckR1Reln(dest_cluster_taxa_list, src_cluster_taxa_list)
+			if (res == 1):
+				if (CheckTransitiveConflict(src_taxa_clust_idx, dest_taxa_clust_idx, \
+								Reachability_Graph_Mat, RELATION_R2, Output_Text_File) == 0):
+					return 1, RELATION_R2
+			elif (res == 2):
+				Cluster_Info_Dict[dest_taxa_clust_idx]._AddPossibleR1(src_taxa_clust_idx)
+				if dest_taxa_clust_idx not in Candidate_Out_Edge_Cluster_List:
+					Candidate_Out_Edge_Cluster_List.append(dest_taxa_clust_idx)
+				return 0, RELATION_R4
+
+	"""
+	case C - src cluster size > 1
+	dest cluster size > 1
+	R1 / R2 relation from source to destination cluster is sought
+	"""
+	if ((len(src_cluster_taxa_list) > 1) and (len(dest_cluster_taxa_list) > 1)):
+		#\ #or ((len(src_cluster_taxa_list) == 1) and (len(dest_cluster_taxa_list) == 1)):
+		if (src_to_dest_cluster_R1_allowed == True):
+			res = CheckR1Reln(src_cluster_taxa_list, dest_cluster_taxa_list)
+			if (res == 1):
+				if (CheckTransitiveConflict(src_taxa_clust_idx, dest_taxa_clust_idx, \
+								Reachability_Graph_Mat, RELATION_R1, Output_Text_File) == 0):
+					return 1, RELATION_R1
+			elif (res == 2):
+				Cluster_Info_Dict[src_taxa_clust_idx]._AddPossibleR1(dest_taxa_clust_idx)
+				if src_taxa_clust_idx not in Candidate_Out_Edge_Cluster_List:
+					Candidate_Out_Edge_Cluster_List.append(src_taxa_clust_idx)
+				return 0, RELATION_R4
+
+		if (dest_to_src_cluster_R1_allowed == True):
+			res = CheckR1Reln(dest_cluster_taxa_list, src_cluster_taxa_list)
+			if (res == 1):
+				if (CheckTransitiveConflict(src_taxa_clust_idx, dest_taxa_clust_idx, \
+								Reachability_Graph_Mat, RELATION_R2, Output_Text_File) == 0):
+					return 1, RELATION_R2
+			elif (res == 2):
+				Cluster_Info_Dict[dest_taxa_clust_idx]._AddPossibleR1(src_taxa_clust_idx)
+				if dest_taxa_clust_idx not in Candidate_Out_Edge_Cluster_List:
+					Candidate_Out_Edge_Cluster_List.append(dest_taxa_clust_idx)
+				return 0, RELATION_R4
+
+	#----------------------------------------------------------
+	"""
+	case D - src cluster size = 1 and dest cluster size = 1
+	check R1 / R2 relation between this cluster pair
+	"""
+	if (len(src_cluster_taxa_list) == 1) and (len(dest_cluster_taxa_list) == 1):
+		res = CheckCandidateR1R2Reln(src_cluster_taxa_list, dest_cluster_taxa_list)
+		if (res == 1):
+			Cluster_Info_Dict[src_taxa_clust_idx]._AddPossibleR1(dest_taxa_clust_idx)
+			if src_taxa_clust_idx not in Candidate_Out_Edge_Cluster_List:
+				Candidate_Out_Edge_Cluster_List.append(src_taxa_clust_idx)
+			return 0, RELATION_R4
+		
+		res = CheckCandidateR1R2Reln(dest_cluster_taxa_list, src_cluster_taxa_list)
+		if (res == 1):
+			Cluster_Info_Dict[dest_taxa_clust_idx]._AddPossibleR1(src_taxa_clust_idx)
+			if dest_taxa_clust_idx not in Candidate_Out_Edge_Cluster_List:
+				Candidate_Out_Edge_Cluster_List.append(dest_taxa_clust_idx)
+			return 0, RELATION_R4
+
+	"""
+	case E - src cluster size = 1 and dest cluster size > 1
+	check R1 relation from src cluster to dest cluster
+	"""
+	if (len(src_cluster_taxa_list) == 1) and (len(dest_cluster_taxa_list) > 1):
+		if (src_to_dest_cluster_R1_allowed == True):
+			res = CheckCandidateR1R2Reln(src_cluster_taxa_list, dest_cluster_taxa_list)
+			if (res == 1):
+				Cluster_Info_Dict[src_taxa_clust_idx]._AddPossibleR1(dest_taxa_clust_idx)
+				if src_taxa_clust_idx not in Candidate_Out_Edge_Cluster_List:
+					Candidate_Out_Edge_Cluster_List.append(src_taxa_clust_idx)
+
+	"""
+	case F - src cluster size > 1 and dest cluster size = 1
+	check R1 relation from dest cluster to src cluster
+	"""
+	if (len(src_cluster_taxa_list) > 1) and (len(dest_cluster_taxa_list) == 1):
+		if (dest_to_src_cluster_R1_allowed == True):
+			res = CheckCandidateR1R2Reln(dest_cluster_taxa_list, src_cluster_taxa_list)
+			if (res == 1):
+				Cluster_Info_Dict[dest_taxa_clust_idx]._AddPossibleR1(src_taxa_clust_idx)
+				if dest_taxa_clust_idx not in Candidate_Out_Edge_Cluster_List:
+					Candidate_Out_Edge_Cluster_List.append(dest_taxa_clust_idx)
+
+	#"""
+	#case D - we check whether R4 relation between the cluster pair can be established
+	#provided it does not provide any conflict
+	#"""
+	#if (CheckTransitiveConflict(src_taxa_label, dest_taxa_label, Reachability_Graph_Mat, RELATION_R4, Output_Text_File) == 0):
+		#return 1, RELATION_R4
+
+	return 0, RELATION_R4
+
+#-------------------------------------------------------
+"""
 this function checks whether R1 relation from clust1_taxa_list to clust2_taxa_list 
 can be established or not, when the consensus relation is R4
 """
@@ -273,27 +445,37 @@ def CheckR1Reln(clust1_spec_list, clust2_spec_list):
 				pseudo_r1_freq = TaxaPair_Reln_Dict[key1]._GetFreqPseudoR1(0)
 				pseudo_r2_freq = TaxaPair_Reln_Dict[key1]._GetFreqPseudoR1(1)
 
-				if (len(clust1_spec_list) == 1) and (len(clust2_spec_list) == 1):
-					if ((r1_score < 0) and (r4_score < 0)) or (r4_priority <= (PRIORITY_PERCENT * r4_freq)):
-						# condition 1
-						if ((r1_freq + 2 * (pseudo_r1_freq - pseudo_r2_freq)) >= r4_freq) \
-							and (round(r1_level_val_ratio, 2) >= R1R2Reln_MAJ_THRS_low) and (RELATION_R1 in allowed_reln_list):
-							return 1
-						# condition 2
-						if ((r1_freq + pseudo_r1_freq - pseudo_r2_freq) >= r4_freq) and (RELATION_R1 in allowed_reln_list):
-							return 1
-						# condition 3
-						if (round(r1_level_val_ratio, 2) >= R1R2Reln_MAJ_THRS_high) and (RELATION_R1 in allowed_reln_list):
-							return 1
+				#if (len(clust1_spec_list) == 1) and (len(clust2_spec_list) == 1):
+					#if ((r1_score < 0) and (r4_score < 0)) or (r4_priority <= (PRIORITY_PERCENT * r4_freq)):
+						## condition 1
+						#if ((r1_freq + 2 * (pseudo_r1_freq - pseudo_r2_freq)) >= r4_freq) \
+							#and (round(r1_level_val_ratio, 2) >= R1R2Reln_MAJ_THRS_low) and (RELATION_R1 in allowed_reln_list):
+							#return 1
+						## condition 2
+						#if ((r1_freq + pseudo_r1_freq - pseudo_r2_freq) >= r4_freq) and (RELATION_R1 in allowed_reln_list):
+							#return 1
+						## condition 3
+						#if (round(r1_level_val_ratio, 2) >= R1R2Reln_MAJ_THRS_high) and (RELATION_R1 in allowed_reln_list):
+							#return 1
 						
-				else:
-					"""
-					at least one of the clusters have cardinality > 1
-					"""
-					if (((r1_freq + 2 * (pseudo_r1_freq - pseudo_r2_freq)) >= r4_freq) \
-						or (TaxaPair_Reln_Dict[key1]._CheckTargetRelnLevelConsensus(RELATION_R1, 1))) \
-						and ((round(r1_level_val_ratio, 2) >= R1R2Reln_MAJ_THRS_low) and (RELATION_R1 in allowed_reln_list)):
+				#else:
+				"""
+				at least one of the clusters have cardinality > 1
+				"""
+				# modify - sourya - we also lower the level baed threshold to include possible candidate edge 
+				
+				if (((r1_freq + 2 * (pseudo_r1_freq - pseudo_r2_freq)) >= r4_freq) \
+					or (TaxaPair_Reln_Dict[key1]._CheckTargetRelnLevelConsensus(RELATION_R1, 1))) and (RELATION_R1 in allowed_reln_list):
+					if (round(r1_level_val_ratio, 2) >= R1R2Reln_MAJ_THRS_low):
 						return 1
+					elif (round(r1_level_val_ratio, 2) >= R1R2Reln_MAJ_THRS_very_low):
+						 return 2
+					 
+				## add - sourya
+				#if ((r1_freq + 2 * (pseudo_r1_freq - pseudo_r2_freq)) >= r4_freq) \
+					#and ((round(r1_level_val_ratio, 2) >= R1R2Reln_MAJ_THRS_low) and (RELATION_R1 in allowed_reln_list)):
+					#return 1
+				## end add - sourya
 	
 			if key2 in TaxaPair_Reln_Dict:
 				r2_level_val_ratio = TaxaPair_Reln_Dict[key2]._GetLevelValRatio(1)
@@ -306,27 +488,37 @@ def CheckR1Reln(clust1_spec_list, clust2_spec_list):
 				r4_score = TaxaPair_Reln_Dict[key2]._GetEdgeCost_ConnReln(RELATION_R4)
 				r4_priority = TaxaPair_Reln_Dict[key2]._GetConnPrVal(RELATION_R4)
 
-				if (len(clust1_spec_list) == 1) and (len(clust2_spec_list) == 1):
-					if ((r2_score < 0) and (r4_score < 0)) or (r4_priority <= (PRIORITY_PERCENT * r4_freq)):
-						# condition 1
-						if ((r2_freq + 2 * (pseudo_r2_freq - pseudo_r1_freq)) >= r4_freq) \
-							and (round(r2_level_val_ratio, 2) >= R1R2Reln_MAJ_THRS_low) and (RELATION_R2 in allowed_reln_list):
-							return 1
-						# condition 2
-						if ((r2_freq + pseudo_r2_freq - pseudo_r1_freq) >= r4_freq) and (RELATION_R2 in allowed_reln_list):
-							return 1
-						# condition 3
-						if (round(r2_level_val_ratio, 2) >= R1R2Reln_MAJ_THRS_high) and (RELATION_R2 in allowed_reln_list):
-							return 1
+				#if (len(clust1_spec_list) == 1) and (len(clust2_spec_list) == 1):
+					#if ((r2_score < 0) and (r4_score < 0)) or (r4_priority <= (PRIORITY_PERCENT * r4_freq)):
+						## condition 1
+						#if ((r2_freq + 2 * (pseudo_r2_freq - pseudo_r1_freq)) >= r4_freq) \
+							#and (round(r2_level_val_ratio, 2) >= R1R2Reln_MAJ_THRS_low) and (RELATION_R2 in allowed_reln_list):
+							#return 1
+						## condition 2
+						#if ((r2_freq + pseudo_r2_freq - pseudo_r1_freq) >= r4_freq) and (RELATION_R2 in allowed_reln_list):
+							#return 1
+						## condition 3
+						#if (round(r2_level_val_ratio, 2) >= R1R2Reln_MAJ_THRS_high) and (RELATION_R2 in allowed_reln_list):
+							#return 1
 				
-				else:
-					"""
-					at least one of the clusters have cardinality > 1
-					"""
-					if (((r2_freq + 2 * (pseudo_r2_freq - pseudo_r1_freq)) >= r4_freq) \
-						or (TaxaPair_Reln_Dict[key2]._CheckTargetRelnLevelConsensus(RELATION_R2, 1))) \
-						and ((round(r2_level_val_ratio, 2) >= R1R2Reln_MAJ_THRS_low) and (RELATION_R2 in allowed_reln_list)):
+				#else:
+				"""
+				at least one of the clusters have cardinality > 1
+				"""
+				# modify - sourya - we also lower the level baed threshold to include possible candidate edge 
+				
+				if (((r2_freq + 2 * (pseudo_r2_freq - pseudo_r1_freq)) >= r4_freq) \
+					or (TaxaPair_Reln_Dict[key2]._CheckTargetRelnLevelConsensus(RELATION_R2, 1))) and (RELATION_R2 in allowed_reln_list):
+					if (round(r2_level_val_ratio, 2) >= R1R2Reln_MAJ_THRS_low):
 						return 1
+					elif (round(r2_level_val_ratio, 2) >= R1R2Reln_MAJ_THRS_very_low):
+						return 2
+
+				## add - sourya
+				#if ((r2_freq + 2 * (pseudo_r2_freq - pseudo_r1_freq)) >= r4_freq) \
+					#and ((round(r2_level_val_ratio, 2) >= R1R2Reln_MAJ_THRS_low) and (RELATION_R2 in allowed_reln_list)):
+					#return 1
+				## end add - sourya
 	
 	return 0
 
@@ -347,146 +539,53 @@ def CheckCandidateR1R2Reln(clust1_spec_list, clust2_spec_list):
 			key2 = (t2, t1)
 			if key1 in TaxaPair_Reln_Dict:
 				r1_level_val_ratio = TaxaPair_Reln_Dict[key1]._GetLevelValRatio(0)
-				r2_level_val_ratio = TaxaPair_Reln_Dict[key1]._GetLevelValRatio(1)
+				#r2_level_val_ratio = TaxaPair_Reln_Dict[key1]._GetLevelValRatio(1)
 				allowed_reln_list = TaxaPair_Reln_Dict[key1]._GetAllowedRelnList()
-				r1_score = TaxaPair_Reln_Dict[key1]._GetEdgeCost_ConnReln(RELATION_R1)
-				r4_score = TaxaPair_Reln_Dict[key1]._GetEdgeCost_ConnReln(RELATION_R4)
-				r4_priority = TaxaPair_Reln_Dict[key1]._GetConnPrVal(RELATION_R4)
-				r1_freq = TaxaPair_Reln_Dict[key1]._GetEdgeWeight(RELATION_R1)
-				r4_freq = TaxaPair_Reln_Dict[key1]._GetEdgeWeight(RELATION_R4)
-				pseudo_r1_freq = TaxaPair_Reln_Dict[key1]._GetFreqPseudoR1(0)
-				pseudo_r2_freq = TaxaPair_Reln_Dict[key1]._GetFreqPseudoR1(1)
+				#r1_score = TaxaPair_Reln_Dict[key1]._GetEdgeCost_ConnReln(RELATION_R1)
+				#r4_score = TaxaPair_Reln_Dict[key1]._GetEdgeCost_ConnReln(RELATION_R4)
+				#r4_priority = TaxaPair_Reln_Dict[key1]._GetConnPrVal(RELATION_R4)
+				#r1_freq = TaxaPair_Reln_Dict[key1]._GetEdgeWeight(RELATION_R1)
+				#r4_freq = TaxaPair_Reln_Dict[key1]._GetEdgeWeight(RELATION_R4)
+				#pseudo_r1_freq = TaxaPair_Reln_Dict[key1]._GetFreqPseudoR1(0)
+				#pseudo_r2_freq = TaxaPair_Reln_Dict[key1]._GetFreqPseudoR1(1)
 				
 				if (RELATION_R1 in allowed_reln_list):
 					if (round(r1_level_val_ratio, 2) >= R1R2Reln_MAJ_THRS_low):
 						return 1
+					
+					if (TaxaPair_Reln_Dict[key1]._CheckTargetRelnLevelConsensus(RELATION_R1, 1)) \
+						and (round(r1_level_val_ratio, 2) >= R1R2Reln_MAJ_THRS_very_low):
+						return 1
 
-				if (RELATION_R2 in allowed_reln_list):
-					if (round(r2_level_val_ratio, 2) >= R1R2Reln_MAJ_THRS_low):
-						return -1
+				#if (RELATION_R2 in allowed_reln_list):
+					#if (round(r2_level_val_ratio, 2) >= R1R2Reln_MAJ_THRS_low):
+						#return -1
 
 			if key2 in TaxaPair_Reln_Dict:
 				r2_level_val_ratio = TaxaPair_Reln_Dict[key2]._GetLevelValRatio(1)
-				r1_level_val_ratio = TaxaPair_Reln_Dict[key2]._GetLevelValRatio(0)
+				#r1_level_val_ratio = TaxaPair_Reln_Dict[key2]._GetLevelValRatio(0)
 				allowed_reln_list = TaxaPair_Reln_Dict[key2]._GetAllowedRelnList()
-				r2_freq = TaxaPair_Reln_Dict[key2]._GetEdgeWeight(RELATION_R2)
-				r4_freq = TaxaPair_Reln_Dict[key2]._GetEdgeWeight(RELATION_R4)
-				pseudo_r1_freq = TaxaPair_Reln_Dict[key2]._GetFreqPseudoR1(0)
-				pseudo_r2_freq = TaxaPair_Reln_Dict[key2]._GetFreqPseudoR1(1)
-				r2_score = TaxaPair_Reln_Dict[key2]._GetEdgeCost_ConnReln(RELATION_R2)
-				r4_score = TaxaPair_Reln_Dict[key2]._GetEdgeCost_ConnReln(RELATION_R4)
-				r4_priority = TaxaPair_Reln_Dict[key2]._GetConnPrVal(RELATION_R4)
+				#r2_freq = TaxaPair_Reln_Dict[key2]._GetEdgeWeight(RELATION_R2)
+				#r4_freq = TaxaPair_Reln_Dict[key2]._GetEdgeWeight(RELATION_R4)
+				#pseudo_r1_freq = TaxaPair_Reln_Dict[key2]._GetFreqPseudoR1(0)
+				#pseudo_r2_freq = TaxaPair_Reln_Dict[key2]._GetFreqPseudoR1(1)
+				#r2_score = TaxaPair_Reln_Dict[key2]._GetEdgeCost_ConnReln(RELATION_R2)
+				#r4_score = TaxaPair_Reln_Dict[key2]._GetEdgeCost_ConnReln(RELATION_R4)
+				#r4_priority = TaxaPair_Reln_Dict[key2]._GetConnPrVal(RELATION_R4)
 				
 				if (RELATION_R2 in allowed_reln_list):
 					if (round(r2_level_val_ratio, 2) >= R1R2Reln_MAJ_THRS_low):
 						return 1
 
-				if (RELATION_R1 in allowed_reln_list):
-					if (round(r1_level_val_ratio, 2) >= R1R2Reln_MAJ_THRS_low):
-						return -1
+					if (TaxaPair_Reln_Dict[key2]._CheckTargetRelnLevelConsensus(RELATION_R2, 1)) \
+						and (round(r2_level_val_ratio, 2) >= R1R2Reln_MAJ_THRS_very_low):
+						return 1
+
+				#if (RELATION_R1 in allowed_reln_list):
+					#if (round(r1_level_val_ratio, 2) >= R1R2Reln_MAJ_THRS_low):
+						#return -1
 				
 	return 0
-
-#-------------------------------------------------------
-"""
-this function checks whether a cluster pair can be related by R1 or R2 relation
-even if R4 relation is predominant among them
-provided no conflict is induced
-Here the source taxa cluster has cardinality > 1
-"""
-def CheckHiddenR1R2Reln(Reachability_Graph_Mat, src_taxa_clust_idx, dest_taxa_clust_idx, Output_Text_File):
-	"""
-	find the taxa list of respective clusters
-	"""
-	src_cluster_taxa_list = Cluster_Info_Dict[src_taxa_clust_idx]._GetSpeciesList()
-	dest_cluster_taxa_list = Cluster_Info_Dict[dest_taxa_clust_idx]._GetSpeciesList()
-
-	#----------------------------------------------------------
-	"""
-	case A - src cluster size > 1
-	dest cluster size = 1
-	R1 relation from src cluster to dest cluster is sought
-	"""
-	if (len(src_cluster_taxa_list) > 1) and (len(dest_cluster_taxa_list) == 1):
-		if (CheckR1Reln(src_cluster_taxa_list, dest_cluster_taxa_list) == 1):
-			if (CheckTransitiveConflict(src_taxa_clust_idx, dest_taxa_clust_idx, \
-							Reachability_Graph_Mat, RELATION_R1, Output_Text_File) == 0):
-				return 1, RELATION_R1
-
-	"""
-	case B - src cluster size = 1
-	dest cluster size > 1
-	R2 relation from src cluster to dest cluster is sought
-	"""
-	if (len(src_cluster_taxa_list) == 1) and (len(dest_cluster_taxa_list) > 1):
-		if (CheckR1Reln(dest_cluster_taxa_list, src_cluster_taxa_list) == 1):
-			if (CheckTransitiveConflict(src_taxa_clust_idx, dest_taxa_clust_idx, \
-							Reachability_Graph_Mat, RELATION_R2, Output_Text_File) == 0):
-				return 1, RELATION_R2
-
-	"""
-	case C - src cluster size > 1
-	dest cluster size > 1
-	R1 / R2 relation from source to destination cluster is sought
-	"""
-	if ((len(src_cluster_taxa_list) > 1) and (len(dest_cluster_taxa_list) > 1)) \
-		or ((len(src_cluster_taxa_list) == 1) and (len(dest_cluster_taxa_list) == 1)):
-		if (CheckR1Reln(src_cluster_taxa_list, dest_cluster_taxa_list) == 1):
-			if (CheckTransitiveConflict(src_taxa_clust_idx, dest_taxa_clust_idx, \
-							Reachability_Graph_Mat, RELATION_R1, Output_Text_File) == 0):
-				return 1, RELATION_R1
-
-		if (CheckR1Reln(dest_cluster_taxa_list, src_cluster_taxa_list) == 1):
-			if (CheckTransitiveConflict(src_taxa_clust_idx, dest_taxa_clust_idx, \
-							Reachability_Graph_Mat, RELATION_R2, Output_Text_File) == 0):
-				return 1, RELATION_R2
-
-	"""
-	case D - src cluster size = 1 and dest cluster size = 1
-	check R1 / R2 relation between this cluster pair
-	"""
-	if (len(src_cluster_taxa_list) == 1) and (len(dest_cluster_taxa_list) == 1):
-		res = CheckCandidateR1R2Reln(src_cluster_taxa_list, dest_cluster_taxa_list)
-		if (res == 1):
-			Cluster_Info_Dict[src_taxa_clust_idx]._AddPossibleR1(dest_taxa_clust_idx)
-			if src_taxa_clust_idx not in Candidate_Out_Edge_Cluster_List:
-				Candidate_Out_Edge_Cluster_List.append(src_taxa_clust_idx)
-		
-		if (res == -1):
-			Cluster_Info_Dict[dest_taxa_clust_idx]._AddPossibleR1(src_taxa_clust_idx)
-			if dest_taxa_clust_idx not in Candidate_Out_Edge_Cluster_List:
-				Candidate_Out_Edge_Cluster_List.append(dest_taxa_clust_idx)
-
-	"""
-	case E - src cluster size = 1 and dest cluster size > 1
-	check R1 relation from src cluster to dest cluster
-	"""
-	if (len(src_cluster_taxa_list) == 1) and (len(dest_cluster_taxa_list) > 1):
-		res = CheckCandidateR1R2Reln(src_cluster_taxa_list, dest_cluster_taxa_list)
-		if (res == 1):
-			Cluster_Info_Dict[src_taxa_clust_idx]._AddPossibleR1(dest_taxa_clust_idx)
-			if src_taxa_clust_idx not in Candidate_Out_Edge_Cluster_List:
-				Candidate_Out_Edge_Cluster_List.append(src_taxa_clust_idx)
-
-	"""
-	case F - src cluster size > 1 and dest cluster size = 1
-	check R1 relation from dest cluster to src cluster
-	"""
-	if (len(src_cluster_taxa_list) > 1) and (len(dest_cluster_taxa_list) == 1):
-		res = CheckCandidateR1R2Reln(dest_cluster_taxa_list, src_cluster_taxa_list)
-		if (res == 1):
-			Cluster_Info_Dict[dest_taxa_clust_idx]._AddPossibleR1(src_taxa_clust_idx)
-			if dest_taxa_clust_idx not in Candidate_Out_Edge_Cluster_List:
-				Candidate_Out_Edge_Cluster_List.append(dest_taxa_clust_idx)
-
-	#"""
-	#case D - we check whether R4 relation between the cluster pair can be established
-	#provided it does not provide any conflict
-	#"""
-	#if (CheckTransitiveConflict(src_taxa_label, dest_taxa_label, Reachability_Graph_Mat, RELATION_R4, Output_Text_File) == 0):
-		#return 1, RELATION_R4
-
-	return 0, RELATION_R4
 
 #-------------------------------------------------------
 #""" 

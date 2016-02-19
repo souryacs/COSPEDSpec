@@ -82,23 +82,23 @@ def Fill_DistMat_AvgEntry(DistMat, no_of_clust, clust_species_list, DIST_MAT_TYP
 	#return False
 	
 ##-------------------------------------------
-#"""
-#following function checks if we are merging two leaves 
-#which do not have R3 as their consensus relation
-#in such a case, the function returns FALSE
-#"""
-#def CheckMergeImproperLeaves(clust_species_list, i, j):
-	#if (IsLeafCluster(clust_species_list, i) == True) and (IsLeafCluster(clust_species_list, j) == True):
-		#key1 = (clust_species_list[i][0], clust_species_list[j][0])
-		#key2 = (clust_species_list[j][0], clust_species_list[i][0])
-		#if key1 in TaxaPair_Reln_Dict:
-			#if (TaxaPair_Reln_Dict[key1]._CheckTargetRelnConsensus(RELATION_R3) == False):
-				#return True
-		#if key2 in TaxaPair_Reln_Dict:
-			#if (TaxaPair_Reln_Dict[key2]._CheckTargetRelnConsensus(RELATION_R3) == False):
-				#return True
+"""
+following function checks if we are merging two leaves 
+which do not have R3 as their consensus relation
+in such a case, the function returns FALSE
+"""
+def CheckMergeImproperLeaves(clust_species_list, i, j):
+	if (IsLeafCluster(clust_species_list, i) == True) and (IsLeafCluster(clust_species_list, j) == True):
+		key1 = (clust_species_list[i][0], clust_species_list[j][0])
+		key2 = (clust_species_list[j][0], clust_species_list[i][0])
+		if key1 in TaxaPair_Reln_Dict:
+			if (TaxaPair_Reln_Dict[key1]._CheckTargetRelnConsensus(RELATION_R3) == False):
+				return True
+		if key2 in TaxaPair_Reln_Dict:
+			if (TaxaPair_Reln_Dict[key2]._CheckTargetRelnConsensus(RELATION_R3) == False):
+				return True
 	
-	#return False
+	return False
 
 #-------------------------------------------
 """
@@ -116,12 +116,12 @@ def Find_Unique_Min(Norm_DistMat, no_of_clust, clust_species_list):
 				continue
 			
 			if (Norm_DistMat[i][j] < min_val):
-				if 1:	#(CheckMergeImproperLeaves(clust_species_list, i, j) == False) and (CheckMergeImproperLeafandNonleaf(clust_species_list, i, j) == False):	# add - sourya
+				if (CheckMergeImproperLeaves(clust_species_list, i, j) == False):	# and (CheckMergeImproperLeafandNonleaf(clust_species_list, i, j) == False):	# add - sourya
 					min_val = Norm_DistMat[i][j]
 					min_idx_i = i
 					min_idx_j = j
 			elif (Norm_DistMat[i][j] == min_val):
-				if 1:	#(CheckMergeImproperLeaves(clust_species_list, i, j) == False) and (CheckMergeImproperLeafandNonleaf(clust_species_list, i, j) == False):	# add - sourya
+				if (CheckMergeImproperLeaves(clust_species_list, i, j) == False):	# and (CheckMergeImproperLeafandNonleaf(clust_species_list, i, j) == False):	# add - sourya
 					# comment - sourya
 					## here we prioritize the cluster pair having minimum number of species
 					#if (len(clust_species_list[i]) + len(clust_species_list[j])) < (len(clust_species_list[min_idx_i]) + len(clust_species_list[min_idx_j])):
@@ -507,9 +507,9 @@ def Merge_Leaf_NonLeaf(Curr_tree, clust_species_list, leaf_idx, non_leaf_idx, ta
 		fp.close()
 	
 	# obtain three sets of XL values
-	XL_clust2_child1_clust2_child2 = FindAvgXL(clust2_child1_taxa_list, clust2_child2_taxa_list, DIST_MAT_TYPE, False, (DIST_MAT_UPDATE - 1))
-	XL_clust2_child1_leaf = FindAvgXL(clust2_child1_taxa_list, clust_species_list[leaf_idx], DIST_MAT_TYPE, False, (DIST_MAT_UPDATE - 1))
-	XL_clust2_child2_leaf = FindAvgXL(clust2_child2_taxa_list, clust_species_list[leaf_idx], DIST_MAT_TYPE, False, (DIST_MAT_UPDATE - 1))
+	XL_clust2_child1_clust2_child2 = FindAvgXL(clust2_child1_taxa_list, clust2_child2_taxa_list, DIST_MAT_TYPE, True, (DIST_MAT_UPDATE - 1))
+	XL_clust2_child1_leaf = FindAvgXL(clust2_child1_taxa_list, clust_species_list[leaf_idx], DIST_MAT_TYPE, True, (DIST_MAT_UPDATE - 1))
+	XL_clust2_child2_leaf = FindAvgXL(clust2_child2_taxa_list, clust_species_list[leaf_idx], DIST_MAT_TYPE, True, (DIST_MAT_UPDATE - 1))
 
 	if (DEBUG_LEVEL >= 2):
 		fp = open(Output_Text_File, 'a')
@@ -530,20 +530,28 @@ def Merge_Leaf_NonLeaf(Curr_tree, clust_species_list, leaf_idx, non_leaf_idx, ta
 	## end add - sourya
 
 	XL_list = [XL_clust2_child1_clust2_child2, XL_clust2_child1_leaf, XL_clust2_child2_leaf]
+	
 	if (XL_clust2_child1_clust2_child2 == min(XL_list)):
 		# configuration (A,(B,C)) will be employed
 		Curr_tree = MergeSubtrees(Curr_tree, leaf_mrca_node, non_leaf_mrca_node, all_taxa_mrca_node, taxa_list, Output_Text_File)
-	elif (XL_clust2_child1_leaf == min(XL_list)):
+		return Curr_tree
+	elif (XL_clust2_child2_leaf == min(XL_list)) and (len(clust2_child2_taxa_list) > 1):
 		# configuration (B, (A, C)) will be employed
+		# provided C is not leaf
 		src_subtree_node = leaf_mrca_node
 		dest_subtree_node = Curr_tree.mrca(taxon_labels=clust2_child2_taxa_list)
 		Curr_tree = InsertSubTree(Curr_tree, src_subtree_node, dest_subtree_node, Output_Text_File)
-	else:
+		return Curr_tree
+	elif (XL_clust2_child1_leaf == min(XL_list)) and (len(clust2_child1_taxa_list) > 1):
 		# configuration (C, (A, B)) will be employed 
+		# provided B is not leaf
 		src_subtree_node = leaf_mrca_node
 		dest_subtree_node = Curr_tree.mrca(taxon_labels=clust2_child1_taxa_list)
 		Curr_tree = InsertSubTree(Curr_tree, src_subtree_node, dest_subtree_node, Output_Text_File)
+		return Curr_tree
 	
+	# otherwise configuration (A,(B,C)) will be employed
+	Curr_tree = MergeSubtrees(Curr_tree, leaf_mrca_node, non_leaf_mrca_node, all_taxa_mrca_node, taxa_list, Output_Text_File)
 	return Curr_tree
 
 #-------------------------------------------
@@ -843,9 +851,15 @@ def Merge_Both_NonLeaf(Curr_tree, clust_species_list, idx1, idx2, taxa_list, Out
 		1) ((A,B),(C,D)), 2) (C, (D, (A, B))), 3) (D, (C, (A, B)))
 		"""
 		#  XL(C,:) / 2
-		XL_clust2_child1_clust1_avg = (XL_clust1_child1_clust2_child1 + XL_clust1_child2_clust2_child1) / 2.0
+		# modify - sourya
+		# replacing average with maximum operator
+		#XL_clust2_child1_clust1_avg = (XL_clust1_child1_clust2_child1 + XL_clust1_child2_clust2_child1) / 2.0
+		XL_clust2_child1_clust1_avg = max(XL_clust1_child1_clust2_child1, XL_clust1_child2_clust2_child1)
 		# XL(D,:) / 2
-		XL_clust2_child2_clust1_avg = (XL_clust1_child1_clust2_child2 + XL_clust1_child2_clust2_child2) / 2.0
+		# modify - sourya
+		# replacing average with maximum operator
+		#XL_clust2_child2_clust1_avg = (XL_clust1_child1_clust2_child2 + XL_clust1_child2_clust2_child2) / 2.0
+		XL_clust2_child2_clust1_avg = max(XL_clust1_child1_clust2_child2, XL_clust1_child2_clust2_child2)
 		
 		"""
 		# case 1A - XL(C,D) is lower than both XL(C,:) / 2 and XL(D,:) / 2 (: denotes A and B)
@@ -894,9 +908,15 @@ def Merge_Both_NonLeaf(Curr_tree, clust_species_list, idx1, idx2, taxa_list, Out
 		1) ((A,B),(C,D)), 2) (A, (B, (C, D))), 3) (B, (A, (C, D)))
 		"""
 		#  XL(A,:) / 2
-		XL_clust1_child1_clust2_avg = (XL_clust1_child1_clust2_child1 + XL_clust1_child1_clust2_child2) / 2.0
+		# modify - sourya
+		# replacing average with maximum operator
+		#XL_clust1_child1_clust2_avg = (XL_clust1_child1_clust2_child1 + XL_clust1_child1_clust2_child2) / 2.0
+		XL_clust1_child1_clust2_avg = max(XL_clust1_child1_clust2_child1, XL_clust1_child1_clust2_child2)
 		# XL(B,:) / 2
-		XL_clust1_child2_clust2_avg = (XL_clust1_child2_clust2_child1 + XL_clust1_child2_clust2_child2) / 2.0
+		# modify - sourya
+		# replacing average with maximum operator
+		#XL_clust1_child2_clust2_avg = (XL_clust1_child2_clust2_child1 + XL_clust1_child2_clust2_child2) / 2.0
+		XL_clust1_child2_clust2_avg = max(XL_clust1_child2_clust2_child1, XL_clust1_child2_clust2_child2)
 		"""
 		# case 1B - XL(A,B) is lower than both XL(A,:) / 2 and XL(B,:) / 2 (: denotes C and D)
 		"""
@@ -1458,11 +1478,14 @@ def Merge_Cluster_Pair_New(Curr_tree, clust_species_list, min_idx_i, min_idx_j, 
 	if (isleaf_clust1 == True) and (isleaf_clust2 == True):
 		Curr_tree = Merge_Leaves(Curr_tree, clust_species_list, min_idx_i, min_idx_j, taxa_list, Output_Text_File)
 	elif (isleaf_clust1 == True) and (isleaf_clust2 == False):
-		Curr_tree = Merge_Leaf_NonLeaf(Curr_tree, clust_species_list, min_idx_i, min_idx_j, taxa_list, Output_Text_File, DIST_MAT_TYPE, DIST_MAT_UPDATE)
+		Curr_tree = Merge_Leaf_NonLeaf(Curr_tree, clust_species_list, min_idx_i, min_idx_j, taxa_list, \
+			Output_Text_File, DIST_MAT_TYPE, DIST_MAT_UPDATE)
 	elif (isleaf_clust1 == False) and (isleaf_clust2 == True):
-		Curr_tree = Merge_Leaf_NonLeaf(Curr_tree, clust_species_list, min_idx_j, min_idx_i, taxa_list, Output_Text_File, DIST_MAT_TYPE, DIST_MAT_UPDATE)
+		Curr_tree = Merge_Leaf_NonLeaf(Curr_tree, clust_species_list, min_idx_j, min_idx_i, taxa_list, \
+			Output_Text_File, DIST_MAT_TYPE, DIST_MAT_UPDATE)
 	elif (isleaf_clust1 == False) and (isleaf_clust2 == False):
-		Curr_tree = Merge_Both_NonLeaf(Curr_tree, clust_species_list, min_idx_i, min_idx_j, taxa_list, Output_Text_File, DIST_MAT_TYPE, DIST_MAT_UPDATE)
+		Curr_tree = Merge_Both_NonLeaf(Curr_tree, clust_species_list, min_idx_i, min_idx_j, taxa_list, \
+			Output_Text_File, DIST_MAT_TYPE, DIST_MAT_UPDATE)
 	
 	return Curr_tree
 
@@ -1519,7 +1542,7 @@ def ResolveMultifurcation(Curr_tree, clust_species_list, no_of_input_clusters, O
 	#Fill_DistMat_SingleEntry(DistMat, no_of_clust, clust_species_list, DIST_MAT_TYPE)
 	
 	# using average information from a taxa cluster
-	Fill_DistMat_AvgEntry(DistMat, no_of_clust, clust_species_list, DIST_MAT_TYPE, (DIST_MAT_UPDATE - 1))
+	#Fill_DistMat_AvgEntry(DistMat, no_of_clust, clust_species_list, DIST_MAT_TYPE, (DIST_MAT_UPDATE - 1))
 	#---------------------------------------
 	# end comment - sourya
 	
@@ -1530,7 +1553,7 @@ def ResolveMultifurcation(Curr_tree, clust_species_list, no_of_input_clusters, O
 		instead of approximating the cluster contents
 		we use the XL value computed from individual cluster elements
 		"""
-		#Fill_DistMat_SingleEntry(DistMat, no_of_clust, clust_species_list, DIST_MAT_TYPE, (DIST_MAT_UPDATE - 1))
+		Fill_DistMat_SingleEntry(DistMat, no_of_clust, clust_species_list, DIST_MAT_TYPE, (DIST_MAT_UPDATE - 1))
 		#Fill_DistMat_AvgEntry(DistMat, no_of_clust, clust_species_list, DIST_MAT_TYPE, (DIST_MAT_UPDATE - 1))
 		# end add - sourya
 		
@@ -1558,7 +1581,8 @@ def ResolveMultifurcation(Curr_tree, clust_species_list, no_of_input_clusters, O
 		if (NJ_MERGE_CLUST == 1):
 			Curr_tree = Merge_Cluster_Pair(Curr_tree, clust_species_list, min_idx_i, min_idx_j, taxa_list, Output_Text_File)
 		else:
-			Curr_tree = Merge_Cluster_Pair_New(Curr_tree, clust_species_list, min_idx_i, min_idx_j, taxa_list, Output_Text_File, DIST_MAT_TYPE, DIST_MAT_UPDATE)
+			Curr_tree = Merge_Cluster_Pair_New(Curr_tree, clust_species_list, min_idx_i, min_idx_j, taxa_list, \
+				Output_Text_File, DIST_MAT_TYPE, DIST_MAT_UPDATE)
 		#---------------------------------------------------------      
 		"""
 		adjust the DistMat by inserting one new row and column corresponding to the new cluster

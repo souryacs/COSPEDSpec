@@ -61,14 +61,14 @@ CURRENT_CLUST_IDX_LIST = []
 
 # this is the debug level
 # set for printing the necessary information
-DEBUG_LEVEL = 2
+DEBUG_LEVEL = 0
 
 MAJORITY_CONSENSUS_RATIO = 0.6
 LEVEL_COUNT_VAL_CONSENSUS_RATIO = 0.7
 
 # variables used to denote whether we use traditional NJ method
 # or use a variant of it, namely the agglomerative clustering
-#TRADITIONAL_NJ = 1
+TRADITIONAL_NJ = 1
 AGGLO_CLUST = 2
 
 """
@@ -99,7 +99,7 @@ for a non conflicting couplet with negative support score of the corresponding r
 #R1R2Reln_MAJ_THRS = 0.7
 R1R2Reln_MAJ_THRS_high = 0.8	#0.75
 R1R2Reln_MAJ_THRS_low = 0.7	#0.8
-#R1R2Reln_MAJ_THRS_very_low = 0.65
+R1R2Reln_MAJ_THRS_very_low = 0.6	#0.65
 
 """
 this is a threshold corresponding to the selection of R3 relation
@@ -117,7 +117,7 @@ R3Reln_MAJ_THRS = 0.2	#0.15
 for a couplet, relations with frequency of this percentage of the max (consensus) frequency
 will be included in the score queue
 """
-PERCENT_MAX_FREQ = 0.5	#0.35
+PERCENT_MAX_FREQ = 0.35	#0.5	#sourya
 
 #CONSENSUS_FREQ_RATIO_THR = 0.7	#0.8
 

@@ -396,6 +396,9 @@ this function computes average XL information between a pair of taxa clusters
 													2, returns the maximum of XL measures
 """
 def FindAvgXL(taxa_clust1, taxa_clust2, DIST_MAT_TYPE, single_elem, type_of_output=0):
+	
+	#print '***** taxa_clust1: ', taxa_clust1, ' taxa_clust2: ', taxa_clust2
+	
 	if (single_elem == False):
 		curr_taxa_pair_list = []
 	
@@ -416,6 +419,10 @@ def FindAvgXL(taxa_clust1, taxa_clust2, DIST_MAT_TYPE, single_elem, type_of_outp
 					curr_taxa_pair_list.append(val)
 				else:
 					return val
+	
+	#print 'curr_taxa_pair_list : ', curr_taxa_pair_list
+	#print 'Avg of curr_taxa_pair_list: ', (sum(curr_taxa_pair_list) * 1.0) / len(curr_taxa_pair_list)
+	#print 'Stdev of curr_taxa_pair_list: ', (numpy.std(numpy.array(curr_taxa_pair_list)))
 	
 	# average of this pairwise list is used as the XL approximation
 	if (single_elem == False):
