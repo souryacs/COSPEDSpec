@@ -76,24 +76,26 @@ def Process_Candidate_Out_Edge_Cluster_List(Reachability_Graph_Mat, DIST_MAT_TYP
 						"""
 						this is the average of excess gene count between x and every child of cl
 						"""
-						xl_x_childcl_list = []	#0	# modify - sourya
+						xl_x_childcl = 0
+						#xl_x_childcl_list = []	# modify - sourya
 						"""
 						this is the average of excess gene count between cl and every child of cl
 						"""
-						xl_cl_childcl_list = []	#0	# modify - sourya
+						xl_cl_childcl = 0
+						#xl_cl_childcl_list = []	# modify - sourya
 						
 						for child_cl in Cluster_Info_Dict[cl]._GetOutEdgeList():
 							curr_xl_x_childcl = FindAvgXL(Cluster_Info_Dict[child_cl]._GetSpeciesList(), \
 								Cluster_Info_Dict[x]._GetSpeciesList(), DIST_MAT_TYPE, True)
 							# modify - sourya
-							#xl_x_childcl = xl_x_childcl + curr_xl_x_childcl
-							xl_x_childcl_list.append(curr_xl_x_childcl)
+							xl_x_childcl = xl_x_childcl + curr_xl_x_childcl
+							#xl_x_childcl_list.append(curr_xl_x_childcl)
 							
 							curr_xl_cl_childcl = FindAvgXL(Cluster_Info_Dict[child_cl]._GetSpeciesList(), \
 								Cluster_Info_Dict[cl]._GetSpeciesList(), DIST_MAT_TYPE, True)
 							# modify - sourya
-							#xl_cl_childcl = xl_cl_childcl + curr_xl_cl_childcl
-							xl_cl_childcl_list.append(curr_xl_cl_childcl)
+							xl_cl_childcl = xl_cl_childcl + curr_xl_cl_childcl
+							#xl_cl_childcl_list.append(curr_xl_cl_childcl)
 							
 							if (DEBUG_LEVEL >= 2):
 								fp = open(Output_Text_File, 'a')
@@ -104,16 +106,16 @@ def Process_Candidate_Out_Edge_Cluster_List(Reachability_Graph_Mat, DIST_MAT_TYP
 								fp.close()
 							
 						# modify - sourya
-						#xl_x_childcl = (xl_x_childcl * 1.0) / len(Cluster_Info_Dict[cl]._GetOutEdgeList())
-						#xl_cl_childcl = (xl_cl_childcl * 1.0) / len(Cluster_Info_Dict[cl]._GetOutEdgeList())
-						# instead of taking the average, we take the minimum
-						xl_x_childcl = min(xl_x_childcl_list)
-						xl_cl_childcl = min(xl_cl_childcl_list)
+						xl_x_childcl = (xl_x_childcl * 1.0) / len(Cluster_Info_Dict[cl]._GetOutEdgeList())
+						xl_cl_childcl = (xl_cl_childcl * 1.0) / len(Cluster_Info_Dict[cl]._GetOutEdgeList())
+						## instead of taking the average, we take the minimum
+						#xl_x_childcl = min(xl_x_childcl_list)
+						#xl_cl_childcl = min(xl_cl_childcl_list)
 
 						if (DEBUG_LEVEL >= 2):
 							fp = open(Output_Text_File, 'a')
-							fp.write('\n FINAL Min excess gene count between (child) clusters and the cluster ' + str(x) + ' is: ' + str(xl_x_childcl)) 
-							fp.write('\n FINAL Min excess gene count between clusters and the cluster ' + str(cl) + ' is: ' + str(xl_cl_childcl)) 
+							fp.write('\n FINAL Avg excess gene count between (child) clusters and the cluster ' + str(x) + ' is: ' + str(xl_x_childcl)) 
+							fp.write('\n FINAL Avg excess gene count between clusters and the cluster ' + str(cl) + ' is: ' + str(xl_cl_childcl)) 
 							fp.close()
 						
 						if (xl_x_childcl < ((xl_cl_x + xl_cl_childcl) / 2.0)):
@@ -201,23 +203,39 @@ def Proc_Queue_Pos_Score_R1R2(Reachability_Graph_Mat, Output_Text_File):
 					"""
 					there is no apparent existing relationship between the couplet
 					"""
+					# add - sourya
 					"""
-					first, check whether the relation induces conflict
-					otherwise, we apply the relations
+					if the R1 / R2 relation is strictly consensus then we apply the relation directly
+					otherwise, we insert the relation in the candidate set of relations
 					"""
-					if (CheckTransitiveConflict(src_taxa_clust_idx, dest_taxa_clust_idx, \
-							Reachability_Graph_Mat, reln_type, Output_Text_File) == 0):
-						if (DEBUG_LEVEL >= 2):
-							fp = open(Output_Text_File, 'a')    
-							fp.write('\n ==>>>>>>>>> NEW CONN --- nodes to be connected: ' \
-								+ str(src_taxa_label) + ' and ' + str(dest_taxa_label) + \
-										' nodes indices: ' + str(COMPLETE_INPUT_TAXA_LIST.index(src_taxa_label)) \
-											+ ' and ' + str(COMPLETE_INPUT_TAXA_LIST.index(dest_taxa_label)) + \
-										' relation type: ' + str(reln_type) + ' conn score: ' + str(conn_score))
-							fp.close()
-						
-						# also update the reachability graph information
-						Reachability_Graph_Mat = AdjustReachGraph(Reachability_Graph_Mat, src_taxa_clust_idx, dest_taxa_clust_idx, reln_type)
+					if (conn_score <= 0):
+						if (reln_type == RELATION_R1):
+							Cluster_Info_Dict[src_taxa_clust_idx]._AddPossibleR1(dest_taxa_clust_idx)
+							if src_taxa_clust_idx not in Candidate_Out_Edge_Cluster_List:
+								Candidate_Out_Edge_Cluster_List.append(src_taxa_clust_idx)
+						else:
+							Cluster_Info_Dict[dest_taxa_clust_idx]._AddPossibleR1(src_taxa_clust_idx)
+							if dest_taxa_clust_idx not in Candidate_Out_Edge_Cluster_List:
+								Candidate_Out_Edge_Cluster_List.append(dest_taxa_clust_idx)
+					
+					else:
+						"""
+						first, check whether the relation induces conflict
+						otherwise, we apply the relations
+						"""
+						if (CheckTransitiveConflict(src_taxa_clust_idx, dest_taxa_clust_idx, \
+								Reachability_Graph_Mat, reln_type, Output_Text_File) == 0):
+							if (DEBUG_LEVEL >= 2):
+								fp = open(Output_Text_File, 'a')    
+								fp.write('\n ==>>>>>>>>> NEW CONN --- nodes to be connected: ' \
+									+ str(src_taxa_label) + ' and ' + str(dest_taxa_label) + \
+											' nodes indices: ' + str(COMPLETE_INPUT_TAXA_LIST.index(src_taxa_label)) \
+												+ ' and ' + str(COMPLETE_INPUT_TAXA_LIST.index(dest_taxa_label)) + \
+											' relation type: ' + str(reln_type) + ' conn score: ' + str(conn_score))
+								fp.close()
+							
+							# also update the reachability graph information
+							Reachability_Graph_Mat = AdjustReachGraph(Reachability_Graph_Mat, src_taxa_clust_idx, dest_taxa_clust_idx, reln_type)
 				
 		"""
 		case B - relation is R4 and it is also consensus score

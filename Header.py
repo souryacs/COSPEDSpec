@@ -61,7 +61,7 @@ CURRENT_CLUST_IDX_LIST = []
 
 # this is the debug level
 # set for printing the necessary information
-DEBUG_LEVEL = 0
+DEBUG_LEVEL = 2
 
 MAJORITY_CONSENSUS_RATIO = 0.6
 LEVEL_COUNT_VAL_CONSENSUS_RATIO = 0.7
@@ -105,7 +105,8 @@ R1R2Reln_MAJ_THRS_very_low = 0.6	#0.65
 this is a threshold corresponding to the selection of R3 relation
 for a non conflicting couplet with negative support score of the corresponding relation
 """
-R3Reln_MAJ_THRS = 0.2	#0.15
+R3Reln_MAJ_THRS = 0.2
+R3Reln_MAJ_THRS_LOW = 0.15
 
 #"""
 #this is a threshold corresponding to the selection of R4 relation
@@ -121,13 +122,20 @@ PERCENT_MAX_FREQ = 0.35	#0.5	#sourya
 
 #CONSENSUS_FREQ_RATIO_THR = 0.7	#0.8
 
-PRIORITY_PERCENT = 0.1
+#PRIORITY_PERCENT = 0.1
 
 """
 this list contains the set of clusters 
 which need to be processed for setting at least one directed out edge to another cluster
 """
 Candidate_Out_Edge_Cluster_List = []
+
+"""
+this threshold is applied at the last stage
+when a sibling is broken in R1 / R2 relations 
+based on the XL value distribution
+"""
+VARIATION_XL_THR = 0.25
 
 #-----------------------------------------------------
 """ 
@@ -227,8 +235,6 @@ class Reln_TaxaPair(object):
 	this function returns the ratio of level value
 	@param: idx: 	if 0, returns ratio w.r.t r1
 							  if 1, returns ratio w.r.t r2
-							  if 3, returns ratio w.r.t r1 when a sibling is present
-							  if 4, returns ratio w.r.t r2 when a sibling is present
 	"""
 	def _GetLevelValRatio(self, idx):
 		level_val_r1 = self.ALL_Reln_Level_Diff_Val_Count[0]
@@ -339,10 +345,37 @@ class Reln_TaxaPair(object):
 				fp.close()
 			return True
 		
+		## add - sourya
+		#if ((level_val_r2 + level_val_r1) > 0):
+			#if ((round((lev_diff / (level_val_r2 + level_val_r1)), 2)) <= R3Reln_MAJ_THRS_LOW):
+				## the level difference should be very small
+				#if (DEBUG_LEVEL >= 2):
+					#fp = open(outfile, 'a')
+					#fp.write('\n *** R3 RELATI0N IS THE MAJORITY *** ')  
+					#fp.close()
+				#return True
+			#if ((round((lev_diff / (level_val_r2 + level_val_r1)), 2)) <= R3Reln_MAJ_THRS) and (fr3 > min(self.freq_count)):
+				## the level difference should be very small
+				#if (DEBUG_LEVEL >= 2):
+					#fp = open(outfile, 'a')
+					#fp.write('\n *** R3 RELATI0N IS THE MAJORITY *** ')  
+					#fp.close()
+				#return True
+		#else:	#if ((level_val_r2 + level_val_r1) == 0):
+			#if (DEBUG_LEVEL >= 2):
+				#fp = open(outfile, 'a')
+				#fp.write('\n *** R3 RELATI0N IS THE MAJORITY *** ')  
+				#fp.close()
+			#return True
+		## end add - sourya
+		
+		## comment - sourya
 		"""
 		R3 relation should not be the relation with minimum frequency among all constituent relations
+		unless the frequency of R3 relation is at least 20% of the input supported trees
+		this 20\% threshold is empirical
 		"""
-		if (fr3 > min(self.freq_count)):
+		if (fr3 > min(self.freq_count)) or (fr3 >= (0.2 * self.supporting_trees)):
 			if ((level_val_r2 + level_val_r1) > 0):
 				if ((round((lev_diff / (level_val_r2 + level_val_r1)), 2)) <= R3Reln_MAJ_THRS):
 					# the level difference should be very small
@@ -357,11 +390,13 @@ class Reln_TaxaPair(object):
 					fp.write('\n *** R3 RELATI0N IS THE MAJORITY *** ')  
 					fp.close()
 				return True
+		## end comment - sourya
 
 		if (DEBUG_LEVEL >= 2):
 			fp = open(outfile, 'a')
 			fp.write('\n R3 RELATI0N IS NOT THE MAJORITY')  
 			fp.close()
+		
 			
 		return False
 		

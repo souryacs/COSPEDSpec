@@ -1521,7 +1521,7 @@ this function processes one internal node (basically the children list)
 to resolve multifurcation
 """
 def ResolveMultifurcation(Curr_tree, clust_species_list, no_of_input_clusters, Output_Text_File, \
-	NJ_RULE_USED, DIST_MAT_TYPE, DIST_MAT_UPDATE, NJ_MERGE_CLUST):
+	NJ_RULE_USED, DIST_MAT_TYPE, DIST_MAT_UPDATE, NJ_MERGE_CLUST, XL_DistMat):
 	# total number of clusters
 	no_of_clust = no_of_input_clusters
 
@@ -1536,27 +1536,29 @@ def ResolveMultifurcation(Curr_tree, clust_species_list, no_of_input_clusters, O
 		fp.write('\n Examining ILS score for individual cluster pairs ')
 		fp.close()      
 
-	# comment - sourya
 	#---------------------------------------
-	# using single taxon as a representative of the taxa cluster
-	#Fill_DistMat_SingleEntry(DistMat, no_of_clust, clust_species_list, DIST_MAT_TYPE)
+	if (DIST_MAT_UPDATE == 1):
+		# using single taxon as a representative of the taxa cluster
+		Fill_DistMat_SingleEntry(DistMat, no_of_clust, clust_species_list, DIST_MAT_TYPE)
 	
-	# using average information from a taxa cluster
-	#Fill_DistMat_AvgEntry(DistMat, no_of_clust, clust_species_list, DIST_MAT_TYPE, (DIST_MAT_UPDATE - 1))
+		# using average information from a taxa cluster
+		#Fill_DistMat_AvgEntry(DistMat, no_of_clust, clust_species_list, DIST_MAT_TYPE, (DIST_MAT_UPDATE - 1))
+
+	else:
+		# fill the distance matrix using entries from XL_DistMat
+		for i in range(no_of_clust - 1):
+			clust_i_idx = COMPLETE_INPUT_TAXA_LIST.index(clust_species_list[i][0])
+			for j in range(i+1, no_of_clust):
+				"""
+				clust_species_list[i] and clust_species_list[j]
+				contain two taxa list of one or more elements
+				"""
+				clust_j_idx = COMPLETE_INPUT_TAXA_LIST.index(clust_species_list[j][0])
+				DistMat[j][i] = DistMat[i][j] = XL_DistMat[clust_i_idx][clust_j_idx]
 	#---------------------------------------
-	# end comment - sourya
-	
+
 	# loop to execute the agglomerative clustering
 	while(no_of_clust > 2):
-		# add - sourya
-		"""
-		instead of approximating the cluster contents
-		we use the XL value computed from individual cluster elements
-		"""
-		Fill_DistMat_SingleEntry(DistMat, no_of_clust, clust_species_list, DIST_MAT_TYPE, (DIST_MAT_UPDATE - 1))
-		#Fill_DistMat_AvgEntry(DistMat, no_of_clust, clust_species_list, DIST_MAT_TYPE, (DIST_MAT_UPDATE - 1))
-		# end add - sourya
-		
 		min_idx_i, min_idx_j = Get_NJ_Based_Min_Pair_Idx(DistMat, Norm_DistMat, \
 			no_of_clust, clust_species_list, NJ_RULE_USED, Output_Text_File)
 
@@ -1584,49 +1586,6 @@ def ResolveMultifurcation(Curr_tree, clust_species_list, no_of_input_clusters, O
 			Curr_tree = Merge_Cluster_Pair_New(Curr_tree, clust_species_list, min_idx_i, min_idx_j, taxa_list, \
 				Output_Text_File, DIST_MAT_TYPE, DIST_MAT_UPDATE)
 		#---------------------------------------------------------      
-		"""
-		adjust the DistMat by inserting one new row and column corresponding to the new cluster
-		and then deleting the information of earlier two clusters
-		"""
-		# first append one row
-		DistMat = numpy.vstack((DistMat, numpy.zeros((1, no_of_clust), dtype=numpy.float)))
-		# then append one column
-		DistMat = numpy.hstack((DistMat, numpy.zeros((no_of_clust + 1, 1), dtype=numpy.float)))
-		# now apply reshape operation to get proper square matrix dimension
-		DistMat = numpy.reshape(DistMat, ((no_of_clust + 1), (no_of_clust + 1)), order='C')
-		
-		# comment - sourya
-		# now fill the elements of the new added row and column
-		for k in range(no_of_clust):
-			# for any index k, the number of extra lineage is the maximum of these three quantities
-			if (NJ_RULE_USED == AGGLO_CLUST):
-				if (DIST_MAT_UPDATE == 1):
-					DistMat[k][no_of_clust] = (DistMat[k][min_idx_i] + DistMat[k][min_idx_j]) / 2.0
-				elif (DIST_MAT_UPDATE == 2):
-					DistMat[k][no_of_clust] = min(DistMat[k][min_idx_i], DistMat[k][min_idx_j])	# modified - sourya
-				else:
-					DistMat[k][no_of_clust] = max(DistMat[k][min_idx_i], DistMat[k][min_idx_j])	# modified - sourya
-				#elif (DIST_MAT_UPDATE == 3):
-					#DistMat[k][no_of_clust] = (DistMat[k][min_idx_i] * len(clust_species_list[min_idx_i]) + \
-						#DistMat[k][min_idx_j] * len(clust_species_list[min_idx_j])) / (len(clust_species_list[min_idx_i]) + len(clust_species_list[min_idx_j]))
-			else:
-				DistMat[k][no_of_clust] = (DistMat[k][min_idx_i] + DistMat[k][min_idx_j] - DistMat[min_idx_i][min_idx_j]) / 2.0
-			# symmetric property
-			DistMat[no_of_clust][k] = DistMat[k][no_of_clust]
-		# end comment - sourya
-		
-		# now remove the rows and columns corresponding to min_idx_i and min_idx_j
-		DistMat = numpy.delete(DistMat, (min_idx_i), axis=0)	# delete the row
-		DistMat = numpy.delete(DistMat, (min_idx_i), axis=1)	# delete the column
-		DistMat = numpy.delete(DistMat, (min_idx_j - 1), axis=0)	# delete the row
-		DistMat = numpy.delete(DistMat, (min_idx_j - 1), axis=1)	# delete the column
-
-		# clear Norm_DistMat
-		Norm_DistMat = numpy.delete(Norm_DistMat, (min_idx_i), axis=0)	# delete the row
-		Norm_DistMat = numpy.delete(Norm_DistMat, (min_idx_i), axis=1)	# delete the column
-		Norm_DistMat.fill(0)
-		
-		
 		# remove individual clusters' taxa information from the clust_species_list
 		# and add taxa_list as a new element
 		clust_species_list.pop(min_idx_i)
@@ -1644,9 +1603,59 @@ def ResolveMultifurcation(Curr_tree, clust_species_list, no_of_input_clusters, O
 					preorder_taxa_list.append(n.taxon.label)
 		clust_species_list.append(preorder_taxa_list)   
 		# end add - sourya
+		#---------------------------------------------------------      
+		"""
+		adjust the DistMat by inserting one new row and column corresponding to the new cluster
+		and then deleting the information of earlier two clusters
+		"""
+		# first append one row
+		DistMat = numpy.vstack((DistMat, numpy.zeros((1, no_of_clust), dtype=numpy.float)))
+		# then append one column
+		DistMat = numpy.hstack((DistMat, numpy.zeros((no_of_clust + 1, 1), dtype=numpy.float)))
+		# now apply reshape operation to get proper square matrix dimension
+		DistMat = numpy.reshape(DistMat, ((no_of_clust + 1), (no_of_clust + 1)), order='C')
+		
+		if (DIST_MAT_UPDATE == 1):
+			# now fill the elements of the new added row and column
+			for k in range(no_of_clust):
+				if (NJ_RULE_USED == AGGLO_CLUST):
+					DistMat[k][no_of_clust] = (DistMat[k][min_idx_i] + DistMat[k][min_idx_j]) / 2.0
+				else:
+					DistMat[k][no_of_clust] = (DistMat[k][min_idx_i] + DistMat[k][min_idx_j] - DistMat[min_idx_i][min_idx_j]) / 2.0
+				# symmetric property
+				DistMat[no_of_clust][k] = DistMat[k][no_of_clust]
+		
+		# now remove the rows and columns corresponding to min_idx_i and min_idx_j
+		DistMat = numpy.delete(DistMat, (min_idx_i), axis=0)	# delete the row
+		DistMat = numpy.delete(DistMat, (min_idx_i), axis=1)	# delete the column
+		DistMat = numpy.delete(DistMat, (min_idx_j - 1), axis=0)	# delete the row
+		DistMat = numpy.delete(DistMat, (min_idx_j - 1), axis=1)	# delete the column
+
+		# clear Norm_DistMat
+		Norm_DistMat = numpy.delete(Norm_DistMat, (min_idx_i), axis=0)	# delete the row
+		Norm_DistMat = numpy.delete(Norm_DistMat, (min_idx_i), axis=1)	# delete the column
+		Norm_DistMat.fill(0)
 		
 		# decrement the number of clusters considered
 		no_of_clust = no_of_clust - 1
+	
+		if (DIST_MAT_UPDATE == 2):
+			"""
+			now update the distance matrix entry
+			basically the last column (or last row) entries need to be updated
+			"""
+			idx1 = COMPLETE_INPUT_TAXA_LIST.index(clust_species_list[no_of_clust - 1][0])
+			for k in range(no_of_clust - 1):
+				idx2 = COMPLETE_INPUT_TAXA_LIST.index(clust_species_list[k][0])
+				DistMat[k][no_of_clust - 1] = DistMat[no_of_clust - 1][k] = XL_DistMat[idx1][idx2]
+
+	# add - sourya
+	"""
+	delete the distance matrices
+	"""
+	del DistMat
+	del Norm_DistMat
+	# end add - sourya
 	
 	return
             
@@ -1654,7 +1663,7 @@ def ResolveMultifurcation(Curr_tree, clust_species_list, no_of_input_clusters, O
 # this function refines input supertree such that the supertree becomes binary
 # this is required for proper benchmarking with existing binary tree construction methods on 
 # ILS sorting
-def Refine_Supertree_Binary_Form(Curr_tree, Output_Text_File, NJ_RULE_USED, DIST_MAT_TYPE, DIST_MAT_UPDATE, NJ_MERGE_CLUST):
+def Refine_Supertree_Binary_Form(Curr_tree, Output_Text_File, NJ_RULE_USED, DIST_MAT_TYPE, DIST_MAT_UPDATE, NJ_MERGE_CLUST, XL_DistMat):
 
 	# comment - sourya
 	#----------------------------------------
@@ -1715,4 +1724,90 @@ def Refine_Supertree_Binary_Form(Curr_tree, Output_Text_File, NJ_RULE_USED, DIST
 			
 			# call the resolving routine
 			ResolveMultifurcation(Curr_tree, clust_species_list, len(curr_node_children), Output_Text_File, \
-				NJ_RULE_USED, DIST_MAT_TYPE, DIST_MAT_UPDATE, NJ_MERGE_CLUST)
+				NJ_RULE_USED, DIST_MAT_TYPE, DIST_MAT_UPDATE, NJ_MERGE_CLUST, XL_DistMat)
+
+	return
+
+#--------------------------------------------------------------
+"""
+this function checks siblings of the species tree and checks whether that couplet can be 
+actually related by R1 / R2 relation
+"""
+def Refine_Species_Tree_Siblings(Curr_tree, XL_DistMat, Output_Text_File):
+	
+	if (DEBUG_LEVEL >= 2):
+		fp = open(Output_Text_File, 'a')
+	
+	for curr_node in Curr_tree.postorder_internal_node_iter():
+		curr_node_leaf_children = curr_node.leaf_nodes()
+		if (len(curr_node_leaf_children) == 2):
+			# first form two single taxon lists consisting of these leaf nodes (taxa)
+			t1_list = []
+			t1_list.append(curr_node_leaf_children[0].taxon.label)
+			t1_idx = COMPLETE_INPUT_TAXA_LIST.index(curr_node_leaf_children[0].taxon.label)
+			t2_list = []
+			t2_list.append(curr_node_leaf_children[1].taxon.label)
+			t2_idx = COMPLETE_INPUT_TAXA_LIST.index(curr_node_leaf_children[1].taxon.label)
+			# then form all the taxon lists descendant from the parent node of 'curr_node'
+			# apart from the current couplet
+			child_taxa_list = []
+			for n in curr_node.parent_node.leaf_nodes():
+				if (n.taxon.label not in t1_list) and (n.taxon.label not in t2_list):
+					child_taxa_list.append(n.taxon.label)
+			
+			if (DEBUG_LEVEL >= 2):
+				fp.write('\n Refine function --- t1_list: ' + str(t1_list) + ' t2_list: ' + str(t2_list) + '  child_taxa_list: ' + str(child_taxa_list))
+			
+			# XL (avg) w.r.t child_taxa_list and taxon 1
+			t1_XL = 0
+			# XL (avg) w.r.t child_taxa_list and taxon 2
+			t2_XL = 0
+			for t in child_taxa_list:
+				t_idx = COMPLETE_INPUT_TAXA_LIST.index(t)
+				t1_XL = t1_XL + XL_DistMat[t1_idx][t_idx]
+				t2_XL = t2_XL + XL_DistMat[t2_idx][t_idx]
+			t1_XL = (t1_XL * 1.0) / len(child_taxa_list)
+			t2_XL = (t2_XL * 1.0) / len(child_taxa_list)
+			variation = math.fabs(t1_XL - t2_XL) / min(t1_XL, t2_XL)
+
+			if (DEBUG_LEVEL >= 2):
+				fp.write('\n (Avg) t1_XL: ' + str(t1_XL) + ' t2_XL: ' + str(t2_XL) + '  variation: ' + str(variation))
+				
+			if (variation > VARIATION_XL_THR):
+				"""
+				time to break the sibling relation in R1 / R2 relation
+				"""
+				# first search the other child of curr_node.parent_node
+				# which is an internal node and where the subtree insertion will take place
+				for n in curr_node.parent_node.child_nodes():
+					if (Node_Label(n) != Node_Label(curr_node)):
+						target_node = n
+						break
+
+				key1 = (curr_node_leaf_children[0].taxon.label, curr_node_leaf_children[1].taxon.label)
+				key2 = (curr_node_leaf_children[1].taxon.label, curr_node_leaf_children[0].taxon.label)
+				if key1 in TaxaPair_Reln_Dict:
+					if (TaxaPair_Reln_Dict[key1]._GetEdgeWeight(RELATION_R1) > TaxaPair_Reln_Dict[key1]._GetEdgeWeight(RELATION_R2)):
+						val = 1
+					else:
+						val = 2
+				elif key2 in TaxaPair_Reln_Dict:
+					if (TaxaPair_Reln_Dict[key2]._GetEdgeWeight(RELATION_R1) > TaxaPair_Reln_Dict[key2]._GetEdgeWeight(RELATION_R2)):
+						val = 2
+					else:
+						val = 1
+						
+				if (val == 1):
+					# curr_node_leaf_children[0].taxon.label will be placed at the higher level
+					# so basically we have to shift curr_node_leaf_children[1] at the top of the target node
+					Curr_tree = InsertSubTree(Curr_tree, curr_node_leaf_children[1], target_node, Output_Text_File)
+				elif (val == 2):
+					# curr_node_leaf_children[1].taxon.label will be placed at the higher level
+					# so basically we have to shift curr_node_leaf_children[0] at the top of the target node
+					Curr_tree = InsertSubTree(Curr_tree, curr_node_leaf_children[0], target_node, Output_Text_File)
+
+	if (DEBUG_LEVEL >= 2):
+		fp.close()
+	
+	return Curr_tree
+	
