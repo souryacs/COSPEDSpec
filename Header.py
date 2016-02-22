@@ -61,7 +61,7 @@ CURRENT_CLUST_IDX_LIST = []
 
 # this is the debug level
 # set for printing the necessary information
-DEBUG_LEVEL = 2
+DEBUG_LEVEL = 0
 
 MAJORITY_CONSENSUS_RATIO = 0.6
 LEVEL_COUNT_VAL_CONSENSUS_RATIO = 0.7
@@ -106,7 +106,7 @@ this is a threshold corresponding to the selection of R3 relation
 for a non conflicting couplet with negative support score of the corresponding relation
 """
 R3Reln_MAJ_THRS = 0.2
-R3Reln_MAJ_THRS_LOW = 0.15
+#R3Reln_MAJ_THRS_LOW = 0.15
 
 #"""
 #this is a threshold corresponding to the selection of R4 relation

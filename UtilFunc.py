@@ -391,43 +391,98 @@ def Complementary_Reln(inp_reln):
 #------------------------------------------------
 """
 this function computes average XL information between a pair of taxa clusters
-@param type_of_output: if 0, computes the average of XL measures
-													1, returns the minimum of XL measures
-													2, returns the maximum of XL measures
+@param: taxa_clust1: first taxa list
+				taxa_clust2: second taxa list
+				DIST_MAT_TYPE: Type of distance employed
+				single_elem: can contain one of possible three values
+				0: only one element of taxa_clust1 and one element of taxa_clust2 will be compared
+				1: cluster containing taxa_clust1[0] and cluster containing taxa_clust2[0] will be compared
+				2: All pairs of elements of taxa_clust1 and taxa_clust2 will be compared
 """
-def FindAvgXL(taxa_clust1, taxa_clust2, DIST_MAT_TYPE, single_elem, type_of_output=0):
+def FindAvgXL(taxa_clust1, taxa_clust2, DIST_MAT_TYPE, single_elem=2):
+	"""
+	if single_elem = 0
+	we compare taxa_clust1[0] and taxa_clust2[0], in terms of the preorder level
 	
-	if (single_elem == False):
-		curr_taxa_pair_list = []
+	if single_elem = 1
+	we check the first preorder level taxon of both lists taxa_clust1 and taxa_clust2
+	suppose the taxon names are taxa1 and taxa2
+	but instead of comparing taxa1 and taxa2 only
+	we compare the original taxa clusters (may have cardinality > 1) containing taxa1 and taxa2
 	
-	for x1 in taxa_clust1:
-		for x2 in taxa_clust2:  
+	if single_elem = 2
+	we compare pairwise all the elements belonging to taxa_clust1 and taxa_clust2
+	"""
+	if (single_elem == 1):
+		taxa1 = taxa_clust1[0]
+		taxa2 = taxa_clust2[0]
+		clust1 = Taxa_Info_Dict[taxa1]._Get_Taxa_Part_Clust_Idx()
+		clust2 = Taxa_Info_Dict[taxa2]._Get_Taxa_Part_Clust_Idx()
+		taxa_list1 = Cluster_Info_Dict[clust1]._GetSpeciesList()
+		taxa_list2 = Cluster_Info_Dict[clust2]._GetSpeciesList()
+	elif (single_elem == 2):
+		taxa_list1 = taxa_clust1
+		taxa_list2 = taxa_clust2 
+	else:
+		taxa_list1 = []
+		taxa_list1.append(taxa_clust1[0])
+		taxa_list2 = []
+		taxa_list2.append(taxa_clust2[0])
+		
+	curr_taxa_pair_list = []
+	for x1 in taxa_list1:
+		for x2 in taxa_list2:  
 			key1 = (x1, x2)
 			key2 = (x2, x1)
 			#print 'key1: ', key1, ' key2: ', key2
 			if key1 in TaxaPair_Reln_Dict:
 				val = TaxaPair_Reln_Dict[key1]._GetNormalizedXLSumGeneTrees(DIST_MAT_TYPE)
-				if (single_elem == False):
-					curr_taxa_pair_list.append(val)
-				else:
-					return val
+				curr_taxa_pair_list.append(val)
 			elif key2 in TaxaPair_Reln_Dict:
 				val = TaxaPair_Reln_Dict[key2]._GetNormalizedXLSumGeneTrees(DIST_MAT_TYPE)
-				if (single_elem == False):
-					curr_taxa_pair_list.append(val)
-				else:
-					return val
+				curr_taxa_pair_list.append(val)
 	
 	# average of this pairwise list is used as the XL approximation
-	if (single_elem == False):
-		if (len(curr_taxa_pair_list) > 0):
-			if (type_of_output == 0):
-				return (sum(curr_taxa_pair_list) * 1.0) / len(curr_taxa_pair_list)
-			elif (type_of_output == 1):
-				return min(curr_taxa_pair_list)
-			else:
-				return max(curr_taxa_pair_list)
-		else:
-			return 0
+	if (len(curr_taxa_pair_list) > 0):
+		return (sum(curr_taxa_pair_list) * 1.0) / len(curr_taxa_pair_list)
+	else:
+		return 0
 	
-	return 0
+#-----------------------------------------------------------------
+"""
+this function returns the frequency of R1 relation from taxa1 to taxa2 (or frequency of R2 relation from taxa2 to taxa1)
+@param: if percent_tree_frac is 1, the output is normalized with the number of supporting trees
+"""
+def GetR1Freq(taxa1, taxa2, percent_tree_frac=False):
+	val = 0
+	key1 = (taxa1, taxa2)
+	key2 = (taxa2, taxa1)
+	if key1 in TaxaPair_Reln_Dict:
+		val = TaxaPair_Reln_Dict[key1]._GetEdgeWeight(RELATION_R1)
+		if (percent_tree_frac == True):
+			val = (val * 1.0) / TaxaPair_Reln_Dict[key1]._GetNoSupportTrees()
+	elif key2 in TaxaPair_Reln_Dict:
+		val = TaxaPair_Reln_Dict[key2]._GetEdgeWeight(RELATION_R2)
+		if (percent_tree_frac == True):
+			val = (val * 1.0) / TaxaPair_Reln_Dict[key2]._GetNoSupportTrees()
+	
+	return val
+
+#-----------------------------------------------------------------
+"""
+this function returns the list of taxa underlying the given internal node
+in preorder traversal
+@param: inp_node: Input node under which the taxa set will be explored
+				taxa_list: Output taxa list in preorder traversal order
+				inp_set_of_taxa: A superset of taxon; the 'taxa_list' should be a subset of it
+"""
+def GetPreorderTaxaList(inp_node, taxa_list, inp_set_of_taxa):
+	for n in inp_node.preorder_iter():
+		if (n.is_leaf() == True):
+			if n.taxon.label in inp_set_of_taxa:
+				taxa_list.append(n.taxon.label)
+	
+	return taxa_list
+
+
+

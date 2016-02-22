@@ -84,7 +84,8 @@ def parse_options():
 				dest="dist_mat_update", \
 				default=1, \
 				help="1 - Use divide by 2 \
-				2 - Single XL (preorder)")     
+				2 - Use MAX operator \
+				3 - Single XL (preorder)")     
 	
 	parser.add_option("-n", "--njmerge", \
 				type="int", \
@@ -236,25 +237,25 @@ def main():
 
 	data_read_timestamp = time.time()	# note the timestamp
 	#------------------------------------------------------------
-	# add - sourya
-	"""
-	here we compute a distance matrix composed of all the average XL values between individual couplets
-	"""
-	""" 
-	allocate a 2D square matrix of dimension N X N
-	where N = total number of taxa
-	"""
-	XL_DistMat = numpy.zeros((number_of_taxa, number_of_taxa), dtype=numpy.float)
-	for i in range(number_of_taxa - 1):
-		taxa_clust1 = []
-		taxa_clust1.append(COMPLETE_INPUT_TAXA_LIST[i])
-		for j in range(i+1, number_of_taxa):
-			taxa_clust2 = []
-			taxa_clust2.append(COMPLETE_INPUT_TAXA_LIST[j])
-			entry = FindAvgXL(taxa_clust1, taxa_clust2, DIST_MAT_TYPE, True)
-			XL_DistMat[j][i] = XL_DistMat[i][j] = entry
+	## add - sourya
+	#"""
+	#here we compute a distance matrix composed of all the average XL values between individual couplets
+	#"""
+	#""" 
+	#allocate a 2D square matrix of dimension N X N
+	#where N = total number of taxa
+	#"""
+	#XL_DistMat = numpy.zeros((number_of_taxa, number_of_taxa), dtype=numpy.float)
+	#for i in range(number_of_taxa - 1):
+		#taxa_clust1 = []
+		#taxa_clust1.append(COMPLETE_INPUT_TAXA_LIST[i])
+		#for j in range(i+1, number_of_taxa):
+			#taxa_clust2 = []
+			#taxa_clust2.append(COMPLETE_INPUT_TAXA_LIST[j])
+			#entry = FindAvgXL(taxa_clust1, taxa_clust2, DIST_MAT_TYPE, True)
+			#XL_DistMat[j][i] = XL_DistMat[i][j] = entry
 	
-	# end add - sourya
+	## end add - sourya
 	#------------------------------------------------------------
 	""" 
 	here, we process all the couplets to extract couplet statistics
@@ -404,20 +405,20 @@ def main():
 		reln_list = TaxaPair_Reln_Dict[l]._GetAllowedRelnList()
 		if RELATION_R3 in reln_list:
 			if (TaxaPair_Reln_Dict[l]._Check_Reln_R3_Majority(Output_Text_File) == True):
-				"""
-				first check the XL statistics of individual taxon of this couplet
-				"""
-				idx1 = COMPLETE_INPUT_TAXA_LIST.index(l[0])
-				idx2 = COMPLETE_INPUT_TAXA_LIST.index(l[1])
-				if (DEBUG_LEVEL >= 2):
-					fp = open(Output_Text_File, 'a')
-					taxon1_XL_list = XL_DistMat[idx1,:]
-					taxon2_XL_list = XL_DistMat[idx2,:]
-					mean_taxon1_XL = numpy.mean(taxon1_XL_list)
-					mean_taxon2_XL = numpy.mean(taxon2_XL_list)
-					fp.write('\n Couplet 1st taxon : ' + str(l[0]) + ' XL list: ' + str(taxon1_XL_list) + '  ITS MEAN: ' + str(mean_taxon1_XL))
-					fp.write('\n Couplet 2nd taxon : ' + str(l[1]) + ' XL list: ' + str(taxon2_XL_list) + '  ITS MEAN: ' + str(mean_taxon2_XL))
-					fp.close()
+				#"""
+				#first check the XL statistics of individual taxon of this couplet
+				#"""
+				#idx1 = COMPLETE_INPUT_TAXA_LIST.index(l[0])
+				#idx2 = COMPLETE_INPUT_TAXA_LIST.index(l[1])
+				#if (DEBUG_LEVEL >= 2):
+					#fp = open(Output_Text_File, 'a')
+					#taxon1_XL_list = XL_DistMat[idx1,:]
+					#taxon2_XL_list = XL_DistMat[idx2,:]
+					#mean_taxon1_XL = numpy.mean(taxon1_XL_list)
+					#mean_taxon2_XL = numpy.mean(taxon2_XL_list)
+					#fp.write('\n Couplet 1st taxon : ' + str(l[0]) + ' XL list: ' + str(taxon1_XL_list) + '  ITS MEAN: ' + str(mean_taxon1_XL))
+					#fp.write('\n Couplet 2nd taxon : ' + str(l[1]) + ' XL list: ' + str(taxon2_XL_list) + '  ITS MEAN: ' + str(mean_taxon2_XL))
+					#fp.close()
 				
 				"""
 				the couplet can related with the 'RELATION_R3' 
@@ -684,29 +685,29 @@ def main():
 	it also solves the problem C3, as mentioned in the manuscript
 	"""
 	Refine_Supertree_Binary_Form(Supertree_without_branch_len, Output_Text_File, \
-		NJ_RULE_USED, DIST_MAT_TYPE, DIST_MAT_UPDATE, NJ_MERGE_CLUST, XL_DistMat)
+		NJ_RULE_USED, DIST_MAT_TYPE, DIST_MAT_UPDATE, NJ_MERGE_CLUST)
 
 	fp = open(Output_Text_File, 'a')
 	fp.write('\n --- after binary refinement --- output tree without branch length (in newick format): ' + \
 		Supertree_without_branch_len.as_newick_string())    
 	fp.close()
 	
-	# add - sourya
+	## add - sourya
 	
-	"""
-	before finalizing the species tree, first we check whether there exist an internal node 
-	consisting of two leaf children
-	in such a case, we check whether the sibling relation can be broken or not (if required)
-	"""
-	Supertree_without_branch_len = Refine_Species_Tree_Siblings(Supertree_without_branch_len, XL_DistMat, Output_Text_File)
-	Supertree_without_branch_len.update_splits(delete_outdegree_one=True)
+	#"""
+	#before finalizing the species tree, first we check whether there exist an internal node 
+	#consisting of two leaf children
+	#in such a case, we check whether the sibling relation can be broken or not (if required)
+	#"""
+	#Supertree_without_branch_len = Refine_Species_Tree_Siblings(Supertree_without_branch_len, XL_DistMat, Output_Text_File)
+	#Supertree_without_branch_len.update_splits(delete_outdegree_one=True)
 
-	fp = open(Output_Text_File, 'a')
-	fp.write('\n --- after refinement of siblings --- output tree without branch length (in newick format): ' + \
-		Supertree_without_branch_len.as_newick_string())    
-	fp.close()
+	#fp = open(Output_Text_File, 'a')
+	#fp.write('\n --- after refinement of siblings --- output tree without branch length (in newick format): ' + \
+		#Supertree_without_branch_len.as_newick_string())    
+	#fp.close()
 	
-	# end add - sourya
+	## end add - sourya
 
 	# final timestamp
 	binary_refinement_timestamp = time.time()      
@@ -782,10 +783,10 @@ def main():
 	# free the reachability graph (numpy array)
 	del Reachability_Graph_Mat
 	
-	# add - sourya
-	# free the XL_DistMat as well
-	del XL_DistMat
-	# end add - sourya
+	## add - sourya
+	## free the XL_DistMat as well
+	#del XL_DistMat
+	## end add - sourya
     
 #-----------------------------------------------------
 if __name__ == "__main__":
