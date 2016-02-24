@@ -252,7 +252,7 @@ def main():
 		#for j in range(i+1, number_of_taxa):
 			#taxa_clust2 = []
 			#taxa_clust2.append(COMPLETE_INPUT_TAXA_LIST[j])
-			#entry = FindAvgXL(taxa_clust1, taxa_clust2, DIST_MAT_TYPE, True)
+			#entry = FindAvgXL(taxa_clust1, taxa_clust2, DIST_MAT_TYPE, 0)
 			#XL_DistMat[j][i] = XL_DistMat[i][j] = entry
 	
 	## end add - sourya
@@ -353,7 +353,12 @@ def main():
 		for l in TaxaPair_Reln_Dict:
 			#print 'printing info for the TaxaPair_Reln_Dict key: ', l
 			TaxaPair_Reln_Dict[l]._PrintRelnInfo(l, Output_Text_File)
-				
+	
+			## debug - sourya
+			#if ((l[0] == 'Amborella') and (l[1] == 'Nuphar')) or ((l[1] == 'Amborella') and (l[0] == 'Nuphar')):
+				#TaxaPair_Reln_Dict[l]._PrintRelnInfo(l)
+			## end debug - sourya
+
 	""" 
 	Here we allocate the list / storage space of taxa clusters
 	each taxa cluster is supposed to store the taxa subsets related via relation r3 (simultaneous speciation)
@@ -410,16 +415,22 @@ def main():
 				#"""
 				#idx1 = COMPLETE_INPUT_TAXA_LIST.index(l[0])
 				#idx2 = COMPLETE_INPUT_TAXA_LIST.index(l[1])
+				#taxon1_XL_list = XL_DistMat[idx1,:]
+				#taxon2_XL_list = XL_DistMat[idx2,:]
+				#mean_taxon1_XL = numpy.mean(taxon1_XL_list)
+				#mean_taxon2_XL = numpy.mean(taxon2_XL_list)
 				#if (DEBUG_LEVEL >= 2):
 					#fp = open(Output_Text_File, 'a')
-					#taxon1_XL_list = XL_DistMat[idx1,:]
-					#taxon2_XL_list = XL_DistMat[idx2,:]
-					#mean_taxon1_XL = numpy.mean(taxon1_XL_list)
-					#mean_taxon2_XL = numpy.mean(taxon2_XL_list)
 					#fp.write('\n Couplet 1st taxon : ' + str(l[0]) + ' XL list: ' + str(taxon1_XL_list) + '  ITS MEAN: ' + str(mean_taxon1_XL))
 					#fp.write('\n Couplet 2nd taxon : ' + str(l[1]) + ' XL list: ' + str(taxon2_XL_list) + '  ITS MEAN: ' + str(mean_taxon2_XL))
 					#fp.close()
-				
+					
+					### debug - sourya
+					##if ((l[0] == 'Amborella') and (l[1] == 'Nuphar')) or ((l[1] == 'Amborella') and (l[0] == 'Nuphar')):
+						##sys.stdout.write('\n Couplet 1st taxon : ' + str(l[0]) + ' XL list: ' + str(taxon1_XL_list) + '  ITS MEAN: ' + str(mean_taxon1_XL))
+						##sys.stdout.write('\n Couplet 2nd taxon : ' + str(l[1]) + ' XL list: ' + str(taxon2_XL_list) + '  ITS MEAN: ' + str(mean_taxon2_XL))
+					### end debug - sourya
+						
 				"""
 				the couplet can related with the 'RELATION_R3' 
 				provided the relation is not established earlier

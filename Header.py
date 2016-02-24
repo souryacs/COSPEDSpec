@@ -118,6 +118,7 @@ R3Reln_MAJ_THRS = 0.2
 for a couplet, relations with frequency of this percentage of the max (consensus) frequency
 will be included in the score queue
 """
+# it should be fixed at 0.35 - sourya
 PERCENT_MAX_FREQ = 0.35	#0.5	#sourya
 
 #CONSENSUS_FREQ_RATIO_THR = 0.7	#0.8
@@ -135,7 +136,7 @@ this threshold is applied at the last stage
 when a sibling is broken in R1 / R2 relations 
 based on the XL value distribution
 """
-VARIATION_XL_THR = 0.25
+VARIATION_XL_THR = 0.08	#0.25
 
 #-----------------------------------------------------
 """ 
@@ -375,7 +376,9 @@ class Reln_TaxaPair(object):
 		unless the frequency of R3 relation is at least 20% of the input supported trees
 		this 20\% threshold is empirical
 		"""
-		if (fr3 > min(self.freq_count)) or (fr3 >= (0.2 * self.supporting_trees)):
+		# modified - sourya
+		#if (fr3 > min(self.freq_count)) or (fr3 >= (0.2 * self.supporting_trees)):
+		if (fr3 > min(self.freq_count)) and (fr3 >= (0.6 * max(self.freq_count))):
 			if ((level_val_r2 + level_val_r1) > 0):
 				if ((round((lev_diff / (level_val_r2 + level_val_r1)), 2)) <= R3Reln_MAJ_THRS):
 					# the level difference should be very small
@@ -723,35 +726,58 @@ class Reln_TaxaPair(object):
 	"""
 	this function prints all the information associated with a couplet
 	"""
-	def _PrintRelnInfo(self, key, Output_Text_File):
-		fp = open(Output_Text_File, 'a')    
-		fp.write('\n\n\n taxa pair key: ' + str(key))
-		fp.write('\n relations [type/count/priority_reln/score]: ')
-		for i in range(4):
-			fp.write('\n [' + str(i) + '/' + str(self.freq_count[i]) + '/' + str(self.priority_reln[i]) + '/' + str(self.support_score[i]) + ']')
-		#fp.write('\n Sum of extra lineage **** : ' + str(self.XL_sum_gene_trees))
-		# add - sourya
-		#fp.write('\n XL list **** : ' + str(self.XL_sum_gene_trees))
-		fp.write('\n AVERAGE Sum of extra lineage **** : ' + str(self._GetAvgXLGeneTrees()))
-		fp.write('\n MEDIAN Sum of extra lineage **** : ' + str(self._GetMedianXLGeneTrees()))
-		fp.write('\n Mode Sum of extra lineage **** : ' + str(self._GetMultiModeXLVal()))
-		# end add - sourya
-		fp.write('\n No of supporting trees : ' + str(self.supporting_trees))
-		#fp.write('\n Normalized XL sum : ' + str(self._GetNormalizedXLSumGeneTrees()))
-		fp.write('\n ALL relation based Level diff info count (r1/r2/r3): ' + str(self.ALL_Reln_Level_Diff_Info_Count))
-		fp.write('\n ALL relation based Level diff Val count (r1/r2/r3): ' + str(self.ALL_Reln_Level_Diff_Val_Count))
-		fp.write('\n R4 relation pseudo (R1/R2) count: ' + str(self.freq_R4_pseudo_R1R2))
-		fp.write('\n Allowed relation list: ' + str(self.allowed_reln_list))
-		if ((self.ALL_Reln_Level_Diff_Val_Count[0] + self.ALL_Reln_Level_Diff_Val_Count[1]) > 0):
-			fp.write('\n Level Val r1 reln ratio : ' + str((self.ALL_Reln_Level_Diff_Val_Count[0] * 1.0) / (self.ALL_Reln_Level_Diff_Val_Count[0] + self.ALL_Reln_Level_Diff_Val_Count[1])))
-			fp.write('\n Level Val r2 reln ratio : ' + str((self.ALL_Reln_Level_Diff_Val_Count[1] * 1.0) / (self.ALL_Reln_Level_Diff_Val_Count[0] + self.ALL_Reln_Level_Diff_Val_Count[1])))
-			fp.write('\n Level Val r3/r4 reln ratio : ' + str((math.fabs(self.ALL_Reln_Level_Diff_Val_Count[0] - self.ALL_Reln_Level_Diff_Val_Count[1])) / (self.ALL_Reln_Level_Diff_Val_Count[0] + self.ALL_Reln_Level_Diff_Val_Count[1])))
-		#if (sum(self.ALL_Reln_Level_Diff_Info_Count) > 0):
-			#fp.write('\n Level Count r1 reln ratio : ' + str((self.ALL_Reln_Level_Diff_Info_Count[0] * 1.0) / (sum(self.ALL_Reln_Level_Diff_Info_Count))))
-			#fp.write('\n Level Count r2 reln ratio : ' + str((self.ALL_Reln_Level_Diff_Info_Count[1] * 1.0) / (sum(self.ALL_Reln_Level_Diff_Info_Count))))
-			#fp.write('\n Level Count r3 reln ratio : ' + str((self.ALL_Reln_Level_Diff_Info_Count[2] * 1.0) / (sum(self.ALL_Reln_Level_Diff_Info_Count))))
+	def _PrintRelnInfo(self, key, Output_Text_File=None):
+		
+		if Output_Text_File is not None:
+		
+			fp = open(Output_Text_File, 'a')    
+			fp.write('\n\n\n taxa pair key: ' + str(key))
+			fp.write('\n relations [type/count/priority_reln/score]: ')
+			for i in range(4):
+				fp.write('\n [' + str(i) + '/' + str(self.freq_count[i]) + '/' + str(self.priority_reln[i]) + '/' + str(self.support_score[i]) + ']')
+			#fp.write('\n Sum of extra lineage **** : ' + str(self.XL_sum_gene_trees))
+			# add - sourya
+			#fp.write('\n XL list **** : ' + str(self.XL_sum_gene_trees))
+			fp.write('\n AVERAGE Sum of extra lineage **** : ' + str(self._GetAvgXLGeneTrees()))
+			fp.write('\n MEDIAN Sum of extra lineage **** : ' + str(self._GetMedianXLGeneTrees()))
+			fp.write('\n Mode Sum of extra lineage **** : ' + str(self._GetMultiModeXLVal()))
+			# end add - sourya
+			fp.write('\n No of supporting trees : ' + str(self.supporting_trees))
+			#fp.write('\n Normalized XL sum : ' + str(self._GetNormalizedXLSumGeneTrees()))
+			fp.write('\n ALL relation based Level diff info count (r1/r2/r3): ' + str(self.ALL_Reln_Level_Diff_Info_Count))
+			fp.write('\n ALL relation based Level diff Val count (r1/r2/r3): ' + str(self.ALL_Reln_Level_Diff_Val_Count))
+			fp.write('\n R4 relation pseudo (R1/R2) count: ' + str(self.freq_R4_pseudo_R1R2))
+			fp.write('\n Allowed relation list: ' + str(self.allowed_reln_list))
+			if ((self.ALL_Reln_Level_Diff_Val_Count[0] + self.ALL_Reln_Level_Diff_Val_Count[1]) > 0):
+				fp.write('\n Level Val r1 reln ratio : ' + str((self.ALL_Reln_Level_Diff_Val_Count[0] * 1.0) / (self.ALL_Reln_Level_Diff_Val_Count[0] + self.ALL_Reln_Level_Diff_Val_Count[1])))
+				fp.write('\n Level Val r2 reln ratio : ' + str((self.ALL_Reln_Level_Diff_Val_Count[1] * 1.0) / (self.ALL_Reln_Level_Diff_Val_Count[0] + self.ALL_Reln_Level_Diff_Val_Count[1])))
+				fp.write('\n Level Val r3/r4 reln ratio : ' + str((math.fabs(self.ALL_Reln_Level_Diff_Val_Count[0] - self.ALL_Reln_Level_Diff_Val_Count[1])) / (self.ALL_Reln_Level_Diff_Val_Count[0] + self.ALL_Reln_Level_Diff_Val_Count[1])))
+			#if (sum(self.ALL_Reln_Level_Diff_Info_Count) > 0):
+				#fp.write('\n Level Count r1 reln ratio : ' + str((self.ALL_Reln_Level_Diff_Info_Count[0] * 1.0) / (sum(self.ALL_Reln_Level_Diff_Info_Count))))
+				#fp.write('\n Level Count r2 reln ratio : ' + str((self.ALL_Reln_Level_Diff_Info_Count[1] * 1.0) / (sum(self.ALL_Reln_Level_Diff_Info_Count))))
+				#fp.write('\n Level Count r3 reln ratio : ' + str((self.ALL_Reln_Level_Diff_Info_Count[2] * 1.0) / (sum(self.ALL_Reln_Level_Diff_Info_Count))))
 
-		fp.close()
+			fp.close()
+			
+		else:
+			
+			sys.stdout.write('\n\n\n taxa pair key: ' + str(key))
+			sys.stdout.write('\n relations [type/count/priority_reln/score]: ')
+			for i in range(4):
+				sys.stdout.write('\n [' + str(i) + '/' + str(self.freq_count[i]) + '/' + str(self.priority_reln[i]) + '/' + str(self.support_score[i]) + ']')
+			sys.stdout.write('\n AVERAGE Sum of extra lineage **** : ' + str(self._GetAvgXLGeneTrees()))
+			sys.stdout.write('\n MEDIAN Sum of extra lineage **** : ' + str(self._GetMedianXLGeneTrees()))
+			sys.stdout.write('\n Mode Sum of extra lineage **** : ' + str(self._GetMultiModeXLVal()))
+			sys.stdout.write('\n No of supporting trees : ' + str(self.supporting_trees))
+			sys.stdout.write('\n ALL relation based Level diff info count (r1/r2/r3): ' + str(self.ALL_Reln_Level_Diff_Info_Count))
+			sys.stdout.write('\n ALL relation based Level diff Val count (r1/r2/r3): ' + str(self.ALL_Reln_Level_Diff_Val_Count))
+			sys.stdout.write('\n R4 relation pseudo (R1/R2) count: ' + str(self.freq_R4_pseudo_R1R2))
+			sys.stdout.write('\n Allowed relation list: ' + str(self.allowed_reln_list))
+			if ((self.ALL_Reln_Level_Diff_Val_Count[0] + self.ALL_Reln_Level_Diff_Val_Count[1]) > 0):
+				sys.stdout.write('\n Level Val r1 reln ratio : ' + str((self.ALL_Reln_Level_Diff_Val_Count[0] * 1.0) / (self.ALL_Reln_Level_Diff_Val_Count[0] + self.ALL_Reln_Level_Diff_Val_Count[1])))
+				sys.stdout.write('\n Level Val r2 reln ratio : ' + str((self.ALL_Reln_Level_Diff_Val_Count[1] * 1.0) / (self.ALL_Reln_Level_Diff_Val_Count[0] + self.ALL_Reln_Level_Diff_Val_Count[1])))
+				sys.stdout.write('\n Level Val r3/r4 reln ratio : ' + str((math.fabs(self.ALL_Reln_Level_Diff_Val_Count[0] - self.ALL_Reln_Level_Diff_Val_Count[1])) / (self.ALL_Reln_Level_Diff_Val_Count[0] + self.ALL_Reln_Level_Diff_Val_Count[1])))
+			sys.stdout.write('\n\n\n')
 
 	#------------------------------------------
 	"""

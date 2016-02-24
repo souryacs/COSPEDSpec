@@ -516,9 +516,12 @@ def CheckR1Reln(clust1_spec_list, clust2_spec_list):
 				if (((r1_freq + 2 * (pseudo_r1_freq - pseudo_r2_freq)) >= r4_freq) \
 					or (TaxaPair_Reln_Dict[key1]._CheckTargetRelnLevelConsensus(RELATION_R1, 1))) and (RELATION_R1 in allowed_reln_list):
 					if (round(r1_level_val_ratio, 2) >= R1R2Reln_MAJ_THRS_low):
-						res = max(res, 1)
+						#res = max(res, 1)
+						res = 1
 					elif (round(r1_level_val_ratio, 2) >= R1R2Reln_MAJ_THRS_very_low) and (round(r1_level_val_ratio, 2) < R1R2Reln_MAJ_THRS_low):
-						res = max(res, 2)
+						#res = max(res, 2)
+						if (res == 0):
+							res = 2
 					else:
 						return 0
 				else:
@@ -563,9 +566,12 @@ def CheckR1Reln(clust1_spec_list, clust2_spec_list):
 				if (((r2_freq + 2 * (pseudo_r2_freq - pseudo_r1_freq)) >= r4_freq) \
 					or (TaxaPair_Reln_Dict[key2]._CheckTargetRelnLevelConsensus(RELATION_R2, 1))) and (RELATION_R2 in allowed_reln_list):
 					if (round(r2_level_val_ratio, 2) >= R1R2Reln_MAJ_THRS_low):
-						res = max(res, 1)
+						# res = max(res, 1)
+						res = 1
 					elif (round(r2_level_val_ratio, 2) >= R1R2Reln_MAJ_THRS_very_low) and (round(r2_level_val_ratio, 2) < R1R2Reln_MAJ_THRS_low):
-						res = max(res, 2)
+						#res = max(res, 2)
+						if (res == 0):
+							res = 2
 					else:
 						return 0
 				else:
@@ -589,7 +595,7 @@ return: 1 if R1 reln from clust1 to clust2 is possible
 				2 if immediately directed out edge from clust1 to clust2 can be established
 """
 def CheckCandidateR1R2Reln(clust1_spec_list, clust2_spec_list):
-	res = 0
+	#res = 0
 	
 	for t1 in clust1_spec_list:
 		for t2 in clust2_spec_list:
@@ -608,25 +614,25 @@ def CheckCandidateR1R2Reln(clust1_spec_list, clust2_spec_list):
 				pseudo_r2_freq = TaxaPair_Reln_Dict[key1]._GetFreqPseudoR1(1)
 				
 				# comment - sourya
-				#if (RELATION_R1 in allowed_reln_list):
-					#if (round(r1_level_val_ratio, 2) >= R1R2Reln_MAJ_THRS_low):
-						#return 1
+				if (RELATION_R1 in allowed_reln_list):
+					if (round(r1_level_val_ratio, 2) >= R1R2Reln_MAJ_THRS_low):
+						return 1
 					
-					#if (TaxaPair_Reln_Dict[key1]._CheckTargetRelnLevelConsensus(RELATION_R1, 1)) \
-						#and (round(r1_level_val_ratio, 2) >= R1R2Reln_MAJ_THRS_very_low):
-						#return 1
+					if (TaxaPair_Reln_Dict[key1]._CheckTargetRelnLevelConsensus(RELATION_R1, 1)) \
+						and (round(r1_level_val_ratio, 2) >= R1R2Reln_MAJ_THRS_very_low):
+						return 1
 				# end comment - sourya
 				
-				# add - sourya
-				if (((r1_freq + 2 * (pseudo_r1_freq - pseudo_r2_freq)) >= r4_freq) \
-					or (TaxaPair_Reln_Dict[key1]._CheckTargetRelnLevelConsensus(RELATION_R1, 1))) and (RELATION_R1 in allowed_reln_list):
-					if (round(r1_level_val_ratio, 2) >= R1R2Reln_MAJ_THRS_low):
-						res = max(res, 1)
-					else:
-						return 0
-				else:
-					return 0
-				# end add - sourya
+				## add - sourya
+				#if (((r1_freq + 2 * (pseudo_r1_freq - pseudo_r2_freq)) >= r4_freq) \
+					#or (TaxaPair_Reln_Dict[key1]._CheckTargetRelnLevelConsensus(RELATION_R1, 1))) and (RELATION_R1 in allowed_reln_list):
+					#if (round(r1_level_val_ratio, 2) >= R1R2Reln_MAJ_THRS_low):
+						#res = 1
+					#else:
+						#return 0
+				#else:
+					#return 0
+				## end add - sourya
 
 
 			if key2 in TaxaPair_Reln_Dict:
@@ -642,27 +648,27 @@ def CheckCandidateR1R2Reln(clust1_spec_list, clust2_spec_list):
 				#r4_priority = TaxaPair_Reln_Dict[key2]._GetConnPrVal(RELATION_R4)
 				
 				# comment - sourya
-				#if (RELATION_R2 in allowed_reln_list):
-					#if (round(r2_level_val_ratio, 2) >= R1R2Reln_MAJ_THRS_low):
-						#return 1
+				if (RELATION_R2 in allowed_reln_list):
+					if (round(r2_level_val_ratio, 2) >= R1R2Reln_MAJ_THRS_low):
+						return 1
 
-					#if (TaxaPair_Reln_Dict[key2]._CheckTargetRelnLevelConsensus(RELATION_R2, 1)) \
-						#and (round(r2_level_val_ratio, 2) >= R1R2Reln_MAJ_THRS_very_low):
-						#return 1
+					if (TaxaPair_Reln_Dict[key2]._CheckTargetRelnLevelConsensus(RELATION_R2, 1)) \
+						and (round(r2_level_val_ratio, 2) >= R1R2Reln_MAJ_THRS_very_low):
+						return 1
 				# end comment - sourya
 
-				# add - sourya
-				if (((r2_freq + 2 * (pseudo_r2_freq - pseudo_r1_freq)) >= r4_freq) \
-					or (TaxaPair_Reln_Dict[key2]._CheckTargetRelnLevelConsensus(RELATION_R2, 1))) and (RELATION_R2 in allowed_reln_list):
-					if (round(r2_level_val_ratio, 2) >= R1R2Reln_MAJ_THRS_low):
-						res = max(res, 1)
-					else:
-						return 0
-				else:
-					return 0
-				# end add - sourya
+				## add - sourya
+				#if (((r2_freq + 2 * (pseudo_r2_freq - pseudo_r1_freq)) >= r4_freq) \
+					#or (TaxaPair_Reln_Dict[key2]._CheckTargetRelnLevelConsensus(RELATION_R2, 1))) and (RELATION_R2 in allowed_reln_list):
+					#if (round(r2_level_val_ratio, 2) >= R1R2Reln_MAJ_THRS_low):
+						#res = 1
+					#else:
+						#return 0
+				#else:
+					#return 0
+				## end add - sourya
 	
-	return res
+	return 0	# res
 
 #-------------------------------------------------------
 #""" 
