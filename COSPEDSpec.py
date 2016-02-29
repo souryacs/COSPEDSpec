@@ -152,9 +152,14 @@ def main():
 		dir_of_inp_file = './'
 	else:
 		dir_of_inp_file = INPUT_FILENAME[:(k+1)]
+	
 	#if (DEBUG_LEVEL > 1):
 		#print 'dir_of_inp_file: ', dir_of_inp_file  
-			
+	
+	# debug - sourya
+	print '\n\n dir_of_inp_file: ', dir_of_inp_file
+	# end debug - sourya
+	
 	if (OUTPUT_FILENAME == ""):
 		dir_of_curr_exec = dir_of_inp_file + 'COSPEDSpec' + '_D' + str(DIST_MAT_TYPE) \
 			+ '_U' + str(DIST_MAT_UPDATE) + '_N' + str(NJ_MERGE_CLUST)
@@ -237,30 +242,42 @@ def main():
 
 	data_read_timestamp = time.time()	# note the timestamp
 	#------------------------------------------------------------
-	## add - sourya
-	#"""
-	#here we compute a distance matrix composed of all the average XL values between individual couplets
-	#"""
-	#""" 
-	#allocate a 2D square matrix of dimension N X N
-	#where N = total number of taxa
-	#"""
-	#XL_DistMat = numpy.zeros((number_of_taxa, number_of_taxa), dtype=numpy.float)
-	#for i in range(number_of_taxa - 1):
-		#taxa_clust1 = []
-		#taxa_clust1.append(COMPLETE_INPUT_TAXA_LIST[i])
-		#for j in range(i+1, number_of_taxa):
-			#taxa_clust2 = []
-			#taxa_clust2.append(COMPLETE_INPUT_TAXA_LIST[j])
-			#entry = FindAvgXL(taxa_clust1, taxa_clust2, DIST_MAT_TYPE, 0)
-			#XL_DistMat[j][i] = XL_DistMat[i][j] = entry
+	# add - sourya
+	"""
+	here we compute a distance matrix composed of all the average XL values between individual couplets
+	"""
+	""" 
+	allocate a 2D square matrix of dimension N X N
+	where N = total number of taxa
+	"""
+	XL_DistMat = numpy.zeros((number_of_taxa, number_of_taxa), dtype=numpy.float)
+	for i in range(number_of_taxa - 1):
+		taxa_clust1 = []
+		taxa_clust1.append(COMPLETE_INPUT_TAXA_LIST[i])
+		for j in range(i+1, number_of_taxa):
+			taxa_clust2 = []
+			taxa_clust2.append(COMPLETE_INPUT_TAXA_LIST[j])
+			entry = FindAvgXL(taxa_clust1, taxa_clust2, DIST_MAT_TYPE, 0)
+			XL_DistMat[j][i] = XL_DistMat[i][j] = entry
 	
-	## end add - sourya
+	# end add - sourya
 	#------------------------------------------------------------
 	""" 
 	here, we process all the couplets to extract couplet statistics
 	"""  
 	for l in TaxaPair_Reln_Dict:
+		
+		## debug - sourya
+		#if ((l[0] == 'TUP') and (l[1] == 'OTO')) or ((l[1] == 'TUP') and (l[0] == 'OTO')):
+			#print 'The couplet : (', l[0], ',', l[1], ') and the XL list: ', TaxaPair_Reln_Dict[l]._GetXLList()
+
+		#if ((l[0] == 'TUP') and (l[1] == 'ORY')) or ((l[1] == 'TUP') and (l[0] == 'ORY')):
+			#print 'The couplet : (', l[0], ',', l[1], ') and the XL list: ', TaxaPair_Reln_Dict[l]._GetXLList()
+
+		#if ((l[0] == 'OTO') and (l[1] == 'ORY')) or ((l[1] == 'OTO') and (l[0] == 'ORY')):
+			#print 'The couplet : (', l[0], ',', l[1], ') and the XL list: ', TaxaPair_Reln_Dict[l]._GetXLList()
+		## end debug - sourya
+		
 		"""
 		here we first normalize the R1 and R2 relation based level difference count
 		computed for individual gene trees
@@ -291,45 +308,6 @@ def main():
 		TaxaPair_Reln_Dict[l]._SetCostMetric()
 
 		#------------------------------------------------------------
-		# comment - sourya
-		
-		#""" 
-		#support score and corresponding couplets will be placed in one of the following priority queues
-		#1) Cost_List_Taxa_Pair_Multi_Reln: for conflicting couplets (more than one relations are supported)
-		#2) Cost_List_Taxa_Pair_Single_Reln: for non-conflicting couplets + when we use two different queues 
-		#each element of the queue contains the following fields:
-		#1) taxa1 and taxa2    
-		#2) relation type (r1 to r4)
-		#3) support score for that relation 
-		#"""    
-		#if (single_edge_exist == 0):
-			#for reln_type in range(4):
-				#""" 
-				#note: we add only those relations (between a taxa pair) in a queue 
-				#which are supported by at least one source tree
-				#that is, their frequency is non zero
-				#"""
-				#if (TaxaPair_Reln_Dict[l]._GetEdgeWeight(reln_type) > 0):
-					#sublist = [l[0], l[1], reln_type, TaxaPair_Reln_Dict[l]._GetEdgeCost_ConnReln(reln_type)]
-					#Cost_List_Taxa_Pair_Multi_Reln.append(sublist)
-		#else:
-			#""" 
-			#if the current relation is the strict consensus and only supported relation for this couplet, 
-			#copy the relation information in appropriate queue
-			#"""
-			#sublist = [l[0], l[1], reln_type, TaxaPair_Reln_Dict[l]._GetEdgeCost_ConnReln(reln_type)]
-			#""" 
-			#if we have provision for using two separate queues, then we place this relation in Cost_List_Taxa_Pair_Single_Reln
-			#else we place this relation in Cost_List_Taxa_Pair_Multi_Reln
-			#"""
-			#if (NO_OF_QUEUES == 2):
-				#Cost_List_Taxa_Pair_Single_Reln.append(sublist)
-			#else:
-				#Cost_List_Taxa_Pair_Multi_Reln.append(sublist)
-		
-		# end comment - sourya
-		
-		# add - sourya
 		"""
 		for a particular couplet, we select (for queing) only those relations
 		which have at least 50% frequency of the consensus relation frequency
@@ -346,8 +324,6 @@ def main():
 				"""
 				sublist = [l[0], l[1], reln_type, TaxaPair_Reln_Dict[l]._GetEdgeCost_ConnReln(reln_type)]
 				Cost_List_Taxa_Pair_Multi_Reln.append(sublist)
-		# end add - sourya
-		
 	#------------------------------------------------------------  
 	if (DEBUG_LEVEL >= 2):
 		for l in TaxaPair_Reln_Dict:
@@ -408,28 +384,23 @@ def main():
 	"""
 	for l in TaxaPair_Reln_Dict:
 		reln_list = TaxaPair_Reln_Dict[l]._GetAllowedRelnList()
+
 		if RELATION_R3 in reln_list:
 			if (TaxaPair_Reln_Dict[l]._Check_Reln_R3_Majority(Output_Text_File) == True):
-				#"""
-				#first check the XL statistics of individual taxon of this couplet
-				#"""
-				#idx1 = COMPLETE_INPUT_TAXA_LIST.index(l[0])
-				#idx2 = COMPLETE_INPUT_TAXA_LIST.index(l[1])
-				#taxon1_XL_list = XL_DistMat[idx1,:]
-				#taxon2_XL_list = XL_DistMat[idx2,:]
-				#mean_taxon1_XL = numpy.mean(taxon1_XL_list)
-				#mean_taxon2_XL = numpy.mean(taxon2_XL_list)
+				"""
+				first check the XL statistics of individual taxon of this couplet
+				"""
+				idx1 = COMPLETE_INPUT_TAXA_LIST.index(l[0])
+				idx2 = COMPLETE_INPUT_TAXA_LIST.index(l[1])
+				taxon1_XL_list = XL_DistMat[idx1,:]
+				taxon2_XL_list = XL_DistMat[idx2,:]
+				mean_taxon1_XL = numpy.mean(taxon1_XL_list)
+				mean_taxon2_XL = numpy.mean(taxon2_XL_list)
 				#if (DEBUG_LEVEL >= 2):
 					#fp = open(Output_Text_File, 'a')
 					#fp.write('\n Couplet 1st taxon : ' + str(l[0]) + ' XL list: ' + str(taxon1_XL_list) + '  ITS MEAN: ' + str(mean_taxon1_XL))
 					#fp.write('\n Couplet 2nd taxon : ' + str(l[1]) + ' XL list: ' + str(taxon2_XL_list) + '  ITS MEAN: ' + str(mean_taxon2_XL))
 					#fp.close()
-					
-					### debug - sourya
-					##if ((l[0] == 'Amborella') and (l[1] == 'Nuphar')) or ((l[1] == 'Amborella') and (l[0] == 'Nuphar')):
-						##sys.stdout.write('\n Couplet 1st taxon : ' + str(l[0]) + ' XL list: ' + str(taxon1_XL_list) + '  ITS MEAN: ' + str(mean_taxon1_XL))
-						##sys.stdout.write('\n Couplet 2nd taxon : ' + str(l[1]) + ' XL list: ' + str(taxon2_XL_list) + '  ITS MEAN: ' + str(mean_taxon2_XL))
-					### end debug - sourya
 						
 				"""
 				the couplet can related with the 'RELATION_R3' 
@@ -461,18 +432,12 @@ def main():
 			Cluster_Info_Dict[i]._PrintClusterInfo(i, Output_Text_File)
 	
 	#------------------------------------------------------------
-	# add - sourya
 	"""
 	here we set the directed edges between individual clusters
 	corresponding to the relations R1, R2, and R4
 	first we process the couplets and relations having positive support score
 	"""
 	Reachability_Graph_Mat = Proc_Queue_Pos_Score_R1R2(Reachability_Graph_Mat, Output_Text_File)
-
-	""" 
-	we process the conflicting queue (couplets having multiple relations supported)
-	"""
-	#Reachability_Graph_Mat = Proc_Queue(Reachability_Graph_Mat, Output_Text_File)
 	#------------------------------------------------------------
 	# we print the final connection status for all the tree nodes
 	if (DEBUG_LEVEL > 2):
@@ -506,65 +471,6 @@ def main():
 	now we process all the elements of the Candidate_Out_Edge_Cluster_List one by one
 	"""
 	Reachability_Graph_Mat = Process_Candidate_Out_Edge_Cluster_List(Reachability_Graph_Mat, DIST_MAT_TYPE, Output_Text_File)
-	
-	##------------------------------------------------------------
-	## add - sourya
-	#"""
-	#here we check pair wise clusters
-	#which are not related by any edge (relation R1 or R2)
-	#for each such pair of clustters, we check whether there is a pseudo R1 / R2 connection that exists
-	#"""
-	#for i in range(len(CURRENT_CLUST_IDX_LIST) - 1):
-		#for j in range((i + 1), len(CURRENT_CLUST_IDX_LIST)):
-			#if (Reachability_Graph_Mat[i][j] == 2):
-				#"""
-				#current cluster pairs are related by R4 relation
-				#"""
-				#clust1_key = CURRENT_CLUST_IDX_LIST[i]
-				#clust2_key = CURRENT_CLUST_IDX_LIST[j]
-				#reln_type = FindClusterReln(clust1_key, clust2_key)
-				#if (reln_type == 1):
-					#if (DEBUG_LEVEL >= 2):
-						#fp = open(Output_Text_File, 'a')
-						#fp.write('\n\n *** Directed out edge from the cluster: ' + str(clust1_key) + ' to the cluster : ' + str(clust2_key))
-						#fp.close()
-					#ConnectClustPairOutEdge(Reachability_Graph_Mat, clust1_key, clust2_key)
-				#elif (reln_type == 3):
-					#if (DEBUG_LEVEL >= 2):
-						#fp = open(Output_Text_File, 'a')
-						#fp.write('\n\n *** Directed out edge from the parent(s) of cluster: ' + str(clust1_key) + ' to the cluster : ' + str(clust2_key))
-						#fp.close()
-					## add out edge from the parents of clust1_key to the clust2_key
-					#for x in Cluster_Info_Dict[clust1_key]._GetInEdgeList():
-						#ConnectClustPairOutEdge(Reachability_Graph_Mat, x, clust2_key)
-				#elif (reln_type == 2):
-					#if (DEBUG_LEVEL >= 2):
-						#fp = open(Output_Text_File, 'a')
-						#fp.write('\n\n *** Directed out edge from the cluster: ' + str(clust2_key) + ' to the cluster : ' + str(clust1_key))
-						#fp.close()
-					#ConnectClustPairOutEdge(Reachability_Graph_Mat, clust2_key, clust1_key)
-				#elif (reln_type == 4):
-					#if (DEBUG_LEVEL >= 2):
-						#fp = open(Output_Text_File, 'a')
-						#fp.write('\n\n *** Directed out edge from the parent(s) of cluster: ' + str(clust2_key) + ' to the cluster : ' + str(clust1_key))
-						#fp.close()
-					## add out edge from the parents of clust2_key to the clust1_key
-					#for x in Cluster_Info_Dict[clust2_key]._GetInEdgeList():
-						#ConnectClustPairOutEdge(Reachability_Graph_Mat, x, clust1_key)
-
-	## print the cluster information 
-	#if (DEBUG_LEVEL >= 2):
-		#fp = open(Output_Text_File, 'a')
-		#fp.write('\n **** total number of clusters: ' + str(len(CURRENT_CLUST_IDX_LIST)))
-		#fp.write('\n CURRENT_CLUST_IDX_LIST contents: ')
-		#fp.write(str(CURRENT_CLUST_IDX_LIST))    
-		#fp.write('\n ========== cluster information after pseudo R1 / R2 relation addition =============')
-		#fp.close()
-		#for i in Cluster_Info_Dict:
-			##print 'printing the information for cluster node: ', i
-			#Cluster_Info_Dict[i]._PrintClusterInfo(i, Output_Text_File)
-	
-	## end add - sourya
 	
 	# print the cluster information 
 	if (DEBUG_LEVEL >= 2):
@@ -686,6 +592,10 @@ def main():
 	outfile.write(Supertree_without_branch_len.as_newick_string())
 	outfile.close()
 
+	# debug - sourya
+	print '\n\n original supertree as newick string: ', Supertree_without_branch_len.as_newick_string()
+	# end debug - sourya
+
 	#--------------------------------------------------------------
 	fp = open(Output_Text_File, 'a')
 	fp.write('\n --- user provided option for producing strict binary supertree')
@@ -750,9 +660,14 @@ def main():
 
 		# we write the unweighted supertree
 		outfile = open(out_treefilename, 'w')
-		outfile.write(Supertree_without_branch_len.as_newick_string())	
+		outfile.write(Supertree_without_branch_len.as_newick_string())
 		outfile.close()
 	# end add  -sourya
+
+	# debug - sourya
+	print '\n\n Final species tree: ', Supertree_without_branch_len.as_newick_string()
+	print '\n\n'
+	# end debug - sourya
 
 	# we write the time associated with the execution of this method
 	time_info_filename = dir_of_curr_exec + '/' + 'timing_info.txt'
@@ -794,10 +709,10 @@ def main():
 	# free the reachability graph (numpy array)
 	del Reachability_Graph_Mat
 	
-	## add - sourya
-	## free the XL_DistMat as well
-	#del XL_DistMat
-	## end add - sourya
+	# add - sourya
+	# free the XL_DistMat as well
+	del XL_DistMat
+	# end add - sourya
     
 #-----------------------------------------------------
 if __name__ == "__main__":

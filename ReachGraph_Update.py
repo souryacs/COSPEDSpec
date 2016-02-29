@@ -67,50 +67,6 @@ def TransClosUpd(Reachability_Graph_Mat, nodeA_reach_mat_idx, nodeB_reach_mat_id
 					Connect_ClusterPair(Reachability_Graph_Mat, \
 						CURRENT_CLUST_IDX_LIST.index(x), CURRENT_CLUST_IDX_LIST.index(y), RELATION_R1, x, y)  
 
-		## comment - sourya
-		
-		## for A->B connection
-		## if D><A exists
-		## then establish D><B
-		#for x in Cluster_Info_Dict[src_taxa_clust_idx]._GetNoEdgeList():
-			#if (Reachability_Graph_Mat[CURRENT_CLUST_IDX_LIST.index(x)][dest_reach_mat_idx] == 0):
-				#Connect_ClusterPair(Reachability_Graph_Mat, CURRENT_CLUST_IDX_LIST.index(x), \
-					#dest_reach_mat_idx, RELATION_R4, x, dest_taxa_clust_idx)
-				
-		## for A->B connection
-		## if D><A exists
-		## then for all B->E
-		## establish D><E
-		#for x in Cluster_Info_Dict[src_taxa_clust_idx]._GetNoEdgeList():
-			#for y in Cluster_Info_Dict[dest_taxa_clust_idx]._GetOutEdgeList():
-				#if (Reachability_Graph_Mat[CURRENT_CLUST_IDX_LIST.index(x)][CURRENT_CLUST_IDX_LIST.index(y)] == 0):
-					#Connect_ClusterPair(Reachability_Graph_Mat, CURRENT_CLUST_IDX_LIST.index(x), \
-						#CURRENT_CLUST_IDX_LIST.index(y), RELATION_R4, x, y)  
-	
-		## end comment - sourya
-
-	# comment - sourya
-	
-	#else:
-		## construct the out neighborhood of src_cluster
-		## it will contain the cluster itself and all the other clusters connected via out edges from this cluster
-		#src_clust_out_neighb = []
-		#src_clust_out_neighb.append(src_taxa_clust_idx)
-		#src_clust_out_neighb.extend(Cluster_Info_Dict[src_taxa_clust_idx]._GetOutEdgeList())
-		## construct the out neighborhood of dest cluster
-		## it will contain the cluster itself and all the other clusters connected via out edges from this cluster    
-		#dest_clust_out_neighb = []
-		#dest_clust_out_neighb.append(dest_taxa_clust_idx)
-		#dest_clust_out_neighb.extend(Cluster_Info_Dict[dest_taxa_clust_idx]._GetOutEdgeList())
-		
-		#for x in src_clust_out_neighb:
-			#for y in dest_clust_out_neighb:
-				#if (Reachability_Graph_Mat[CURRENT_CLUST_IDX_LIST.index(x)][CURRENT_CLUST_IDX_LIST.index(y)] == 0):
-					#Connect_ClusterPair(Reachability_Graph_Mat, CURRENT_CLUST_IDX_LIST.index(x), \
-						#CURRENT_CLUST_IDX_LIST.index(y), RELATION_R4, x, y)  
-	
-	# end comment - sourya
-	
 #-----------------------------------------------------
 """ 
 this function merges two clusters 

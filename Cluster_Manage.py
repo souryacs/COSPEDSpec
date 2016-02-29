@@ -8,147 +8,6 @@ from Header import *
 import UtilFunc
 from UtilFunc import *
 
-##-----------------------------------------------------
-#"""
-#this function generates an out edge from the first cluster to the second cluster
-#"""
-#def ConnectClustPairOutEdge(Reachability_Graph_Mat, clust1, clust2):
-	#Cluster_Info_Dict[clust1]._AddOutEdge(clust2)
-	#Cluster_Info_Dict[clust2]._AddInEdge(clust1)
-	#reach_clust1_idx = CURRENT_CLUST_IDX_LIST.index(clust1)
-	#reach_clust2_idx = CURRENT_CLUST_IDX_LIST.index(clust2)
-	#Reachability_Graph_Mat[reach_clust1_idx][reach_clust2_idx] = 1
-	#return
-
-##-----------------------------------------------------
-#"""
-#this function finds whether there is a hidden R1 / R2 relation between this pair of clusters
-#which was originally related via R4 (no edge)
-#the return value is an integer. It can have following values.
-#@ 0: no edge will be established
-#@ 1: there will be a directed out edge from the clust1_key to the clust2_key
-#@ 2: there will be a directed out edge from the clust2_key to the clust1_key
-#@ 3: there will be a directed out edge from the parent(s) of clust1_key to the clust2_key
-#@ 4: there will be a directed out edge from the parent(s) of clust2_key to the clust1_key
-#"""
-#def FindClusterReln(clust1_key, clust2_key):
-	#"""
-	#now there is no such strict consensus R4 relation between this cluster pair
-	#so we can proceed to check if a edge connection can be possible
-	#"""
-	#clust1_spec_list = Cluster_Info_Dict[clust1_key]._GetSpeciesList()
-	#clust2_spec_list = Cluster_Info_Dict[clust2_key]._GetSpeciesList()
-
-	#"""
-	#there are two conditions for a cluster to have directed out edge to another cluster
-	#-- For a couplet (x,y) where x in Clust1, y in Clust2
-	#1) (Either fr1(x,y) + pr1(x,y) - pr2(x,y)) > (fr4(x,y) - pr1(x,y))
-	#or 2) Level ratio of r1(x,y) is greater than a certain threshold, and fr1(x,y) is significant (r1 relation 
-	#belongs to the set of allowable relations from x to y)
-	#"""
-	
-	#for t1 in clust1_spec_list:
-		#for t2 in clust2_spec_list:
-			#key1 = (t1, t2)
-			#key2 = (t2, t1)
-			#if key1 in TaxaPair_Reln_Dict:
-				#r1_freq = TaxaPair_Reln_Dict[key1]._GetEdgeWeight(RELATION_R1)
-				#r2_freq = TaxaPair_Reln_Dict[key1]._GetEdgeWeight(RELATION_R2)
-				#r4_freq = TaxaPair_Reln_Dict[key1]._GetEdgeWeight(RELATION_R4)
-				#pseudo_r1_freq = TaxaPair_Reln_Dict[key1]._GetFreqPseudoR1(0)
-				#pseudo_r2_freq = TaxaPair_Reln_Dict[key1]._GetFreqPseudoR1(1)
-				#r1_level_val_ratio = TaxaPair_Reln_Dict[key1]._GetLevelValRatio(0)
-				#r2_level_val_ratio = TaxaPair_Reln_Dict[key1]._GetLevelValRatio(1)
-				#allowed_reln_list = TaxaPair_Reln_Dict[key1]._GetAllowedRelnList()
-				
-				### add - sourya
-				##if (len(clust1_spec_list) > 1) and (len(clust2_spec_list) == 1):
-					##if (RELATION_R1 in allowed_reln_list):
-						##if (round(r1_level_val_ratio, 2) >= R1R2Reln_MAJ_THRS_very_low):
-							##if (TaxaPair_Reln_Dict[key1]._CheckTargetRelnLevelConsensus(RELATION_R1, 1)):
-								##return 1
-						
-				##if (len(clust1_spec_list) == 1) and (len(clust2_spec_list) > 1):
-					##if (RELATION_R2 in allowed_reln_list):
-						##if (round(r2_level_val_ratio, 2) >= R1R2Reln_MAJ_THRS_very_low):
-							##if (TaxaPair_Reln_Dict[key1]._CheckTargetRelnLevelConsensus(RELATION_R2, 1)):
-								##return 2
-				### end add - sourya
-
-				#if (((r1_freq + 2 * (pseudo_r1_freq - pseudo_r2_freq)) >= r4_freq) \
-					#or (TaxaPair_Reln_Dict[key1]._CheckTargetRelnLevelConsensus(RELATION_R1, 1))) \
-					#and ((round(r1_level_val_ratio, 2) >= R1R2Reln_MAJ_THRS_low) and (RELATION_R1 in allowed_reln_list)):
-					##if (len(clust1_spec_list) == 1) and (len(clust2_spec_list) == 1):
-						##if (round(((r1_freq * 1.0) / TaxaPair_Reln_Dict[key1]._GetConsensusFreq()), 2) >= CONSENSUS_FREQ_RATIO_THR) \
-							##or (round(r1_level_val_ratio, 2) >= R1R2Reln_MAJ_THRS_high):
-							##return 1
-					#if (len(clust1_spec_list) > 1):
-						#return 1
-					#else:
-						#return 3
-
-				#if (((r2_freq + 2 * (pseudo_r2_freq - pseudo_r1_freq)) >= r4_freq) \
-					#or (TaxaPair_Reln_Dict[key1]._CheckTargetRelnLevelConsensus(RELATION_R2, 1))) \
-					#and ((round(r2_level_val_ratio, 2) >= R1R2Reln_MAJ_THRS_low) and (RELATION_R2 in allowed_reln_list)):
-					##if (len(clust1_spec_list) == 1) and (len(clust2_spec_list) == 1):
-						##if (round(((r2_freq * 1.0) / TaxaPair_Reln_Dict[key1]._GetConsensusFreq()), 2) >= CONSENSUS_FREQ_RATIO_THR) \
-							##or (round(r2_level_val_ratio, 2) >= R1R2Reln_MAJ_THRS_high):
-							##return 2
-					#if (len(clust2_spec_list) > 1):
-						#return 2
-					#else:
-						#return 4
-
-			#elif key2 in TaxaPair_Reln_Dict:
-				#r1_freq = TaxaPair_Reln_Dict[key2]._GetEdgeWeight(RELATION_R1)
-				#r2_freq = TaxaPair_Reln_Dict[key2]._GetEdgeWeight(RELATION_R2)
-				#r4_freq = TaxaPair_Reln_Dict[key2]._GetEdgeWeight(RELATION_R4)
-				#pseudo_r1_freq = TaxaPair_Reln_Dict[key2]._GetFreqPseudoR1(0)
-				#pseudo_r2_freq = TaxaPair_Reln_Dict[key2]._GetFreqPseudoR1(1)
-				#r1_level_val_ratio = TaxaPair_Reln_Dict[key2]._GetLevelValRatio(0)
-				#r2_level_val_ratio = TaxaPair_Reln_Dict[key2]._GetLevelValRatio(1)
-				#allowed_reln_list = TaxaPair_Reln_Dict[key2]._GetAllowedRelnList()
-				
-				### add - sourya
-				##if (len(clust1_spec_list) > 1) and (len(clust2_spec_list) == 1):
-					##if (RELATION_R2 in allowed_reln_list):
-						##if (round(r2_level_val_ratio, 2) >= R1R2Reln_MAJ_THRS_very_low):
-							##if (TaxaPair_Reln_Dict[key2]._CheckTargetRelnLevelConsensus(RELATION_R2, 1)):
-								##return 1
-						
-				##if (len(clust1_spec_list) == 1) and (len(clust2_spec_list) > 1):
-					##if (RELATION_R1 in allowed_reln_list):
-						##if (round(r1_level_val_ratio, 2) >= R1R2Reln_MAJ_THRS_very_low):
-							##if (TaxaPair_Reln_Dict[key2]._CheckTargetRelnLevelConsensus(RELATION_R1, 1)):
-								##return 2
-				### end add - sourya
-				
-				#if (((r1_freq + 2 * (pseudo_r1_freq - pseudo_r2_freq)) >= r4_freq) \
-					#or (TaxaPair_Reln_Dict[key2]._CheckTargetRelnLevelConsensus(RELATION_R1, 1))) \
-					#and ((round(r1_level_val_ratio, 2) >= R1R2Reln_MAJ_THRS_low) and (RELATION_R1 in allowed_reln_list)):
-					##if (len(clust1_spec_list) == 1) and (len(clust2_spec_list) == 1):
-						##if (round(((r1_freq * 1.0) / TaxaPair_Reln_Dict[key2]._GetConsensusFreq()), 2) >= CONSENSUS_FREQ_RATIO_THR) \
-							##or (round(r1_level_val_ratio, 2) >= R1R2Reln_MAJ_THRS_high):
-							##return 2
-					#if (len(clust2_spec_list) > 1):
-						#return 2
-					#else:
-						#return 4
-
-				#if (((r2_freq + 2 * (pseudo_r2_freq - pseudo_r1_freq)) >= r4_freq) \
-					#or (TaxaPair_Reln_Dict[key2]._CheckTargetRelnLevelConsensus(RELATION_R2, 1))) \
-					#and ((round(r2_level_val_ratio, 2) >= R1R2Reln_MAJ_THRS_low) and (RELATION_R2 in allowed_reln_list)):
-					##if (len(clust1_spec_list) == 1) and (len(clust2_spec_list) == 1):
-						##if (round(((r2_freq * 1.0) / TaxaPair_Reln_Dict[key2]._GetConsensusFreq()), 2) >= CONSENSUS_FREQ_RATIO_THR) \
-							##or (round(r2_level_val_ratio, 2) >= R1R2Reln_MAJ_THRS_high):
-							##return 1
-					#if (len(clust1_spec_list) > 1):
-						#return 1
-					#else:
-						#return 3
-
-	#return 0
-
 #-----------------------------------------------------
 # this function computes the score (ancestor relation) from clust1 to clust2
 def ComputeScore(clust1, clust2, Output_Text_File, MPP_SOLVE_METRIC, DIST_MAT_TYPE):
@@ -167,14 +26,20 @@ def ComputeScore(clust1, clust2, Output_Text_File, MPP_SOLVE_METRIC, DIST_MAT_TY
 			key2 = (t2, t1)
 			if key1 in TaxaPair_Reln_Dict:
 				couplet_count = couplet_count + 1
-				# modified - sourya - using normalization by the number of support trees
+				# modified - sourya 
+				"""
+				using normalization by the number of support trees
+				"""
 				if (MPP_SOLVE_METRIC == 1):
 					score_val = score_val + (TaxaPair_Reln_Dict[key1]._GetConnPrVal(RELATION_R1) * 1.0) / TaxaPair_Reln_Dict[key1]._GetNoSupportTrees()
 				else:
 					score_val = score_val + TaxaPair_Reln_Dict[key1]._GetNormalizedXLSumGeneTrees(DIST_MAT_TYPE)
 			elif key2 in TaxaPair_Reln_Dict:
 				couplet_count = couplet_count + 1
-				# modified - sourya - using normalization by the number of support trees
+				# modified - sourya 
+				"""
+				using normalization by the number of support trees
+				"""
 				if (MPP_SOLVE_METRIC == 1):
 					score_val = score_val + (TaxaPair_Reln_Dict[key2]._GetConnPrVal(RELATION_R2) * 1.0) / TaxaPair_Reln_Dict[key2]._GetNoSupportTrees()
 				else:
@@ -191,12 +56,13 @@ def ComputeScore(clust1, clust2, Output_Text_File, MPP_SOLVE_METRIC, DIST_MAT_TY
 
 
 #-----------------------------------------------------    
-""" this function solves multiple parenting problem (C2)
+""" 
+this function solves multiple parenting problem (C2)
 by uniquely selecting one particular parent
-the selection is carried out using a scoring mechanism """
+the selection is carried out using a scoring mechanism 
+"""
 def SolveMultipleParentC2Problem(Output_Text_File, MPP_SOLVE_METRIC, DIST_MAT_TYPE):
 	for cx in Cluster_Info_Dict:
-		
 		if (DEBUG_LEVEL > 2):
 			fp = open(Output_Text_File, 'a')
 			fp.write('\n ***** Examining cluster -- ')
@@ -275,8 +141,10 @@ def SolveMultipleParentC2Problem(Output_Text_File, MPP_SOLVE_METRIC, DIST_MAT_TY
 				Cluster_Info_Dict[cx]._PrintClusterInfo(cx, Output_Text_File)
 
 #-----------------------------------------------------        
-''' this function returns the root node for the final supertree 
-for a depth first forest, multiple root nodes can be possible - so it returns the node with 0 indegree '''
+"""
+this function returns the root node for the final supertree 
+for a depth first forest, multiple root nodes can be possible - so it returns the node with 0 indegree 
+"""
 def Extract_Node_Min_Indeg(no_of_clusters):
 	min_indeg_node_idx = -1
 	valid_node_found = 0
@@ -297,10 +165,10 @@ def Extract_Node_Min_Indeg(no_of_clusters):
 	return min_indeg_node_idx
 
 #-----------------------------------------------------  
-''' 
+""" 
 this function performs transitive reduction of a graph (transitive closure) and subsequently modifies the cluster of nodes
 in terms of the edge connectivity, to make it free of redunant edges 
-'''
+"""
 def CompressDirectedGraph(Reachability_Graph_Mat):
 	no_of_clusters = len(CURRENT_CLUST_IDX_LIST)
 	

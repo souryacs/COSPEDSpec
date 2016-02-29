@@ -5,13 +5,9 @@ from dendropy import Tree, Taxon, TaxonSet, Node
 import numpy
 import time
 import os
-#from cStringIO import StringIO
 from optparse import OptionParser
 import math
 import sys
-#import networkx as nx
-#import matplotlib.pyplot as plt	# add - debug - sourya
-#import decimal
 
 # we define custom relation types
 RELATION_R3 = 0	# relation r3
@@ -43,12 +39,6 @@ queue storing relations of conflicting couplets
 """
 Cost_List_Taxa_Pair_Multi_Reln = []
 
-#""" 
-#queue storing relations of non-conflicting couplets
-#provided that we use this queue
-#"""
-#Cost_List_Taxa_Pair_Single_Reln = [] 
-
 """ 
 this list contains the complete set of taxa present in the input trees 
 """
@@ -61,7 +51,7 @@ CURRENT_CLUST_IDX_LIST = []
 
 # this is the debug level
 # set for printing the necessary information
-DEBUG_LEVEL = 0
+DEBUG_LEVEL = 2
 
 MAJORITY_CONSENSUS_RATIO = 0.6
 LEVEL_COUNT_VAL_CONSENSUS_RATIO = 0.7
@@ -71,34 +61,17 @@ LEVEL_COUNT_VAL_CONSENSUS_RATIO = 0.7
 TRADITIONAL_NJ = 1
 AGGLO_CLUST = 2
 
-"""
-this is a list of couplets which are siblings
-according to their R3 consensus relation
-"""
-#Sibling_Couplet_List = []
-
-# error indicator 
-#KEY_ABSENCE_INDICATOR = 3
-
 # add - sourya
-MODE_PERCENT = 0.5
+MODE_PERCENT = 0.4	#0.5	#0.35
 MODE_BIN_COUNT = 40
-
-#"""
-#threshold specifying the percentage of supporting trees 
-#which is required to include a relation (and corresponding support score)
-#in the queue
-#currently 
-#"""
-#RELN_SUPPORT_THRS = 0.1
 
 """
 this is a threshold corresponding to the selection of R1 or R2 relation
 for a non conflicting couplet with negative support score of the corresponding relation
 """
 #R1R2Reln_MAJ_THRS = 0.7
-R1R2Reln_MAJ_THRS_high = 0.8	#0.75
-R1R2Reln_MAJ_THRS_low = 0.7	#0.8
+R1R2Reln_MAJ_THRS_high = 0.75	#0.8
+R1R2Reln_MAJ_THRS_low = 0.65	#0.7	#0.8
 R1R2Reln_MAJ_THRS_very_low = 0.6	#0.65
 
 """
@@ -107,12 +80,6 @@ for a non conflicting couplet with negative support score of the corresponding r
 """
 R3Reln_MAJ_THRS = 0.2
 #R3Reln_MAJ_THRS_LOW = 0.15
-
-#"""
-#this is a threshold corresponding to the selection of R4 relation
-#for a non conflicting couplet with negative support score of the corresponding relation
-#"""
-#R4Reln_MAJ_THRS = 0.5
 
 """
 for a couplet, relations with frequency of this percentage of the max (consensus) frequency
@@ -136,7 +103,7 @@ this threshold is applied at the last stage
 when a sibling is broken in R1 / R2 relations 
 based on the XL value distribution
 """
-VARIATION_XL_THR = 0.08	#0.25
+#VARIATION_XL_THR = 0.08	#0.25
 
 #-----------------------------------------------------
 """ 
@@ -253,72 +220,6 @@ class Reln_TaxaPair(object):
 			
 		return 0
 	
-	#"""
-	#this function checks whether for a conflicting taxa pair with negative support score
-	#R1 relation can be applied between this couplet
-	#"""
-	#def _Check_Reln_R1_Majority(self, outfile):
-		#fr1 = self.freq_count[RELATION_R1]
-		#fr2 = self.freq_count[RELATION_R2]
-		#fr3 = self.freq_count[RELATION_R3]
-		#fr4 = self.freq_count[RELATION_R4]
-		#fpr1 = self.freq_R4_pseudo_R1R2[0]
-		#fpr2 = self.freq_R4_pseudo_R1R2[1]
-		#level_r1_count = self.ALL_Reln_Level_Diff_Info_Count[0]
-		#sum_level_count = sum(self.ALL_Reln_Level_Diff_Info_Count)
-		#r1_level_val_ratio = self._GetLevelValRatio(0)
-		
-		#if (DEBUG_LEVEL >= 2):
-			#fp = open(outfile, 'a')
-			#fp.write('\n fr1: ' + str(fr1) + ' fr2: ' + str(fr2) + ' fr4: ' + str(fr4) + ' fr3: ' + str(fr3) \
-				#+ ' fpr1: ' + str(fpr1) + ' fpr2: ' + str(fpr2) + ' level_r1_count: ' + str(level_r1_count) \
-					#+ ' sum_level_count: ' + str(sum_level_count))
-			#fp.write(' Ratio: ' + str(r1_level_val_ratio))  
-			#fp.close()
-		
-		#if (round(r1_level_val_ratio, 2) >= R1R2Reln_MAJ_THRS_high):
-			#return True
-		
-		#if (round(((fr1 * 1.0) / self._GetConsensusFreq()), 2) >= CONSENSUS_FREQ_RATIO_THR):
-			#if  (((fr1 + 2 * (fpr1 - fpr2)) > fr4) and ((fr1 + fpr1 - fpr2) > fr3) and ((fr1 + fpr1 - fpr2) > (fr2 + fpr2 - fpr1))) \
-				#or (round(r1_level_val_ratio, 2) >= R1R2Reln_MAJ_THRS_low):
-				#return True
-		
-		#return False
-		
-	#"""
-	#this function checks whether for a conflicting taxa pair with negative support score
-	#R2 relation can be applied between this couplet
-	#"""
-	#def _Check_Reln_R2_Majority(self, outfile):
-		#fr1 = self.freq_count[RELATION_R1]
-		#fr2 = self.freq_count[RELATION_R2]
-		#fr3 = self.freq_count[RELATION_R3]
-		#fr4 = self.freq_count[RELATION_R4]
-		#fpr1 = self.freq_R4_pseudo_R1R2[0]
-		#fpr2 = self.freq_R4_pseudo_R1R2[1]
-		#level_r2_count = self.ALL_Reln_Level_Diff_Info_Count[1]
-		#sum_level_count = sum(self.ALL_Reln_Level_Diff_Info_Count)
-		#r2_level_val_ratio = self._GetLevelValRatio(1)
-		
-		#if (DEBUG_LEVEL >= 2):
-			#fp = open(outfile, 'a')
-			#fp.write('\n fr1: ' + str(fr1) + ' fr2: ' + str(fr2) + ' fr4: ' + str(fr4) + ' fr3: ' + str(fr3) \
-				#+ ' fpr1: ' + str(fpr1) + ' fpr2: ' + str(fpr2) + ' level_r2_count: ' + str(level_r2_count) \
-					#+ ' sum_level_count: ' + str(sum_level_count))
-			#fp.write(' Ratio: ' + str(r2_level_val_ratio))  
-			#fp.close()
-		
-		#if (round(r2_level_val_ratio, 2) >= R1R2Reln_MAJ_THRS_high):
-			#return True
-		
-		#if (round(((fr2 * 1.0) / self._GetConsensusFreq()), 2) >= CONSENSUS_FREQ_RATIO_THR):
-			#if  (((fr2 + 2 * (fpr2 - fpr1)) > fr4) and ((fr2 + fpr2 - fpr1) > fr3) and ((fr2 + fpr2 - fpr1) > (fr1 + fpr1 - fpr2))) \
-				#or (round(r2_level_val_ratio, 2) >= R1R2Reln_MAJ_THRS_low):
-				#return True
-
-		#return False
-		
 	"""
 	this function checks whether for a conflicting taxa pair with negative support score
 	R3 relation can be applied between this couplet
@@ -345,6 +246,19 @@ class Reln_TaxaPair(object):
 				fp.write('\n *** R3 RELATI0N IS THE MAJORITY *** ')  
 				fp.close()
 			return True
+		
+		# add - sourya
+		"""
+		if the excess gene count statistic (mode) is 0 for this couplet
+		then surely R3 relation is predominant
+		"""
+		if (self._GetMultiModeXLVal() == 0):
+			if (DEBUG_LEVEL >= 2):
+				fp = open(outfile, 'a')
+				fp.write('\n *** R3 RELATI0N IS THE MAJORITY *** ')  
+				fp.close()
+			return True
+		# end add - sourya
 		
 		## add - sourya
 		#if ((level_val_r2 + level_val_r1) > 0):
@@ -378,7 +292,8 @@ class Reln_TaxaPair(object):
 		"""
 		# modified - sourya
 		#if (fr3 > min(self.freq_count)) or (fr3 >= (0.2 * self.supporting_trees)):
-		if (fr3 > min(self.freq_count)) and (fr3 >= (0.6 * max(self.freq_count))):
+		#if (fr3 > min(self.freq_count)) and (fr3 >= (0.6 * max(self.freq_count))):
+		if (fr3 > min(self.freq_count)):
 			if ((level_val_r2 + level_val_r1) > 0):
 				if ((round((lev_diff / (level_val_r2 + level_val_r1)), 2)) <= R3Reln_MAJ_THRS):
 					# the level difference should be very small
@@ -400,44 +315,7 @@ class Reln_TaxaPair(object):
 			fp.write('\n R3 RELATI0N IS NOT THE MAJORITY')  
 			fp.close()
 		
-			
 		return False
-		
-	#"""
-	#this function checks whether for a conflicting taxa pair with negative support score
-	#R4 relation can be applied between this couplet
-	#"""
-	#def _Check_Reln_R4_Majority(self, outfile):
-		
-		#fr1 = self.freq_count[RELATION_R1]
-		#fr2 = self.freq_count[RELATION_R2]
-		#fr3 = self.freq_count[RELATION_R3]
-		#fr4 = self.freq_count[RELATION_R4]
-		#fpr1 = self.freq_R4_pseudo_R1R2[0]
-		#fpr2 = self.freq_R4_pseudo_R1R2[1]
-		#level_val_r1 = self.ALL_Reln_Level_Diff_Val_Count[0]
-		#level_val_r2 = self.ALL_Reln_Level_Diff_Val_Count[1]
-		#lev_diff = math.fabs((level_val_r2 - level_val_r1) * 1.0)
-		#max_fpr = max(fpr1, fpr2)
-		
-		#if (DEBUG_LEVEL >= 2):
-			#fp = open(outfile, 'a')
-			#fp.write('\n fr1: ' + str(fr1) + ' fr2: ' + str(fr2) + ' fr4: ' + str(fr4) + ' fr3: ' + str(fr3) \
-				#+ ' fpr1: ' + str(fpr1) + ' fpr2: ' + str(fpr2) + ' max_fpr: ' + str(max_fpr))
-			
-			#if ((level_val_r2 + level_val_r1) > 0):
-				#fp.write(' Ratio: ' + str(lev_diff / (level_val_r2 + level_val_r1)))  
-			#fp.close()
-		
-		#if (fr4 >= (fr1 + fpr1 - fpr2)) and ((fr4 - max_fpr) > fr3) and (fr4 >= (fr2 + fpr2 - fpr1)):
-			#return True
-		##elif ((fr4 - fpr2) > (fr2 + fpr2 - fpr1)) and ((fr4 - max_fpr) > fr3) and ((fr4 - fpr2) > (fr1 + fpr1 - fpr2)):
-			##return True
-		#elif ((level_val_r2 + level_val_r1) > 0):
-			#if ((lev_diff / (level_val_r2 + level_val_r1)) > R3Reln_MAJ_THRS) and ((lev_diff / (level_val_r2 + level_val_r1)) < R4Reln_MAJ_THRS):
-				#return True
-		
-		#return False
 		
 	#----------------------------------
 	"""
@@ -452,10 +330,6 @@ class Reln_TaxaPair(object):
 	def _RemoveAllowedReln(self, inp_reln):
 		if inp_reln in self.allowed_reln_list:
 			self.allowed_reln_list.remove(inp_reln)
-			
-	#def _SetEmptyAllowedRelnList(self):
-		#self.allowed_reln_list = []
-		
 	#----------------------------------	
 	
 	def _AddFreqPseudoR1(self, idx, r=1):
@@ -500,13 +374,6 @@ class Reln_TaxaPair(object):
 			target_val = (target_val * 1.0) / self.supporting_trees
 			
 		return target_val
-		
-	
-	#def _GetR1R2LevelDiff(self, abs_comp):
-		#target_val = self.ALL_Reln_Level_Diff_Val_Count[0] - self.ALL_Reln_Level_Diff_Val_Count[1]
-		#if (abs_comp == True):
-			#target_val = math.fabs(target_val)
-		#return target_val
 
 	"""
 	this function checks whether the input relation type is a consensus relation
@@ -536,31 +403,15 @@ class Reln_TaxaPair(object):
 				return 1
 			
 		return 0
-	
-	#def _CheckHigherTargetRelnLevelValue(self, src_reln):
-		#reln_array = [RELATION_R1, RELATION_R2, RELATION_R3]
-		#src_reln_idx = reln_array.index(src_reln)
-		#for idx in range(3):
-			#if (idx == src_reln_idx):
-				#continue
-			#if (self.ALL_Reln_Level_Diff_Info_Count[src_reln_idx] < self.ALL_Reln_Level_Diff_Info_Count[idx]):
-				#return 0
-			#if (self.ALL_Reln_Level_Diff_Val_Count[src_reln_idx] < self.ALL_Reln_Level_Diff_Val_Count[idx]):
-				#return 0
-	
-		#return 1
-	
-	#def _GetAllRelnLevelDiffCount(self):
-		#return self.ALL_Reln_Level_Diff_Info_Count
-		
-	#def _GetAllRelnLevelDiffVal(self):
-		#return self.ALL_Reln_Level_Diff_Val_Count
 		
 	def _IncrAllRelnLevelDiffInfoCount(self, idx, val):
 		self.ALL_Reln_Level_Diff_Info_Count[idx] = self.ALL_Reln_Level_Diff_Info_Count[idx] + 1
 		self.ALL_Reln_Level_Diff_Val_Count[idx] = self.ALL_Reln_Level_Diff_Val_Count[idx] + val
 		
 	#------------------------------------------
+	def _GetXLList(self):
+		return self.XL_sum_gene_trees
+	
 	"""
 	this function adds one XL value, computed for a particular input tree
 	to the list of XL values for this couplet
@@ -590,6 +441,12 @@ class Reln_TaxaPair(object):
 	def _GetMedianXLGeneTrees(self):
 		return numpy.median(numpy.array(self.XL_sum_gene_trees)) # modified - sourya
 
+	def _GetStdevXL(self):
+		return numpy.std(numpy.array(self.XL_sum_gene_trees))
+	
+	def _GetVarianceXL(self):
+		return numpy.var(numpy.array(self.XL_sum_gene_trees))
+	
 	"""
 	function to return the average of XL values for this couplet
 	depending on the user parameters, average, median, or binned average XL is returned
@@ -604,7 +461,10 @@ class Reln_TaxaPair(object):
 		elif (dist_type == 4):
 			return min(self._GetAvgXLGeneTrees(), self._GetMedianXLGeneTrees())
 		elif (dist_type == 5):
-			return min(self._GetAvgXLGeneTrees(), self._GetMedianXLGeneTrees(), self._GetMultiModeXLVal())
+			# modified - sourya
+			#return min(self._GetAvgXLGeneTrees(), self._GetMedianXLGeneTrees(), self._GetMultiModeXLVal())
+			# we return average of these three quantities
+			return (self._GetAvgXLGeneTrees() + self._GetMedianXLGeneTrees() + self._GetMultiModeXLVal()) / 3.0
 		elif (dist_type == 6):
 			return min(self._GetMedianXLGeneTrees(), self._GetMultiModeXLVal())
 		
@@ -741,6 +601,9 @@ class Reln_TaxaPair(object):
 			fp.write('\n AVERAGE Sum of extra lineage **** : ' + str(self._GetAvgXLGeneTrees()))
 			fp.write('\n MEDIAN Sum of extra lineage **** : ' + str(self._GetMedianXLGeneTrees()))
 			fp.write('\n Mode Sum of extra lineage **** : ' + str(self._GetMultiModeXLVal()))
+			fp.write('\n Mean(Avg + Mode) of extra lineage **** : ' + str((self._GetMultiModeXLVal() + self._GetAvgXLGeneTrees())/2.0))
+			fp.write('\n Variance of excess lineage: ' + str(self._GetVarianceXL()))
+			fp.write('\n Standard deviation of excess lineage: ' + str(self._GetStdevXL()))
 			# end add - sourya
 			fp.write('\n No of supporting trees : ' + str(self.supporting_trees))
 			#fp.write('\n Normalized XL sum : ' + str(self._GetNormalizedXLSumGeneTrees()))

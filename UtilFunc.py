@@ -3,62 +3,7 @@
 import Header
 from Header import *    
   
-##-----------------------------------------------------
-## original function - sourya
-##---------------------------------
-## this function prints the tree in Newick format
-## sourya - this is the old function with cluster based species list printing in the newick format
-#def PrintNewick_Original(root_clust_node_idx):
-	#if 0:
-		#print 'in function printnewick:   root_clust_node_idx: ', root_clust_node_idx
-		#print 'taxa set: ', Cluster_Info_Dict[root_clust_node_idx]._GetSpeciesList()  
-		#print 'out clust list: ', Cluster_Info_Dict[root_clust_node_idx]._GetOutEdgeList()
-
-	#Tree_Str_List = ''
-	## process the node provided it has not been explored yet
-	#if (Cluster_Info_Dict[root_clust_node_idx]._GetExploredStatus() == 0):  
-		## set the explored status of the current node to true
-		#Cluster_Info_Dict[root_clust_node_idx]._SetExploredStatus()
-		## get the out edge list of the current node which are not explored yet 
-		#outnodes = []
-		#for l in Cluster_Info_Dict[root_clust_node_idx]._GetOutEdgeList():
-			#if (Cluster_Info_Dict[l]._GetExploredStatus() == 0):
-				#outnodes.append(l)
-		#if (len(outnodes) == 0):
-			#spec_list = Cluster_Info_Dict[root_clust_node_idx]._GetSpeciesList()
-			#if (len(spec_list) > 1):
-				#Tree_Str_List = Tree_Str_List + '('
-			#Tree_Str_List = Tree_Str_List + ','.join("'" + item + "'" for item in spec_list)
-			#if (len(spec_list) > 1):
-				#Tree_Str_List = Tree_Str_List + ')'
-		#else:
-			#Tree_Str_List = Tree_Str_List + '('
-			#Tree_Str_List = Tree_Str_List + ','.join("'" + item + "'" for item in Cluster_Info_Dict[root_clust_node_idx]._GetSpeciesList())
-			#Tree_Str_List = Tree_Str_List + ','    
-			#Tree_Str_List = Tree_Str_List + '('
-			#for i in range(len(outnodes)):
-				#if (Cluster_Info_Dict[outnodes[i]]._GetExploredStatus() == 0):  
-					#Tree_Str_List = Tree_Str_List + PrintNewick(outnodes[i])
-					#if (i < (len(outnodes) - 1)):
-						## we check whether any subsequent node belonging to the outnodes list
-						## is left for traverse
-						#j = i + 1
-						#while (j < len(outnodes)):
-							#if (Cluster_Info_Dict[outnodes[j]]._GetExploredStatus() == 0):  
-								#break
-							#j = j + 1	      
-						## in this case, we append one comma
-						#if (j < len(outnodes)):
-							#Tree_Str_List = Tree_Str_List + ','      
-			
-			#Tree_Str_List = Tree_Str_List + ')'
-			#Tree_Str_List = Tree_Str_List + ')'
-		
-	#return Tree_Str_List    
-    
-## end original function - sourya
 #-------------------------------------------
-
 def PrintNewick(root_clust_node_idx):
 	if 0:
 		print 'in function printnewick:   root_clust_node_idx: ', root_clust_node_idx
@@ -121,74 +66,6 @@ def PrintNewick(root_clust_node_idx):
 
 		if (len(outnodes) > 0):	# and (len(spec_list) == 1):
 			Tree_Str_List = Tree_Str_List + ')'
-		
-		
-		
-		## add - sourya
-		#single_tax_single_leaf_outnode = False
-		## end add - sourya
-		
-		#if (len(outnodes) == 0):
-			#if (len(spec_list) > 1):
-				#Tree_Str_List = Tree_Str_List + '('
-			#Tree_Str_List = Tree_Str_List + ','.join("'" + item + "'" for item in spec_list)
-			#if (len(spec_list) > 1):
-				#Tree_Str_List = Tree_Str_List + ')'
-		#else:
-			
-			## add - sourya
-			#if (len(spec_list) == 1):
-				#if (len(outnodes) == 1):
-					#l = outnodes[0]
-					#if (len(Cluster_Info_Dict[l]._GetSpeciesList()) == 1) and (len(Cluster_Info_Dict[l]._GetOutEdgeList()) == 0):
-						#single_tax_single_leaf_outnode = True
-			## end add - sourya
-			
-			### add - sourya
-			##if (len(spec_list) > 1):
-				##single_tax_single_leaf_outnode = False
-			##elif (len(outnodes) > 1):
-				##single_tax_single_leaf_outnode = False
-			##else:
-				##l = outnodes[0]
-				##if (len(Cluster_Info_Dict[l]._GetOutEdgeList()) > 0):
-					##single_tax_single_leaf_outnode = False
-			### end add - sourya
-			
-			## comment - sourya
-			#if (single_tax_single_leaf_outnode == False):	#1:	#(len(spec_list) > 1):	# condition add - sourya
-				#Tree_Str_List = Tree_Str_List + '('
-			## end comment - sourya
-			
-			#Tree_Str_List = Tree_Str_List + ','.join("'" + item + "'" for item in spec_list)
-			#Tree_Str_List = Tree_Str_List + ','    
-			
-			#if (single_tax_single_leaf_outnode == False):	# 1:	#(flag_all_leaf_desc == False):	# this condition add - sourya
-				#Tree_Str_List = Tree_Str_List + '('
-			
-			#for i in range(len(outnodes)):
-				#if (Cluster_Info_Dict[outnodes[i]]._GetExploredStatus() == 0):  
-					#Tree_Str_List = Tree_Str_List + PrintNewick(outnodes[i])
-					#if (i < (len(outnodes) - 1)):
-						## we check whether any subsequent node belonging to the outnodes list
-						## is left for traverse
-						#j = i + 1
-						#while (j < len(outnodes)):
-							#if (Cluster_Info_Dict[outnodes[j]]._GetExploredStatus() == 0):  
-								#break
-							#j = j + 1
-						## in this case, we append one comma
-						#if (j < len(outnodes)):
-							#Tree_Str_List = Tree_Str_List + ','      
-			
-			#if (single_tax_single_leaf_outnode == False):	#1:	#(flag_all_leaf_desc == False):	# this condition add - sourya
-				#Tree_Str_List = Tree_Str_List + ')'
-				
-			## comment - sourya
-			#if (single_tax_single_leaf_outnode == False):	#1:	#(len(spec_list) > 1):	# condition add - sourya
-				#Tree_Str_List = Tree_Str_List + ')'
-			## end comment - sourya
-		
 		
 	return Tree_Str_List    
 
@@ -280,7 +157,6 @@ def DeriveCoupletRelations(Curr_tree, Total_Taxa_Count):
 		# this is the level value associated with this node
 		curr_node_level = curr_node.level()
 		# compute the XL value associated with this node
-		#xl_val = (len(curr_node.leaf_nodes()) - 2)
 		xl_val = ((len(curr_node.leaf_nodes()) - 2) * 1.0 ) / Curr_tree_taxa_count
 		
 		# list the leaf and internal children of the current node
@@ -371,14 +247,6 @@ def Write_Output_Tree(Inp_Tree, outfile, FILE_FORMAT, Suppress_Root=False, Unquo
 def Node_Label(inp_node):
 	return str(inp_node.as_newick_string(suppress_edge_lengths=True))
 
-##-----------------------------------------------------
-## this is the taxa list generated from current internal node
-#def GetTaxaUnderInternalNode(curr_node):
-	#taxa_list_from_curr_internal_node = []
-	#for n in curr_node.leaf_nodes():
-		#taxa_list_from_curr_internal_node.append(n.taxon.label)
-	#return taxa_list_from_curr_internal_node
-
 #----------------------------------------
 def Complementary_Reln(inp_reln):
   if (inp_reln == RELATION_R3) or (inp_reln == RELATION_R4):
@@ -399,7 +267,7 @@ this function computes average XL information between a pair of taxa clusters
 				1: cluster containing taxa_clust1[0] and cluster containing taxa_clust2[0] will be compared
 				2: All pairs of elements of taxa_clust1 and taxa_clust2 will be compared
 """
-def FindAvgXL(taxa_clust1, taxa_clust2, DIST_MAT_TYPE, single_elem=2):
+def FindAvgXL(taxa_clust1, taxa_clust2, DIST_MAT_TYPE, single_elem=2, type_of_output=0):
 	"""
 	if single_elem = 0
 	we compare taxa_clust1[0] and taxa_clust2[0], in terms of the preorder level
@@ -444,7 +312,11 @@ def FindAvgXL(taxa_clust1, taxa_clust2, DIST_MAT_TYPE, single_elem=2):
 	
 	# average of this pairwise list is used as the XL approximation
 	if (len(curr_taxa_pair_list) > 0):
-		return (sum(curr_taxa_pair_list) * 1.0) / len(curr_taxa_pair_list)
+		if (type_of_output == 0):
+			return (sum(curr_taxa_pair_list) * 1.0) / len(curr_taxa_pair_list)
+		else:
+			return max(curr_taxa_pair_list)
+			#return min(curr_taxa_pair_list)
 	else:
 		return 0
 	

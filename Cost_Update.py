@@ -142,12 +142,5 @@ def Build_Max_Heap(inp_queue):
 def Sort_Priority_Queue(inp_queue):
 	Build_Max_Heap(inp_queue)
 	heap_size = len(inp_queue)
-	# this code is not required - sourya
-	# all the sorting related stuff iteratively has been performed in the function proc_queue
-	#for idx in range((len(inp_queue) - 1), 0, -1):
-		#Exchange_Elem(inp_queue, 0, idx)
-		#heap_size = heap_size - 1
-		#Max_Heapify(inp_queue, idx, heap_size)
-	# end comment - sourya
   
       
