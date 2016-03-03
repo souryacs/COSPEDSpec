@@ -51,7 +51,7 @@ CURRENT_CLUST_IDX_LIST = []
 
 # this is the debug level
 # set for printing the necessary information
-DEBUG_LEVEL = 2
+DEBUG_LEVEL = 0
 
 MAJORITY_CONSENSUS_RATIO = 0.6
 LEVEL_COUNT_VAL_CONSENSUS_RATIO = 0.7
@@ -62,7 +62,7 @@ TRADITIONAL_NJ = 1
 AGGLO_CLUST = 2
 
 # add - sourya
-MODE_PERCENT = 0.4	#0.5	#0.35
+MODE_PERCENT = 0.4	#0.25 #0.5	#0.35		
 MODE_BIN_COUNT = 40
 
 """
@@ -79,7 +79,7 @@ this is a threshold corresponding to the selection of R3 relation
 for a non conflicting couplet with negative support score of the corresponding relation
 """
 R3Reln_MAJ_THRS = 0.2
-#R3Reln_MAJ_THRS_LOW = 0.15
+R3Reln_MAJ_THRS_LOW = 0.15
 
 """
 for a couplet, relations with frequency of this percentage of the max (consensus) frequency
@@ -220,6 +220,7 @@ class Reln_TaxaPair(object):
 			
 		return 0
 	
+	#----------------------------------
 	"""
 	this function checks whether for a conflicting taxa pair with negative support score
 	R3 relation can be applied between this couplet
@@ -229,6 +230,10 @@ class Reln_TaxaPair(object):
 		level_val_r2 = self.ALL_Reln_Level_Diff_Val_Count[1]
 		lev_diff = math.fabs((level_val_r2 - level_val_r1) * 1.0)
 		fr3 = self.freq_count[RELATION_R3]
+		fr4 = self.freq_count[RELATION_R4]
+		level_count_r1 = self.ALL_Reln_Level_Diff_Info_Count[0]
+		level_count_r2 = self.ALL_Reln_Level_Diff_Info_Count[1]
+		level_count_r3 = self.ALL_Reln_Level_Diff_Info_Count[2]
 		
 		if (DEBUG_LEVEL >= 2):
 			fp = open(outfile, 'a')
@@ -247,68 +252,28 @@ class Reln_TaxaPair(object):
 				fp.close()
 			return True
 		
-		# add - sourya
-		"""
-		if the excess gene count statistic (mode) is 0 for this couplet
-		then surely R3 relation is predominant
-		"""
-		if (self._GetMultiModeXLVal() == 0):
-			if (DEBUG_LEVEL >= 2):
-				fp = open(outfile, 'a')
-				fp.write('\n *** R3 RELATI0N IS THE MAJORITY *** ')  
-				fp.close()
-			return True
-		# end add - sourya
-		
-		## add - sourya
-		#if ((level_val_r2 + level_val_r1) > 0):
-			#if ((round((lev_diff / (level_val_r2 + level_val_r1)), 2)) <= R3Reln_MAJ_THRS_LOW):
-				## the level difference should be very small
-				#if (DEBUG_LEVEL >= 2):
-					#fp = open(outfile, 'a')
-					#fp.write('\n *** R3 RELATI0N IS THE MAJORITY *** ')  
-					#fp.close()
-				#return True
-			#if ((round((lev_diff / (level_val_r2 + level_val_r1)), 2)) <= R3Reln_MAJ_THRS) and (fr3 > min(self.freq_count)):
-				## the level difference should be very small
-				#if (DEBUG_LEVEL >= 2):
-					#fp = open(outfile, 'a')
-					#fp.write('\n *** R3 RELATI0N IS THE MAJORITY *** ')  
-					#fp.close()
-				#return True
-		#else:	#if ((level_val_r2 + level_val_r1) == 0):
-			#if (DEBUG_LEVEL >= 2):
-				#fp = open(outfile, 'a')
-				#fp.write('\n *** R3 RELATI0N IS THE MAJORITY *** ')  
-				#fp.close()
-			#return True
-		## end add - sourya
-		
-		## comment - sourya
 		"""
 		R3 relation should not be the relation with minimum frequency among all constituent relations
-		unless the frequency of R3 relation is at least 20% of the input supported trees
-		this 20\% threshold is empirical
 		"""
-		# modified - sourya
-		#if (fr3 > min(self.freq_count)) or (fr3 >= (0.2 * self.supporting_trees)):
-		#if (fr3 > min(self.freq_count)) and (fr3 >= (0.6 * max(self.freq_count))):
+		# condition 1 - R3 should not be least frequent
 		if (fr3 > min(self.freq_count)):
-			if ((level_val_r2 + level_val_r1) > 0):
-				if ((round((lev_diff / (level_val_r2 + level_val_r1)), 2)) <= R3Reln_MAJ_THRS):
-					# the level difference should be very small
+			# condition 2 - either R4 should not be consensus
+			# or even if it is consensus, the level count corresponding to R3 relation should be consensus
+			if (fr4 < max(self.freq_count)) or ((level_count_r3 > level_count_r1) and (level_count_r3 > level_count_r2)):
+				if ((level_val_r2 + level_val_r1) > 0):
+					if ((round((lev_diff / (level_val_r2 + level_val_r1)), 2)) <= R3Reln_MAJ_THRS):
+						# the level difference should be very small
+						if (DEBUG_LEVEL >= 2):
+							fp = open(outfile, 'a')
+							fp.write('\n *** R3 RELATI0N IS THE MAJORITY *** ')  
+							fp.close()
+						return True
+				else:	#if ((level_val_r2 + level_val_r1) == 0):
 					if (DEBUG_LEVEL >= 2):
 						fp = open(outfile, 'a')
 						fp.write('\n *** R3 RELATI0N IS THE MAJORITY *** ')  
 						fp.close()
 					return True
-			else:	#if ((level_val_r2 + level_val_r1) == 0):
-				if (DEBUG_LEVEL >= 2):
-					fp = open(outfile, 'a')
-					fp.write('\n *** R3 RELATI0N IS THE MAJORITY *** ')  
-					fp.close()
-				return True
-		## end comment - sourya
 
 		if (DEBUG_LEVEL >= 2):
 			fp = open(outfile, 'a')
@@ -317,6 +282,27 @@ class Reln_TaxaPair(object):
 		
 		return False
 		
+	#----------------------------------
+	"""
+	this function checks whether the 'target_reln' (RELATION_R1 or RELATION_R2) 
+	can be established between this couplet
+	"""
+	def CheckHigherPriority(self, target_reln):
+		if (target_reln == RELATION_R1):
+			if (self.freq_count[RELATION_R1] > self.freq_count[RELATION_R2]) and \
+				(self.ALL_Reln_Level_Diff_Info_Count[0] >= self.ALL_Reln_Level_Diff_Info_Count[1]) and \
+					(self.ALL_Reln_Level_Diff_Info_Count[0] > self.ALL_Reln_Level_Diff_Info_Count[2]) and \
+					(self.ALL_Reln_Level_Diff_Val_Count[0] > self.ALL_Reln_Level_Diff_Val_Count[1]):
+				return 1
+		if (target_reln == RELATION_R2):
+			if (self.freq_count[RELATION_R2] > self.freq_count[RELATION_R1]) and \
+				(self.ALL_Reln_Level_Diff_Info_Count[1] >= self.ALL_Reln_Level_Diff_Info_Count[0]) and \
+					(self.ALL_Reln_Level_Diff_Info_Count[1] > self.ALL_Reln_Level_Diff_Info_Count[2]) and \
+					(self.ALL_Reln_Level_Diff_Val_Count[1] > self.ALL_Reln_Level_Diff_Val_Count[0]):
+				return 1
+	
+		return 0
+	
 	#----------------------------------
 	"""
 	these functions adjust the set of allowed relations among a couplet
@@ -441,12 +427,6 @@ class Reln_TaxaPair(object):
 	def _GetMedianXLGeneTrees(self):
 		return numpy.median(numpy.array(self.XL_sum_gene_trees)) # modified - sourya
 
-	def _GetStdevXL(self):
-		return numpy.std(numpy.array(self.XL_sum_gene_trees))
-	
-	def _GetVarianceXL(self):
-		return numpy.var(numpy.array(self.XL_sum_gene_trees))
-	
 	"""
 	function to return the average of XL values for this couplet
 	depending on the user parameters, average, median, or binned average XL is returned
@@ -461,10 +441,11 @@ class Reln_TaxaPair(object):
 		elif (dist_type == 4):
 			return min(self._GetAvgXLGeneTrees(), self._GetMedianXLGeneTrees())
 		elif (dist_type == 5):
-			# modified - sourya
-			#return min(self._GetAvgXLGeneTrees(), self._GetMedianXLGeneTrees(), self._GetMultiModeXLVal())
 			# we return average of these three quantities
-			return (self._GetAvgXLGeneTrees() + self._GetMedianXLGeneTrees() + self._GetMultiModeXLVal()) / 3.0
+			#return (self._GetAvgXLGeneTrees() + self._GetMedianXLGeneTrees() + self._GetMultiModeXLVal()) / 3.0
+			# modified - sourya
+			# average of mean and mode
+			return (self._GetAvgXLGeneTrees() + self._GetMultiModeXLVal()) / 2.0
 		elif (dist_type == 6):
 			return min(self._GetMedianXLGeneTrees(), self._GetMultiModeXLVal())
 		
@@ -595,18 +576,12 @@ class Reln_TaxaPair(object):
 			fp.write('\n relations [type/count/priority_reln/score]: ')
 			for i in range(4):
 				fp.write('\n [' + str(i) + '/' + str(self.freq_count[i]) + '/' + str(self.priority_reln[i]) + '/' + str(self.support_score[i]) + ']')
-			#fp.write('\n Sum of extra lineage **** : ' + str(self.XL_sum_gene_trees))
-			# add - sourya
-			#fp.write('\n XL list **** : ' + str(self.XL_sum_gene_trees))
 			fp.write('\n AVERAGE Sum of extra lineage **** : ' + str(self._GetAvgXLGeneTrees()))
 			fp.write('\n MEDIAN Sum of extra lineage **** : ' + str(self._GetMedianXLGeneTrees()))
 			fp.write('\n Mode Sum of extra lineage **** : ' + str(self._GetMultiModeXLVal()))
-			fp.write('\n Mean(Avg + Mode) of extra lineage **** : ' + str((self._GetMultiModeXLVal() + self._GetAvgXLGeneTrees())/2.0))
-			fp.write('\n Variance of excess lineage: ' + str(self._GetVarianceXL()))
-			fp.write('\n Standard deviation of excess lineage: ' + str(self._GetStdevXL()))
-			# end add - sourya
+			fp.write('\n Mean(Avg + Median + Mode) of extra lineage **** : ' \
+				+ str((self._GetAvgXLGeneTrees() + self._GetMedianXLGeneTrees() + self._GetMultiModeXLVal()) / 3.0))
 			fp.write('\n No of supporting trees : ' + str(self.supporting_trees))
-			#fp.write('\n Normalized XL sum : ' + str(self._GetNormalizedXLSumGeneTrees()))
 			fp.write('\n ALL relation based Level diff info count (r1/r2/r3): ' + str(self.ALL_Reln_Level_Diff_Info_Count))
 			fp.write('\n ALL relation based Level diff Val count (r1/r2/r3): ' + str(self.ALL_Reln_Level_Diff_Val_Count))
 			fp.write('\n R4 relation pseudo (R1/R2) count: ' + str(self.freq_R4_pseudo_R1R2))
@@ -615,11 +590,6 @@ class Reln_TaxaPair(object):
 				fp.write('\n Level Val r1 reln ratio : ' + str((self.ALL_Reln_Level_Diff_Val_Count[0] * 1.0) / (self.ALL_Reln_Level_Diff_Val_Count[0] + self.ALL_Reln_Level_Diff_Val_Count[1])))
 				fp.write('\n Level Val r2 reln ratio : ' + str((self.ALL_Reln_Level_Diff_Val_Count[1] * 1.0) / (self.ALL_Reln_Level_Diff_Val_Count[0] + self.ALL_Reln_Level_Diff_Val_Count[1])))
 				fp.write('\n Level Val r3/r4 reln ratio : ' + str((math.fabs(self.ALL_Reln_Level_Diff_Val_Count[0] - self.ALL_Reln_Level_Diff_Val_Count[1])) / (self.ALL_Reln_Level_Diff_Val_Count[0] + self.ALL_Reln_Level_Diff_Val_Count[1])))
-			#if (sum(self.ALL_Reln_Level_Diff_Info_Count) > 0):
-				#fp.write('\n Level Count r1 reln ratio : ' + str((self.ALL_Reln_Level_Diff_Info_Count[0] * 1.0) / (sum(self.ALL_Reln_Level_Diff_Info_Count))))
-				#fp.write('\n Level Count r2 reln ratio : ' + str((self.ALL_Reln_Level_Diff_Info_Count[1] * 1.0) / (sum(self.ALL_Reln_Level_Diff_Info_Count))))
-				#fp.write('\n Level Count r3 reln ratio : ' + str((self.ALL_Reln_Level_Diff_Info_Count[2] * 1.0) / (sum(self.ALL_Reln_Level_Diff_Info_Count))))
-
 			fp.close()
 			
 		else:

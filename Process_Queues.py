@@ -641,19 +641,19 @@ def CheckCandidateR1R2Reln(clust1_spec_list, clust2_spec_list):
 			if key1 in TaxaPair_Reln_Dict:
 				r1_level_val_ratio = TaxaPair_Reln_Dict[key1]._GetLevelValRatio(0)
 				allowed_reln_list = TaxaPair_Reln_Dict[key1]._GetAllowedRelnList()
-				r1_freq = TaxaPair_Reln_Dict[key1]._GetEdgeWeight(RELATION_R1)
-				r4_freq = TaxaPair_Reln_Dict[key1]._GetEdgeWeight(RELATION_R4)
-				pseudo_r1_freq = TaxaPair_Reln_Dict[key1]._GetFreqPseudoR1(0)
-				pseudo_r2_freq = TaxaPair_Reln_Dict[key1]._GetFreqPseudoR1(1)
-				r4_score = TaxaPair_Reln_Dict[key1]._GetEdgeCost_ConnReln(RELATION_R4)
+				#r1_freq = TaxaPair_Reln_Dict[key1]._GetEdgeWeight(RELATION_R1)
+				#r4_freq = TaxaPair_Reln_Dict[key1]._GetEdgeWeight(RELATION_R4)
+				#pseudo_r1_freq = TaxaPair_Reln_Dict[key1]._GetFreqPseudoR1(0)
+				#pseudo_r2_freq = TaxaPair_Reln_Dict[key1]._GetFreqPseudoR1(1)
+				#r4_score = TaxaPair_Reln_Dict[key1]._GetEdgeCost_ConnReln(RELATION_R4)
 				
 				## add - sourya
 				#if (len(clust1_spec_list) == 1) and (len(clust2_spec_list) == 1):
 					## in the following condition, a strict R1 relation will be established
 					#if (RELATION_R1 in allowed_reln_list):
-						#if ((r1_freq + 2 * (pseudo_r1_freq - pseudo_r2_freq)) >= r4_freq):
+						#if ((r1_freq + pseudo_r1_freq - pseudo_r2_freq) >= r4_freq):
 							#if (TaxaPair_Reln_Dict[key1]._CheckTargetRelnLevelConsensus(RELATION_R1, 1)):
-								#if (round(r1_level_val_ratio, 2) >= R1R2Reln_MAJ_THRS_high):
+								#if (round(r1_level_val_ratio, 2) >= R1R2Reln_MAJ_THRS_very_low):
 									#return 2
 					### otherwise, if the support score is positive for the relation R4, then 
 					### no R1 relation is possible
@@ -683,19 +683,19 @@ def CheckCandidateR1R2Reln(clust1_spec_list, clust2_spec_list):
 			if key2 in TaxaPair_Reln_Dict:
 				r2_level_val_ratio = TaxaPair_Reln_Dict[key2]._GetLevelValRatio(1)
 				allowed_reln_list = TaxaPair_Reln_Dict[key2]._GetAllowedRelnList()
-				r2_freq = TaxaPair_Reln_Dict[key2]._GetEdgeWeight(RELATION_R2)
-				r4_freq = TaxaPair_Reln_Dict[key2]._GetEdgeWeight(RELATION_R4)
-				pseudo_r1_freq = TaxaPair_Reln_Dict[key2]._GetFreqPseudoR1(0)
-				pseudo_r2_freq = TaxaPair_Reln_Dict[key2]._GetFreqPseudoR1(1)
-				r4_score = TaxaPair_Reln_Dict[key2]._GetEdgeCost_ConnReln(RELATION_R4)
+				#r2_freq = TaxaPair_Reln_Dict[key2]._GetEdgeWeight(RELATION_R2)
+				#r4_freq = TaxaPair_Reln_Dict[key2]._GetEdgeWeight(RELATION_R4)
+				#pseudo_r1_freq = TaxaPair_Reln_Dict[key2]._GetFreqPseudoR1(0)
+				#pseudo_r2_freq = TaxaPair_Reln_Dict[key2]._GetFreqPseudoR1(1)
+				#r4_score = TaxaPair_Reln_Dict[key2]._GetEdgeCost_ConnReln(RELATION_R4)
 				
 				## add - sourya
 				#if (len(clust1_spec_list) == 1) and (len(clust2_spec_list) == 1):
 					## in the following condition, a strict R1 relation will be established
 					#if (RELATION_R2 in allowed_reln_list):
-						#if ((r2_freq + 2 * (pseudo_r2_freq - pseudo_r1_freq)) >= r4_freq):
+						#if ((r2_freq + pseudo_r2_freq - pseudo_r1_freq) >= r4_freq):
 							#if (TaxaPair_Reln_Dict[key2]._CheckTargetRelnLevelConsensus(RELATION_R2, 1)):
-								#if (round(r2_level_val_ratio, 2) >= R1R2Reln_MAJ_THRS_high):
+								#if (round(r2_level_val_ratio, 2) >= R1R2Reln_MAJ_THRS_very_low):
 									#return 2
 					### otherwise, if the support score is positive for the relation R4, then 
 					### no R1 relation is possible

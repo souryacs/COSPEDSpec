@@ -162,7 +162,7 @@ def main():
 	
 	if (OUTPUT_FILENAME == ""):
 		dir_of_curr_exec = dir_of_inp_file + 'COSPEDSpec' + '_D' + str(DIST_MAT_TYPE) \
-			+ '_U' + str(DIST_MAT_UPDATE) + '_N' + str(NJ_MERGE_CLUST)
+			+ '_U' + str(DIST_MAT_UPDATE) + '_N' + str(NJ_MERGE_CLUST) + '_Bin40Mode0.4'
 		# create the directory
 		if (os.path.isdir(dir_of_curr_exec) == False):
 			mkdr_cmd = 'mkdir ' + dir_of_curr_exec

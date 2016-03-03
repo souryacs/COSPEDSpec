@@ -4,13 +4,16 @@ import Header
 from Header import *
 import UtilFunc
 from UtilFunc import *
+# add - sourya
+import Process_Queues
+from Process_Queues import *
 
 #-------------------------------------------
 """
 this function fills the distance matrix using normalized excess gene count
 for a particular taxa cluster, it uses one representative taxon of that taxa cluster
 """
-def Fill_DistMat_SingleEntry(DistMat, no_of_clust, clust_species_list, DIST_MAT_TYPE, DIST_MAT_UPDATE):
+def Fill_DistMat_SingleEntry(DistMat, no_of_clust, clust_species_list, DIST_MAT_TYPE):
 	"""
 	check and explore each pair of taxa clusters
 	"""
@@ -82,12 +85,12 @@ def Find_Unique_Min(Norm_DistMat, no_of_clust, clust_species_list):
 				continue
 			
 			if (Norm_DistMat[i][j] < min_val):
-				if (CheckMergeImproperLeaves(clust_species_list, i, j) == False):	# and (CheckMergeImproperLeafandNonleaf(clust_species_list, i, j) == False):	# add - sourya
+				if (CheckMergeImproperLeaves(clust_species_list, i, j) == False):
 					min_val = Norm_DistMat[i][j]
 					min_idx_i = i
 					min_idx_j = j
 			elif (Norm_DistMat[i][j] == min_val):
-				if (CheckMergeImproperLeaves(clust_species_list, i, j) == False):	# and (CheckMergeImproperLeafandNonleaf(clust_species_list, i, j) == False):	# add - sourya
+				if (CheckMergeImproperLeaves(clust_species_list, i, j) == False):
 					if (GetR3RelnLevelConsVal(clust_species_list[i][0], clust_species_list[j][0]) > \
 						GetR3RelnLevelConsVal(clust_species_list[min_idx_i][0], clust_species_list[min_idx_j][0])):
 						min_idx_i = i
@@ -311,12 +314,28 @@ def Merge_Leaves(Curr_tree, clust_species_list, idx1, idx2, taxa_list, Output_Te
 	
 	return Curr_tree
 
+
+# ---------------------------------------
+"""
+this function checks whether taxa1 can be related with taxa2 via the target_reln
+given their relation frequencies and also the level values
+"""
+def Freq_Level_Higher(taxa1, taxa2, target_reln):
+	key1 = (taxa1, taxa2)
+	key2 = (taxa2, taxa1)
+	if key1 in TaxaPair_Reln_Dict:
+		return TaxaPair_Reln_Dict[key1].CheckHigherPriority(target_reln)
+	elif key2 in TaxaPair_Reln_Dict:
+		return TaxaPair_Reln_Dict[key2].CheckHigherPriority(Complementary_Reln(target_reln))
+
+	return 0
+
 #-------------------------------------------
 """
 this function merges one leaf node and another non leaf node (taxa cluster)
 to refine the output species tree
 """
-def Merge_Leaf_NonLeaf(Curr_tree, clust_species_list, leaf_idx, non_leaf_idx, taxa_list, Output_Text_File, DIST_MAT_TYPE, DIST_MAT_UPDATE):
+def Merge_Leaf_NonLeaf(Curr_tree, clust_species_list, leaf_idx, non_leaf_idx, taxa_list, Output_Text_File, DIST_MAT_TYPE):
 	
 	#----------------------------------------------------------------
 	# representing first cluster as A (leaf node) and second cluster as (B,C)
@@ -348,75 +367,7 @@ def Merge_Leaf_NonLeaf(Curr_tree, clust_species_list, leaf_idx, non_leaf_idx, ta
 		fp.write('\n ---- clust2_child2_taxa_list: ' + str(clust2_child2_taxa_list))
 		fp.close()
 	
-	##----------------------------------------------------
-	#"""
-	#case 1 - both B and C are leaves
-	#"""
-	#if (len(clust2_child1_taxa_list) == 1) and (len(clust2_child2_taxa_list) == 1):
-		#FreqR1_A_to_all = GetR1Freq(leaf_taxon, clust2_child1_taxa_list[0], True) \
-			#+ GetR1Freq(leaf_taxon, clust2_child2_taxa_list[0], True)
-		#FreqR1_B_to_all = GetR1Freq(clust2_child1_taxa_list[0], leaf_taxon, True) \
-			#+ GetR1Freq(clust2_child1_taxa_list[0], clust2_child2_taxa_list[0], True)
-		#FreqR1_C_to_all = GetR1Freq(clust2_child2_taxa_list[0], leaf_taxon, True) \
-			#+ GetR1Freq(clust2_child2_taxa_list[0], clust2_child1_taxa_list[0], True)
-		#Freq_List = [FreqR1_A_to_all, FreqR1_B_to_all, FreqR1_C_to_all]
-		#if (FreqR1_A_to_all == max(Freq_List)):
-			## case 1.1 - configuration (A,(B,C)) will be employed
-			#Curr_tree = MergeSubtrees(Curr_tree, leaf_mrca_node, non_leaf_mrca_node, all_taxa_mrca_node, taxa_list, Output_Text_File)
-			#return Curr_tree
-		#elif (FreqR1_B_to_all == max(Freq_List)):
-			## case 1.2 - configuration (B, (A, C)) will be employed
-			#src_subtree_node = leaf_mrca_node
-			#dest_subtree_node = Curr_tree.mrca(taxon_labels=clust2_child2_taxa_list)
-			#Curr_tree = InsertSubTree(Curr_tree, src_subtree_node, dest_subtree_node, Output_Text_File)
-			#return Curr_tree
-		#else:
-			## case 1.3 - configuration (C, (A, B)) will be employed
-			#src_subtree_node = leaf_mrca_node
-			#dest_subtree_node = Curr_tree.mrca(taxon_labels=clust2_child1_taxa_list)
-			#Curr_tree = InsertSubTree(Curr_tree, src_subtree_node, dest_subtree_node, Output_Text_File)
-			#return Curr_tree
-	##----------------------------------------------------
-	#"""
-	#case 2 - B is a leaf and C is a non leaf
-	#"""
-	#if (len(clust2_child1_taxa_list) == 1):
-		#FreqR1_A_to_all = GetR1Freq(leaf_taxon, clust2_child1_taxa_list[0], True) \
-			#+ GetR1Freq(leaf_taxon, clust2_child2_taxa_list[0], True)
-		#FreqR1_B_to_all = GetR1Freq(clust2_child1_taxa_list[0], leaf_taxon, True) \
-			#+ GetR1Freq(clust2_child1_taxa_list[0], clust2_child2_taxa_list[0], True)
-		#Freq_List = [FreqR1_A_to_all, FreqR1_B_to_all]
-		#if (FreqR1_A_to_all == max(Freq_List)):
-			## case 2.1 - configuration (A,(B,C)) will be employed
-			#Curr_tree = MergeSubtrees(Curr_tree, leaf_mrca_node, non_leaf_mrca_node, all_taxa_mrca_node, taxa_list, Output_Text_File)
-			#return Curr_tree
-		#else:	#if (FreqR1_B_to_all == max(Freq_List)):
-			## case 2.2 - configuration (B, (A, C)) will be employed
-			#src_subtree_node = leaf_mrca_node
-			#dest_subtree_node = Curr_tree.mrca(taxon_labels=clust2_child2_taxa_list)
-			#Curr_tree = InsertSubTree(Curr_tree, src_subtree_node, dest_subtree_node, Output_Text_File)
-			#return Curr_tree
-	##----------------------------------------------------
-	#"""
-	#case 3 - C is a leaf and B is a non leaf
-	#"""
-	#if (len(clust2_child2_taxa_list) == 1):
-		#FreqR1_A_to_all = GetR1Freq(leaf_taxon, clust2_child1_taxa_list[0], True) \
-			#+ GetR1Freq(leaf_taxon, clust2_child2_taxa_list[0], True)
-		#FreqR1_C_to_all = GetR1Freq(clust2_child2_taxa_list[0], leaf_taxon, True) \
-			#+ GetR1Freq(clust2_child2_taxa_list[0], clust2_child1_taxa_list[0], True)
-		#Freq_List = [FreqR1_A_to_all, FreqR1_C_to_all]
-		#if (FreqR1_A_to_all == max(Freq_List)):
-			## case 3.1 - configuration (A,(B,C)) will be employed
-			#Curr_tree = MergeSubtrees(Curr_tree, leaf_mrca_node, non_leaf_mrca_node, all_taxa_mrca_node, taxa_list, Output_Text_File)
-			#return Curr_tree
-		#else:	#if (FreqR1_C_to_all == max(Freq_List)):
-			## case 3.2 - configuration (C, (A, B)) will be employed
-			#src_subtree_node = leaf_mrca_node
-			#dest_subtree_node = Curr_tree.mrca(taxon_labels=clust2_child1_taxa_list)
-			#Curr_tree = InsertSubTree(Curr_tree, src_subtree_node, dest_subtree_node, Output_Text_File)
-			#return Curr_tree
-	##----------------------------------------------------
+	#----------------------------------------------------
 
 	# obtain three sets of XL values
 	"""
@@ -447,84 +398,110 @@ def Merge_Leaf_NonLeaf(Curr_tree, clust_species_list, leaf_idx, non_leaf_idx, ta
 
 	XL_list = [XL_clust2_child1_clust2_child2, XL_clust2_child1_leaf, XL_clust2_child2_leaf]
 	
-	if (XL_clust2_child1_clust2_child2 == min(XL_list)):
-		# configuration (A,(B,C)) will be employed
-		Curr_tree = MergeSubtrees(Curr_tree, leaf_mrca_node, non_leaf_mrca_node, all_taxa_mrca_node, taxa_list, Output_Text_File)
-		return Curr_tree
-	elif (XL_clust2_child2_leaf == min(XL_list)): 
-		if (len(clust2_child2_taxa_list) > 1):
-			# configuration (B, (A, C)) will be employed
-			# provided C is not leaf
+	"""
+	Note: A is the external leaf
+	(B,C) is the existing cluster
+	
+	default configuration is (A,(B,C)) 
+	however, we explore other options as well
+	"""
+	
+	# construct single element lists from each representative class
+	A_Single_Taxa_List = []
+	A_Single_Taxa_List.append(leaf_taxon)
+	B_Single_Taxa_List = []
+	B_Single_Taxa_List.append(clust2_child1_taxa_list[0])
+	C_Single_Taxa_List = []
+	C_Single_Taxa_List.append(clust2_child2_taxa_list[0])
+	
+	"""
+	case 1.1 - check if B can be placed externally, and (A,C) together can be placed as siblings
+	this can be done only if C is not a leaf
+	"""
+	# modified - sourya
+	if (len(clust2_child2_taxa_list) > 1):
+		if (CheckR1Reln(B_Single_Taxa_List, A_Single_Taxa_List) > 0) \
+			or ((len(clust2_child1_taxa_list) == 1) and (Freq_Level_Higher(B_Single_Taxa_List[0], A_Single_Taxa_List[0], RELATION_R1) == 1)):
+				
+	#if (len(clust2_child2_taxa_list) > 1) and (CheckR1Reln(B_Single_Taxa_List, A_Single_Taxa_List) > 0):	# comment - sourya
+			"""
+			if R1(B,A) will be predominant compared to R1(A,B)
+			then the configuration (B, (A,C)) can be employed
+			"""
+			if (DEBUG_LEVEL >= 2):
+				fp = open(Output_Text_File, 'a')
+				fp.write('\n *** Case 1 --- Merging Condition (B, (A, C))')
+				fp.close()
 			src_subtree_node = leaf_mrca_node
 			dest_subtree_node = Curr_tree.mrca(taxon_labels=clust2_child2_taxa_list)
 			Curr_tree = InsertSubTree(Curr_tree, src_subtree_node, dest_subtree_node, Output_Text_File)
 			return Curr_tree
-		else:
-			"""
-			# C is a leaf node, and also A
-			# we have to check two possible cases - 1) A, (B,C) default 2) C, (A,B)
-			we inspect relative R1 / R2 frequency, and decide accordingly
-			"""
-			key1 = (leaf_taxon, clust2_child2_taxa_list[0])
-			key2 = (clust2_child2_taxa_list[0], leaf_taxon)
-			if key1 in TaxaPair_Reln_Dict:
-				if (TaxaPair_Reln_Dict[key1]._GetEdgeWeight(RELATION_R2) > TaxaPair_Reln_Dict[key1]._GetEdgeWeight(RELATION_R1)):
-					# configuration (C, (A,B)) will be employed
-					src_subtree_node = leaf_mrca_node
-					dest_subtree_node = Curr_tree.mrca(taxon_labels=clust2_child1_taxa_list)
-					Curr_tree = InsertSubTree(Curr_tree, src_subtree_node, dest_subtree_node, Output_Text_File)
-					return Curr_tree
+
+	"""
+	case 1.2 - check if C can be placed externally, and (A,B) together can be placed as siblings
+	this can be done only if B is not a leaf
+	"""
+	# modified - sourya
+	if (len(clust2_child1_taxa_list) > 1):
+		if (CheckR1Reln(C_Single_Taxa_List, A_Single_Taxa_List) > 0) \
+			or ((len(clust2_child2_taxa_list) == 1) and (Freq_Level_Higher(C_Single_Taxa_List[0], A_Single_Taxa_List[0], RELATION_R1) == 1)):
 				
-			if key2 in TaxaPair_Reln_Dict:
-				if (TaxaPair_Reln_Dict[key2]._GetEdgeWeight(RELATION_R1) > TaxaPair_Reln_Dict[key2]._GetEdgeWeight(RELATION_R2)):
-					# configuration (C, (A,B)) will be employed
-					src_subtree_node = leaf_mrca_node
-					dest_subtree_node = Curr_tree.mrca(taxon_labels=clust2_child1_taxa_list)
-					Curr_tree = InsertSubTree(Curr_tree, src_subtree_node, dest_subtree_node, Output_Text_File)
-					return Curr_tree
-					
-			# otherwise, default A, (B,C) configuration will be employed
-			Curr_tree = MergeSubtrees(Curr_tree, leaf_mrca_node, non_leaf_mrca_node, all_taxa_mrca_node, taxa_list, Output_Text_File)
+	#if (len(clust2_child1_taxa_list) > 1) and (CheckR1Reln(C_Single_Taxa_List, A_Single_Taxa_List) > 0):	# comment - sourya
+			"""
+			if R1(C,A) will be predominant compared to R1(A,C)
+			then the configuration (C, (A,B)) can be employed
+			"""
+			if (DEBUG_LEVEL >= 2):
+				fp = open(Output_Text_File, 'a')
+				fp.write('\n *** Case 2 --- Merging Condition (C, (A, B))')
+				fp.close()
+			src_subtree_node = leaf_mrca_node
+			dest_subtree_node = Curr_tree.mrca(taxon_labels=clust2_child1_taxa_list)
+			Curr_tree = InsertSubTree(Curr_tree, src_subtree_node, dest_subtree_node, Output_Text_File)
+			return Curr_tree
+
+	#---------------------------------------------
+	# XL based check
+
+	if (XL_clust2_child1_clust2_child2 == min(XL_list)):
+		if (DEBUG_LEVEL >= 2):
+			fp = open(Output_Text_File, 'a')
+			fp.write('\n *** Case 3 --- Merging Condition (A, (B, C))')
+			fp.close()
+		# configuration (A,(B,C)) will be employed
+		Curr_tree = MergeSubtrees(Curr_tree, leaf_mrca_node, non_leaf_mrca_node, all_taxa_mrca_node, taxa_list, Output_Text_File)
+		return Curr_tree
+	elif (XL_clust2_child2_leaf == min(XL_list)):
+		if (len(clust2_child2_taxa_list) > 1):
+			# configuration (B, (A, C)) will be employed
+			# provided C is not leaf
+			if (DEBUG_LEVEL >= 2):
+				fp = open(Output_Text_File, 'a')
+				fp.write('\n *** Case 4 --- Merging Condition (B, (A, C))')
+				fp.close()
+			src_subtree_node = leaf_mrca_node
+			dest_subtree_node = Curr_tree.mrca(taxon_labels=clust2_child2_taxa_list)
+			Curr_tree = InsertSubTree(Curr_tree, src_subtree_node, dest_subtree_node, Output_Text_File)
 			return Curr_tree
 		
 	elif (XL_clust2_child1_leaf == min(XL_list)):
 		if (len(clust2_child1_taxa_list) > 1):
 			# configuration (C, (A, B)) will be employed 
 			# provided B is not leaf
+			if (DEBUG_LEVEL >= 2):
+				fp = open(Output_Text_File, 'a')
+				fp.write('\n *** Case 5 --- Merging Condition (C, (A, B))')
+				fp.close()
 			src_subtree_node = leaf_mrca_node
 			dest_subtree_node = Curr_tree.mrca(taxon_labels=clust2_child1_taxa_list)
 			Curr_tree = InsertSubTree(Curr_tree, src_subtree_node, dest_subtree_node, Output_Text_File)
 			return Curr_tree
-		else:
-			"""
-			# B is a leaf node, and also A
-			# we have to check two possible cases - 1) A, (B,C) default 2) B, (A,C)
-			we inspect relative R1 / R2 frequency, and decide accordingly
-			"""
-			key1 = (leaf_taxon, clust2_child1_taxa_list[0])
-			key2 = (clust2_child1_taxa_list[0], leaf_taxon)
-			if key1 in TaxaPair_Reln_Dict:
-				if (TaxaPair_Reln_Dict[key1]._GetEdgeWeight(RELATION_R2) > TaxaPair_Reln_Dict[key1]._GetEdgeWeight(RELATION_R1)):
-					# configuration (B, (A,C)) will be employed
-					src_subtree_node = leaf_mrca_node
-					dest_subtree_node = Curr_tree.mrca(taxon_labels=clust2_child2_taxa_list)
-					Curr_tree = InsertSubTree(Curr_tree, src_subtree_node, dest_subtree_node, Output_Text_File)
-					return Curr_tree
-				
-			if key2 in TaxaPair_Reln_Dict:
-				if (TaxaPair_Reln_Dict[key2]._GetEdgeWeight(RELATION_R1) > TaxaPair_Reln_Dict[key2]._GetEdgeWeight(RELATION_R2)):
-					# configuration (B, (A,C)) will be employed
-					src_subtree_node = leaf_mrca_node
-					dest_subtree_node = Curr_tree.mrca(taxon_labels=clust2_child2_taxa_list)
-					Curr_tree = InsertSubTree(Curr_tree, src_subtree_node, dest_subtree_node, Output_Text_File)
-					return Curr_tree
-					
-			# otherwise, default A, (B,C) configuration will be employed
-			Curr_tree = MergeSubtrees(Curr_tree, leaf_mrca_node, non_leaf_mrca_node, all_taxa_mrca_node, taxa_list, Output_Text_File)
-			return Curr_tree
-			
 	
 	# otherwise configuration (A,(B,C)) will be employed
+	if (DEBUG_LEVEL >= 2):
+		fp = open(Output_Text_File, 'a')
+		fp.write('\n *** Case 6 --- Merging Condition (A, (B, C))')
+		fp.close()
 	Curr_tree = MergeSubtrees(Curr_tree, leaf_mrca_node, non_leaf_mrca_node, all_taxa_mrca_node, taxa_list, Output_Text_File)
 	return Curr_tree
 
@@ -532,7 +509,7 @@ def Merge_Leaf_NonLeaf(Curr_tree, clust_species_list, leaf_idx, non_leaf_idx, ta
 """
 this function merges both non leaf nodes (taxa cluster) to refine the output species tree
 """
-def Merge_Both_NonLeaf(Curr_tree, clust_species_list, idx1, idx2, taxa_list, Output_Text_File, DIST_MAT_TYPE, DIST_MAT_UPDATE):
+def Merge_Both_NonLeaf(Curr_tree, clust_species_list, idx1, idx2, taxa_list, Output_Text_File, DIST_MAT_TYPE):
 	
 	#----------------------------------------------------------------
 	#representing first cluster as (A,B) and second cluster as (C,D)
@@ -578,7 +555,7 @@ def Merge_Both_NonLeaf(Curr_tree, clust_species_list, idx1, idx2, taxa_list, Out
 		fp.write('\n ---- clust2_child2_taxa_list: ' + str(clust2_child2_taxa_list))
 		fp.close()
 	
-	#------------------------------
+	#---------------------------------------------------------
 	# obtain XL values for different taxa sets
 	# XL(A,B)
 	if (len(clust1_child1_taxa_list) == 1) and (len(clust1_child2_taxa_list) == 1):
@@ -626,13 +603,14 @@ def Merge_Both_NonLeaf(Curr_tree, clust_species_list, idx1, idx2, taxa_list, Out
 		fp.write('\n ---- XL_clust1_child2_clust2_child2: ' + str(XL_clust1_child2_clust2_child2))
 		fp.close()
 	
-	
 	if (XL_clust1_child1_clust1_child2 <= XL_clust2_child1_clust2_child2):
+		
 		"""
 		cluster (A,B) will remain intact
 		we have to inspect between three configurations
 		1) ((A,B),(C,D)), 2) (C, (D, (A, B))), 3) (D, (C, (A, B)))
 		"""
+		
 		#  XL(C,:) / 2
 		# modify - sourya
 		# replacing average with maximum operator
@@ -651,7 +629,7 @@ def Merge_Both_NonLeaf(Curr_tree, clust_species_list, idx1, idx2, taxa_list, Out
 			# ((A,B),(C,D)) configuration can be employed
 			if (DEBUG_LEVEL >= 2):
 				fp = open(Output_Text_File, 'a')
-				fp.write('\n *** Default Merging Condition ((A,B),(C,D))')
+				fp.write('\n *** Case 3 - Default Merging Condition ((A,B),(C,D))')
 				fp.close()
 			Curr_tree = MergeSubtrees(Curr_tree, clust1_mrca_node, clust2_mrca_node, all_taxa_mrca_node, taxa_list, Output_Text_File)
 			return Curr_tree
@@ -663,7 +641,7 @@ def Merge_Both_NonLeaf(Curr_tree, clust_species_list, idx1, idx2, taxa_list, Out
 			# configuration (D, (C, (A, B))) can be employed here
 			if (DEBUG_LEVEL >= 2):
 				fp = open(Output_Text_File, 'a')
-				fp.write('\n *** Merging Condition (D, (C, (A, B)))')
+				fp.write('\n *** Case 4 - Merging Condition (D, (C, (A, B)))')
 				fp.close()
 			src_subtree_node = clust1_mrca_node
 			dest_subtree_node = Curr_tree.mrca(taxon_labels=clust2_child1_taxa_list)
@@ -677,7 +655,7 @@ def Merge_Both_NonLeaf(Curr_tree, clust_species_list, idx1, idx2, taxa_list, Out
 			# configuration (C, (D, (A, B))) can be employed here
 			if (DEBUG_LEVEL >= 2):
 				fp = open(Output_Text_File, 'a')
-				fp.write('\n *** Merging Condition (C, (D, (A, B)))')
+				fp.write('\n *** Case 5 - Merging Condition (C, (D, (A, B)))')
 				fp.close()
 			src_subtree_node = clust1_mrca_node
 			dest_subtree_node = Curr_tree.mrca(taxon_labels=clust2_child2_taxa_list)
@@ -685,11 +663,13 @@ def Merge_Both_NonLeaf(Curr_tree, clust_species_list, idx1, idx2, taxa_list, Out
 			return Curr_tree
 		
 	else:
+		
 		"""
 		cluster (C,D) will remain intact
 		we have to inspect between three configurations
 		1) ((A,B),(C,D)), 2) (A, (B, (C, D))), 3) (B, (A, (C, D)))
 		"""
+
 		#  XL(A,:) / 2
 		# modify - sourya
 		# replacing average with maximum operator
@@ -706,7 +686,7 @@ def Merge_Both_NonLeaf(Curr_tree, clust_species_list, idx1, idx2, taxa_list, Out
 		if (XL_clust1_child1_clust1_child2 <= XL_clust1_child1_clust2_avg) and (XL_clust1_child1_clust1_child2 <= XL_clust1_child2_clust2_avg):
 			if (DEBUG_LEVEL >= 2):
 				fp = open(Output_Text_File, 'a')
-				fp.write('\n *** Default Merging Condition ((A,B),(C,D))')
+				fp.write('\n *** Case 8 - Default Merging Condition ((A,B),(C,D))')
 				fp.close()
 			Curr_tree = MergeSubtrees(Curr_tree, clust1_mrca_node, clust2_mrca_node, all_taxa_mrca_node, taxa_list, Output_Text_File)
 			return Curr_tree
@@ -718,7 +698,7 @@ def Merge_Both_NonLeaf(Curr_tree, clust_species_list, idx1, idx2, taxa_list, Out
 			# the configuration (B, (A, (C, D))) can be employed here
 			if (DEBUG_LEVEL >= 2):
 				fp = open(Output_Text_File, 'a')
-				fp.write('\n *** Merging Condition (B, (A, (C, D)))')
+				fp.write('\n *** Case 9 - Merging Condition (B, (A, (C, D)))')
 				fp.close()
 			src_subtree_node = clust2_mrca_node
 			dest_subtree_node = Curr_tree.mrca(taxon_labels=clust1_child1_taxa_list)
@@ -732,108 +712,27 @@ def Merge_Both_NonLeaf(Curr_tree, clust_species_list, idx1, idx2, taxa_list, Out
 			# the configuration (A, (B, (C, D))) can be employed here
 			if (DEBUG_LEVEL >= 2):
 				fp = open(Output_Text_File, 'a')
-				fp.write('\n *** Merging Condition (A, (B, (C, D)))')
+				fp.write('\n *** Case 10 - Merging Condition (A, (B, (C, D)))')
 				fp.close()
 			src_subtree_node = clust2_mrca_node
 			dest_subtree_node = Curr_tree.mrca(taxon_labels=clust1_child2_taxa_list)
 			Curr_tree = InsertSubTree(Curr_tree, src_subtree_node, dest_subtree_node, Output_Text_File)
 			return Curr_tree
 			
-	#-----------------------------------------------------
-	# comment - sourya
-
-	#"""
-	#first we inspect the case when ((A,B),(C,D)) configuration can be employed
-	#"""
-	#XL_list = [XL_clust1_child1_clust1_child2, XL_clust2_child1_clust2_child2, XL_clust1_child1_clust2_child1, \
-		#XL_clust1_child1_clust2_child2, XL_clust1_child2_clust2_child1, XL_clust1_child2_clust2_child2]
-	#XL_list.sort()
-	
-	#"""
-	#if the XL count of (A,B) and (C,D) lie within first three indices
-	#then merge this cluster pair
-	#"""
-	#if (XL_list.index(XL_clust1_child1_clust1_child2) <= 2) and (XL_list.index(XL_clust2_child1_clust2_child2) <= 2):
-		#if (DEBUG_LEVEL >= 2):
-			#fp = open(Output_Text_File, 'a')
-			#fp.write('\n *** Default Merging Condition ((A,B),(C,D))')
-			#fp.close()
-		
-		## ((A,B),(C,D)) configuration can be employed
-		#Curr_tree = MergeSubtrees(Curr_tree, clust1_mrca_node, clust2_mrca_node, all_taxa_mrca_node, taxa_list, Output_Text_File)
-		#return Curr_tree
-	##------------------------------------------------------
-	#"""
-	#otherwise, we have to inspect other configurations
-	#"""
-	## computing the sum of XL values for all different clusters
-	## XL sum for cluster A
-	#sum_XL_clust1_child1 = XL_clust1_child1_clust1_child2 + XL_clust1_child1_clust2_child1 + XL_clust1_child1_clust2_child2
-	## XL sum for cluster B
-	#sum_XL_clust1_child2 = XL_clust1_child1_clust1_child2 + XL_clust1_child2_clust2_child1 + XL_clust1_child2_clust2_child2
-	## XL sum for cluster C
-	#sum_XL_clust2_child1 = XL_clust2_child1_clust2_child2 + XL_clust1_child1_clust2_child1 + XL_clust1_child2_clust2_child1
-	## XL sum for cluster D
-	#sum_XL_clust2_child2 = XL_clust2_child1_clust2_child2 + XL_clust1_child1_clust2_child2 + XL_clust1_child2_clust2_child2
-	
-	#sum_XL_list = [sum_XL_clust1_child1, sum_XL_clust1_child2, sum_XL_clust2_child1, sum_XL_clust2_child2]
-		
-	#if (DEBUG_LEVEL >= 2):
-		#fp = open(Output_Text_File, 'a')
-		#fp.write('\n sum_XL_clust1_child1: ' + str(sum_XL_clust1_child1))
-		#fp.write('\n sum_XL_clust1_child2: ' + str(sum_XL_clust1_child2))
-		#fp.write('\n sum_XL_clust2_child1: ' + str(sum_XL_clust2_child1))
-		#fp.write('\n sum_XL_clust2_child2: ' + str(sum_XL_clust2_child2))
-		#fp.close()
-	
-	#if (sum_XL_clust1_child1 == max(sum_XL_list)):
-		## the configuration (A, (B, (C, D))) can be employed here
-		#if (DEBUG_LEVEL >= 2):
-			#fp = open(Output_Text_File, 'a')
-			#fp.write('\n *** Merging Condition (A, (B, (C, D)))')
-			#fp.close()
-		#src_subtree_node = clust2_mrca_node
-		#dest_subtree_node = Curr_tree.mrca(taxon_labels=clust1_child2_taxa_list)
-		#Curr_tree = InsertSubTree(Curr_tree, src_subtree_node, dest_subtree_node, Output_Text_File)
-	#elif (sum_XL_clust1_child2 == max(sum_XL_list)):
-		## the configuration (B, (A, (C, D))) can be employed here
-		#if (DEBUG_LEVEL >= 2):
-			#fp = open(Output_Text_File, 'a')
-			#fp.write('\n *** Merging Condition (B, (A, (C, D)))')
-			#fp.close()
-		#src_subtree_node = clust2_mrca_node
-		#dest_subtree_node = Curr_tree.mrca(taxon_labels=clust1_child1_taxa_list)
-		#Curr_tree = InsertSubTree(Curr_tree, src_subtree_node, dest_subtree_node, Output_Text_File)
-	#elif (sum_XL_clust2_child1 == max(sum_XL_list)):
-		## configuration (C, (D, (A, B))) can be employed here
-		#if (DEBUG_LEVEL >= 2):
-			#fp = open(Output_Text_File, 'a')
-			#fp.write('\n *** Merging Condition (C, (D, (A, B)))')
-			#fp.close()
-		#src_subtree_node = clust1_mrca_node
-		#dest_subtree_node = Curr_tree.mrca(taxon_labels=clust2_child2_taxa_list)
-		#Curr_tree = InsertSubTree(Curr_tree, src_subtree_node, dest_subtree_node, Output_Text_File)
-	#else:	#if (sum_XL_clust2_child2 == max(sum_XL_list)):
-		## configuration (D, (C, (A, B))) can be employed here
-		#if (DEBUG_LEVEL >= 2):
-			#fp = open(Output_Text_File, 'a')
-			#fp.write('\n *** Merging Condition (D, (C, (A, B)))')
-			#fp.close()
-		#src_subtree_node = clust1_mrca_node
-		#dest_subtree_node = Curr_tree.mrca(taxon_labels=clust2_child1_taxa_list)
-		#Curr_tree = InsertSubTree(Curr_tree, src_subtree_node, dest_subtree_node, Output_Text_File)
-		
-	#return Curr_tree
-	
-	# end comment - sourya
-	#-----------------------------------------------------
-
+	# default merging if none of the above conditions work ((A,B),(C,D)) configuration can be employed
+	if (DEBUG_LEVEL >= 2):
+		fp = open(Output_Text_File, 'a')
+		fp.write('\n *** Case 11 - Default Merging Condition ((A,B),(C,D))')
+		fp.close()
+	Curr_tree = MergeSubtrees(Curr_tree, clust1_mrca_node, clust2_mrca_node, all_taxa_mrca_node, taxa_list, Output_Text_File)
+	return Curr_tree
 
 #-------------------------------------------
 """
 this is a new function to merge taxa clusters for agglomerative clustering - sourya
 """
-def Merge_Cluster_Pair_New(Curr_tree, clust_species_list, min_idx_i, min_idx_j, taxa_list, Output_Text_File, DIST_MAT_TYPE, DIST_MAT_UPDATE):
+def Merge_Cluster_Pair_New(Curr_tree, clust_species_list, min_idx_i, min_idx_j, taxa_list, \
+	Output_Text_File, DIST_MAT_TYPE):
 
 	isleaf_clust1 = IsLeafCluster(clust_species_list, min_idx_i)
 	isleaf_clust2 = IsLeafCluster(clust_species_list, min_idx_j)
@@ -841,13 +740,13 @@ def Merge_Cluster_Pair_New(Curr_tree, clust_species_list, min_idx_i, min_idx_j, 
 		Curr_tree = Merge_Leaves(Curr_tree, clust_species_list, min_idx_i, min_idx_j, taxa_list, Output_Text_File)
 	elif (isleaf_clust1 == True) and (isleaf_clust2 == False):
 		Curr_tree = Merge_Leaf_NonLeaf(Curr_tree, clust_species_list, min_idx_i, min_idx_j, taxa_list, \
-			Output_Text_File, DIST_MAT_TYPE, DIST_MAT_UPDATE)
+			Output_Text_File, DIST_MAT_TYPE)
 	elif (isleaf_clust1 == False) and (isleaf_clust2 == True):
 		Curr_tree = Merge_Leaf_NonLeaf(Curr_tree, clust_species_list, min_idx_j, min_idx_i, taxa_list, \
-			Output_Text_File, DIST_MAT_TYPE, DIST_MAT_UPDATE)
+			Output_Text_File, DIST_MAT_TYPE)
 	elif (isleaf_clust1 == False) and (isleaf_clust2 == False):
 		Curr_tree = Merge_Both_NonLeaf(Curr_tree, clust_species_list, min_idx_i, min_idx_j, taxa_list, \
-			Output_Text_File, DIST_MAT_TYPE, DIST_MAT_UPDATE)
+			Output_Text_File, DIST_MAT_TYPE)
 	
 	return Curr_tree
 
@@ -899,11 +798,11 @@ def ResolveMultifurcation(Curr_tree, clust_species_list, no_of_input_clusters, O
 		fp.close()      
 
 	#---------------------------------------
-	# using single taxon as a representative of the taxa cluster
-	Fill_DistMat_SingleEntry(DistMat, no_of_clust, clust_species_list, DIST_MAT_TYPE, DIST_MAT_UPDATE)
+	## using single taxon as a representative of the taxa cluster
+	#Fill_DistMat_SingleEntry(DistMat, no_of_clust, clust_species_list, DIST_MAT_TYPE)
 
 	# using average information from a taxa cluster
-	#Fill_DistMat_AvgEntry(DistMat, no_of_clust, clust_species_list, DIST_MAT_TYPE)
+	Fill_DistMat_AvgEntry(DistMat, no_of_clust, clust_species_list, DIST_MAT_TYPE)
 	#---------------------------------------
 
 	# loop to execute the agglomerative clustering
@@ -933,7 +832,7 @@ def ResolveMultifurcation(Curr_tree, clust_species_list, no_of_input_clusters, O
 			Curr_tree = Merge_Cluster_Pair(Curr_tree, clust_species_list, min_idx_i, min_idx_j, taxa_list, Output_Text_File)
 		else:
 			Curr_tree = Merge_Cluster_Pair_New(Curr_tree, clust_species_list, min_idx_i, min_idx_j, taxa_list, \
-				Output_Text_File, DIST_MAT_TYPE, DIST_MAT_UPDATE)
+				Output_Text_File, DIST_MAT_TYPE)
 		#---------------------------------------------------------      
 		# remove individual clusters' taxa information from the clust_species_list
 		# and add taxa_list as a new element
