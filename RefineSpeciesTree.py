@@ -398,68 +398,75 @@ def Merge_Leaf_NonLeaf(Curr_tree, clust_species_list, leaf_idx, non_leaf_idx, ta
 
 	XL_list = [XL_clust2_child1_clust2_child2, XL_clust2_child1_leaf, XL_clust2_child2_leaf]
 	
-	"""
-	Note: A is the external leaf
-	(B,C) is the existing cluster
+	#---------------------------------------------
 	
-	default configuration is (A,(B,C)) 
-	however, we explore other options as well
-	"""
+	# comment - sourya - all
 	
-	# construct single element lists from each representative class
-	A_Single_Taxa_List = []
-	A_Single_Taxa_List.append(leaf_taxon)
-	B_Single_Taxa_List = []
-	B_Single_Taxa_List.append(clust2_child1_taxa_list[0])
-	C_Single_Taxa_List = []
-	C_Single_Taxa_List.append(clust2_child2_taxa_list[0])
+	#"""
+	#Note: A is the external leaf
+	#(B,C) is the existing cluster
 	
-	"""
-	case 1.1 - check if B can be placed externally, and (A,C) together can be placed as siblings
-	this can be done only if C is not a leaf
-	"""
-	# modified - sourya
-	if (len(clust2_child2_taxa_list) > 1):
-		if (CheckR1Reln(B_Single_Taxa_List, A_Single_Taxa_List) > 0) \
-			or ((len(clust2_child1_taxa_list) == 1) and (Freq_Level_Higher(B_Single_Taxa_List[0], A_Single_Taxa_List[0], RELATION_R1) == 1)):
+	#default configuration is (A,(B,C)) 
+	#however, we explore other options as well
+	#"""
+	
+	## construct single element lists from each representative class
+	#A_Single_Taxa_List = []
+	#A_Single_Taxa_List.append(leaf_taxon)
+	#B_Single_Taxa_List = []
+	#B_Single_Taxa_List.append(clust2_child1_taxa_list[0])
+	#C_Single_Taxa_List = []
+	#C_Single_Taxa_List.append(clust2_child2_taxa_list[0])
+	
+	#"""
+	#case 1.1 - check if B can be placed externally, and (A,C) together can be placed as siblings
+	#this can be done only if C is not a leaf
+	#"""
+	## modified - sourya
+	#if (len(clust2_child2_taxa_list) > 1):
+		#if (CheckR1Reln(B_Single_Taxa_List, A_Single_Taxa_List) > 0) \
+			#or ((len(clust2_child1_taxa_list) == 1) and (Freq_Level_Higher(B_Single_Taxa_List[0], A_Single_Taxa_List[0], RELATION_R1) == 1)):
 				
-	#if (len(clust2_child2_taxa_list) > 1) and (CheckR1Reln(B_Single_Taxa_List, A_Single_Taxa_List) > 0):	# comment - sourya
-			"""
-			if R1(B,A) will be predominant compared to R1(A,B)
-			then the configuration (B, (A,C)) can be employed
-			"""
-			if (DEBUG_LEVEL >= 2):
-				fp = open(Output_Text_File, 'a')
-				fp.write('\n *** Case 1 --- Merging Condition (B, (A, C))')
-				fp.close()
-			src_subtree_node = leaf_mrca_node
-			dest_subtree_node = Curr_tree.mrca(taxon_labels=clust2_child2_taxa_list)
-			Curr_tree = InsertSubTree(Curr_tree, src_subtree_node, dest_subtree_node, Output_Text_File)
-			return Curr_tree
+	##if (len(clust2_child2_taxa_list) > 1) and (CheckR1Reln(B_Single_Taxa_List, A_Single_Taxa_List) > 0):	# comment - sourya
+			#"""
+			#if R1(B,A) will be predominant compared to R1(A,B)
+			#then the configuration (B, (A,C)) can be employed
+			#"""
+			#if (DEBUG_LEVEL >= 2):
+				#fp = open(Output_Text_File, 'a')
+				#fp.write('\n *** Case 1 --- Merging Condition (B, (A, C))')
+				#fp.close()
+			#src_subtree_node = leaf_mrca_node
+			#dest_subtree_node = Curr_tree.mrca(taxon_labels=clust2_child2_taxa_list)
+			#Curr_tree = InsertSubTree(Curr_tree, src_subtree_node, dest_subtree_node, Output_Text_File)
+			#return Curr_tree
 
-	"""
-	case 1.2 - check if C can be placed externally, and (A,B) together can be placed as siblings
-	this can be done only if B is not a leaf
-	"""
-	# modified - sourya
-	if (len(clust2_child1_taxa_list) > 1):
-		if (CheckR1Reln(C_Single_Taxa_List, A_Single_Taxa_List) > 0) \
-			or ((len(clust2_child2_taxa_list) == 1) and (Freq_Level_Higher(C_Single_Taxa_List[0], A_Single_Taxa_List[0], RELATION_R1) == 1)):
+	#"""
+	#case 1.2 - check if C can be placed externally, and (A,B) together can be placed as siblings
+	#this can be done only if B is not a leaf
+	#"""
+	## modified - sourya
+	#if (len(clust2_child1_taxa_list) > 1):
+		#if (CheckR1Reln(C_Single_Taxa_List, A_Single_Taxa_List) > 0) \
+			#or ((len(clust2_child2_taxa_list) == 1) and (Freq_Level_Higher(C_Single_Taxa_List[0], A_Single_Taxa_List[0], RELATION_R1) == 1)):
 				
-	#if (len(clust2_child1_taxa_list) > 1) and (CheckR1Reln(C_Single_Taxa_List, A_Single_Taxa_List) > 0):	# comment - sourya
-			"""
-			if R1(C,A) will be predominant compared to R1(A,C)
-			then the configuration (C, (A,B)) can be employed
-			"""
-			if (DEBUG_LEVEL >= 2):
-				fp = open(Output_Text_File, 'a')
-				fp.write('\n *** Case 2 --- Merging Condition (C, (A, B))')
-				fp.close()
-			src_subtree_node = leaf_mrca_node
-			dest_subtree_node = Curr_tree.mrca(taxon_labels=clust2_child1_taxa_list)
-			Curr_tree = InsertSubTree(Curr_tree, src_subtree_node, dest_subtree_node, Output_Text_File)
-			return Curr_tree
+	##if (len(clust2_child1_taxa_list) > 1) and (CheckR1Reln(C_Single_Taxa_List, A_Single_Taxa_List) > 0):	# comment - sourya
+			#"""
+			#if R1(C,A) will be predominant compared to R1(A,C)
+			#then the configuration (C, (A,B)) can be employed
+			#"""
+			#if (DEBUG_LEVEL >= 2):
+				#fp = open(Output_Text_File, 'a')
+				#fp.write('\n *** Case 2 --- Merging Condition (C, (A, B))')
+				#fp.close()
+			#src_subtree_node = leaf_mrca_node
+			#dest_subtree_node = Curr_tree.mrca(taxon_labels=clust2_child1_taxa_list)
+			#Curr_tree = InsertSubTree(Curr_tree, src_subtree_node, dest_subtree_node, Output_Text_File)
+			#return Curr_tree
 
+
+	# end comment - sourya - all
+	
 	#---------------------------------------------
 	# XL based check
 

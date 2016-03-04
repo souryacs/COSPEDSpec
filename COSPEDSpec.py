@@ -162,7 +162,7 @@ def main():
 	
 	if (OUTPUT_FILENAME == ""):
 		dir_of_curr_exec = dir_of_inp_file + 'COSPEDSpec' + '_D' + str(DIST_MAT_TYPE) \
-			+ '_U' + str(DIST_MAT_UPDATE) + '_N' + str(NJ_MERGE_CLUST) + '_Bin40Mode0.4'
+			+ '_U' + str(DIST_MAT_UPDATE) + '_N' + str(NJ_MERGE_CLUST) + '_Bin40Mode0.4_New'
 		# create the directory
 		if (os.path.isdir(dir_of_curr_exec) == False):
 			mkdr_cmd = 'mkdir ' + dir_of_curr_exec
@@ -242,25 +242,25 @@ def main():
 
 	data_read_timestamp = time.time()	# note the timestamp
 	#------------------------------------------------------------
-	# add - sourya
-	"""
-	here we compute a distance matrix composed of all the average XL values between individual couplets
-	"""
-	""" 
-	allocate a 2D square matrix of dimension N X N
-	where N = total number of taxa
-	"""
-	XL_DistMat = numpy.zeros((number_of_taxa, number_of_taxa), dtype=numpy.float)
-	for i in range(number_of_taxa - 1):
-		taxa_clust1 = []
-		taxa_clust1.append(COMPLETE_INPUT_TAXA_LIST[i])
-		for j in range(i+1, number_of_taxa):
-			taxa_clust2 = []
-			taxa_clust2.append(COMPLETE_INPUT_TAXA_LIST[j])
-			entry = FindAvgXL(taxa_clust1, taxa_clust2, DIST_MAT_TYPE, 0)
-			XL_DistMat[j][i] = XL_DistMat[i][j] = entry
+	## add - sourya
+	#"""
+	#here we compute a distance matrix composed of all the average XL values between individual couplets
+	#"""
+	#""" 
+	#allocate a 2D square matrix of dimension N X N
+	#where N = total number of taxa
+	#"""
+	#XL_DistMat = numpy.zeros((number_of_taxa, number_of_taxa), dtype=numpy.float)
+	#for i in range(number_of_taxa - 1):
+		#taxa_clust1 = []
+		#taxa_clust1.append(COMPLETE_INPUT_TAXA_LIST[i])
+		#for j in range(i+1, number_of_taxa):
+			#taxa_clust2 = []
+			#taxa_clust2.append(COMPLETE_INPUT_TAXA_LIST[j])
+			#entry = FindAvgXL(taxa_clust1, taxa_clust2, DIST_MAT_TYPE, 0)
+			#XL_DistMat[j][i] = XL_DistMat[i][j] = entry
 	
-	# end add - sourya
+	## end add - sourya
 	#------------------------------------------------------------
 	""" 
 	here, we process all the couplets to extract couplet statistics
@@ -387,20 +387,20 @@ def main():
 
 		if RELATION_R3 in reln_list:
 			if (TaxaPair_Reln_Dict[l]._Check_Reln_R3_Majority(Output_Text_File) == True):
-				"""
-				first check the XL statistics of individual taxon of this couplet
-				"""
-				idx1 = COMPLETE_INPUT_TAXA_LIST.index(l[0])
-				idx2 = COMPLETE_INPUT_TAXA_LIST.index(l[1])
-				taxon1_XL_list = XL_DistMat[idx1,:]
-				taxon2_XL_list = XL_DistMat[idx2,:]
-				mean_taxon1_XL = numpy.mean(taxon1_XL_list)
-				mean_taxon2_XL = numpy.mean(taxon2_XL_list)
-				#if (DEBUG_LEVEL >= 2):
-					#fp = open(Output_Text_File, 'a')
-					#fp.write('\n Couplet 1st taxon : ' + str(l[0]) + ' XL list: ' + str(taxon1_XL_list) + '  ITS MEAN: ' + str(mean_taxon1_XL))
-					#fp.write('\n Couplet 2nd taxon : ' + str(l[1]) + ' XL list: ' + str(taxon2_XL_list) + '  ITS MEAN: ' + str(mean_taxon2_XL))
-					#fp.close()
+				#"""
+				#first check the XL statistics of individual taxon of this couplet
+				#"""
+				#idx1 = COMPLETE_INPUT_TAXA_LIST.index(l[0])
+				#idx2 = COMPLETE_INPUT_TAXA_LIST.index(l[1])
+				#taxon1_XL_list = XL_DistMat[idx1,:]
+				#taxon2_XL_list = XL_DistMat[idx2,:]
+				#mean_taxon1_XL = numpy.mean(taxon1_XL_list)
+				#mean_taxon2_XL = numpy.mean(taxon2_XL_list)
+				##if (DEBUG_LEVEL >= 2):
+					##fp = open(Output_Text_File, 'a')
+					##fp.write('\n Couplet 1st taxon : ' + str(l[0]) + ' XL list: ' + str(taxon1_XL_list) + '  ITS MEAN: ' + str(mean_taxon1_XL))
+					##fp.write('\n Couplet 2nd taxon : ' + str(l[1]) + ' XL list: ' + str(taxon2_XL_list) + '  ITS MEAN: ' + str(mean_taxon2_XL))
+					##fp.close()
 						
 				"""
 				the couplet can related with the 'RELATION_R3' 
@@ -709,10 +709,10 @@ def main():
 	# free the reachability graph (numpy array)
 	del Reachability_Graph_Mat
 	
-	# add - sourya
-	# free the XL_DistMat as well
-	del XL_DistMat
-	# end add - sourya
+	## add - sourya
+	## free the XL_DistMat as well
+	#del XL_DistMat
+	## end add - sourya
     
 #-----------------------------------------------------
 if __name__ == "__main__":

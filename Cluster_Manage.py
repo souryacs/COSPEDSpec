@@ -26,7 +26,6 @@ def ComputeScore(clust1, clust2, Output_Text_File, MPP_SOLVE_METRIC, DIST_MAT_TY
 			key2 = (t2, t1)
 			if key1 in TaxaPair_Reln_Dict:
 				couplet_count = couplet_count + 1
-				# modified - sourya 
 				"""
 				using normalization by the number of support trees
 				"""
@@ -36,7 +35,6 @@ def ComputeScore(clust1, clust2, Output_Text_File, MPP_SOLVE_METRIC, DIST_MAT_TY
 					score_val = score_val + TaxaPair_Reln_Dict[key1]._GetNormalizedXLSumGeneTrees(DIST_MAT_TYPE)
 			elif key2 in TaxaPair_Reln_Dict:
 				couplet_count = couplet_count + 1
-				# modified - sourya 
 				"""
 				using normalization by the number of support trees
 				"""

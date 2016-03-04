@@ -62,7 +62,7 @@ TRADITIONAL_NJ = 1
 AGGLO_CLUST = 2
 
 # add - sourya
-MODE_PERCENT = 0.4	#0.25 #0.5	#0.35		
+MODE_PERCENT = 0.4	#0.35	#0.5	#0.25 
 MODE_BIN_COUNT = 40
 
 """
