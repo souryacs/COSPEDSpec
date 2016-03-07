@@ -9,7 +9,16 @@ import UtilFunc
 from UtilFunc import *
 
 #-----------------------------------------------------
-# this function computes the score (ancestor relation) from clust1 to clust2
+""" 
+this function computes the score of the relation R1 from clust1 to clust2
+@parameters:
+	clust1 and clust2 are taxa clusters containing one or more taxa
+	MPP_SOLVE_METRIC: if 1, priority of relation R1 is used as the score measure
+										if 2, excess gene leaf count (normalized) is used as the score measure
+	DIST_MAT_TYPE: used when XL based score is used
+									variation of XL measure is indicated by this parameter
+	Both score measures are normalized by the number of support trees
+"""
 def ComputeScore(clust1, clust2, Output_Text_File, MPP_SOLVE_METRIC, DIST_MAT_TYPE):
   
 	if (DEBUG_LEVEL > 2):
@@ -26,18 +35,12 @@ def ComputeScore(clust1, clust2, Output_Text_File, MPP_SOLVE_METRIC, DIST_MAT_TY
 			key2 = (t2, t1)
 			if key1 in TaxaPair_Reln_Dict:
 				couplet_count = couplet_count + 1
-				"""
-				using normalization by the number of support trees
-				"""
 				if (MPP_SOLVE_METRIC == 1):
 					score_val = score_val + (TaxaPair_Reln_Dict[key1]._GetConnPrVal(RELATION_R1) * 1.0) / TaxaPair_Reln_Dict[key1]._GetNoSupportTrees()
 				else:
 					score_val = score_val + TaxaPair_Reln_Dict[key1]._GetNormalizedXLSumGeneTrees(DIST_MAT_TYPE)
 			elif key2 in TaxaPair_Reln_Dict:
 				couplet_count = couplet_count + 1
-				"""
-				using normalization by the number of support trees
-				"""
 				if (MPP_SOLVE_METRIC == 1):
 					score_val = score_val + (TaxaPair_Reln_Dict[key2]._GetConnPrVal(RELATION_R2) * 1.0) / TaxaPair_Reln_Dict[key2]._GetNoSupportTrees()
 				else:
@@ -55,9 +58,14 @@ def ComputeScore(clust1, clust2, Output_Text_File, MPP_SOLVE_METRIC, DIST_MAT_TY
 
 #-----------------------------------------------------    
 """ 
-this function solves multiple parenting problem (C2)
+this function solves multiple parent problem (C2)
 by uniquely selecting one particular parent
 the selection is carried out using a scoring mechanism 
+@parameters:
+	MPP_SOLVE_METRIC: if 1, priority of relation R1 is used as the score measure
+										if 2, excess gene leaf count (normalized) is used as the score measure
+	DIST_MAT_TYPE: used when XL based score is used
+									variation of XL measure is indicated by this parameter
 """
 def SolveMultipleParentC2Problem(Output_Text_File, MPP_SOLVE_METRIC, DIST_MAT_TYPE):
 	for cx in Cluster_Info_Dict:
@@ -68,19 +76,28 @@ def SolveMultipleParentC2Problem(Output_Text_File, MPP_SOLVE_METRIC, DIST_MAT_TY
 			Cluster_Info_Dict[cx]._PrintClusterInfo(cx, Output_Text_File)    
 		
 		if (Cluster_Info_Dict[cx]._Get_Indegree() > 1):
-			# at first form the list to contain the score values for all the child nodes
-			# we'll define the score value later
+			"""
+			for the current cluster cx
+			take note of all its parent clusters (indexed by cz in the iterations)
+			"""
 			if (DEBUG_LEVEL > 2):
 				fp = open(Output_Text_File, 'a')
 				fp.write('\n ***** Examining cluster with more than one indegree -- before in edge list fixing: ')
 				fp.close()      
 				Cluster_Info_Dict[cx]._PrintClusterInfo(cx, Output_Text_File)
 			
-			# initialize one dictionary keyed by cluster indices
+			"""
+			initialize one dictionary keyed by cluster indices cz
+			cz signifies one parent node of the current cluster cx
+			"""
 			scoring_dict = dict()
 			for cz in Cluster_Info_Dict[cx]._GetInEdgeList():
 				scoring_dict.setdefault(cz, 0)
-			# now for each of the in clusters, compute the score 
+			
+			"""
+			now for each of the parent clusters cz of the current cluster cx, 
+			compute the R1 score from cz to cx
+			"""
 			for cz in Cluster_Info_Dict[cx]._GetInEdgeList():
 				scoring_dict[cz] = ComputeScore(cz, cx, Output_Text_File, MPP_SOLVE_METRIC, DIST_MAT_TYPE)
 			
@@ -88,8 +105,13 @@ def SolveMultipleParentC2Problem(Output_Text_File, MPP_SOLVE_METRIC, DIST_MAT_TY
 			if (DEBUG_LEVEL > 2):
 				fp = open(Output_Text_File, 'a')      
 			
-			# after computing all such scores for all the in edge clusters
-			# we store the values in a list and sort it
+			"""
+			all such R1 scores from cz to cx (where cz iteratively points to one ancestor of cx)
+			are saved in a list named "Scoring_List"
+			items of this list is a key-value pair
+			key: the cluster cz
+			value: the score measure
+			"""
 			Scoring_List = []
 			for cz in Cluster_Info_Dict[cx]._GetInEdgeList():
 				if (DEBUG_LEVEL > 2):
@@ -97,14 +119,14 @@ def SolveMultipleParentC2Problem(Output_Text_File, MPP_SOLVE_METRIC, DIST_MAT_TY
 				temp_subl = [cz, scoring_dict[cz]]
 				Scoring_List.append(temp_subl)
 			
-			# after obtaining scores for different taxa set belonging under individual child 
-			# nodes of the current node under study, we decide about their ancestral / descendant relationships
 			if (DEBUG_LEVEL > 2):
 				fp.write('\n --- before sorting the scoring list --- ')
 				for i in range(len(Scoring_List)):
 					fp.write('\n elem idx: ' + str(i) + ' cluster label: ' + str(Scoring_List[i][0]) + ' score: ' + str(Scoring_List[i][1]))
 
-			# sort the scoring list
+			"""
+			sort the scoring list in ascending order
+			"""
 			Scoring_List.sort(key=lambda x: x[1])
 			if (DEBUG_LEVEL > 2):
 				fp.write('\n --- after sorting the scoring list --- ')
@@ -116,17 +138,21 @@ def SolveMultipleParentC2Problem(Output_Text_File, MPP_SOLVE_METRIC, DIST_MAT_TY
 				fp.close()
 
 			if (MPP_SOLVE_METRIC == 1):
-				# for the priority measure 
-				# after sorting the scoring list, now remove all except the last element from the 
-				# cx cluster in edge lists
+				"""
+				for the priority measure, remove all except the last element from the 
+				scoring list of the current cluster cx
+				the last element contains the highest priority measure
+				"""
 				for i in range(len(Scoring_List) - 1):
 					target_delete_clust_idx = Scoring_List[i][0]
 					Cluster_Info_Dict[cx]._RemoveInEdge(target_delete_clust_idx)
 					Cluster_Info_Dict[target_delete_clust_idx]._RemoveOutEdge(cx)
 			else:
-				# for the XL based measure
-				# after sorting the scoring list, now remove all except the first element from the 
-				# cx cluster in edge lists
+				"""
+				for the XL based measure, remove all except the first element from the 
+				scoring list of the current cluster cx
+				the first element contains the lowest XL measure
+				"""
 				for i in range(1, len(Scoring_List)):
 					target_delete_clust_idx = Scoring_List[i][0]
 					Cluster_Info_Dict[cx]._RemoveInEdge(target_delete_clust_idx)
@@ -141,7 +167,8 @@ def SolveMultipleParentC2Problem(Output_Text_File, MPP_SOLVE_METRIC, DIST_MAT_TY
 #-----------------------------------------------------        
 """
 this function returns the root node for the final supertree 
-for a depth first forest, multiple root nodes can be possible - so it returns the node with 0 indegree 
+for a depth first forest, multiple root nodes can be possible - 
+so it returns the node with 0 indegree 
 """
 def Extract_Node_Min_Indeg(no_of_clusters):
 	min_indeg_node_idx = -1
@@ -164,7 +191,8 @@ def Extract_Node_Min_Indeg(no_of_clusters):
 
 #-----------------------------------------------------  
 """ 
-this function performs transitive reduction of a graph (transitive closure) and subsequently modifies the cluster of nodes
+this function performs transitive reduction of a graph (transitive closure) 
+and subsequently modifies the cluster of nodes
 in terms of the edge connectivity, to make it free of redunant edges 
 """
 def CompressDirectedGraph(Reachability_Graph_Mat):
@@ -188,8 +216,10 @@ def CompressDirectedGraph(Reachability_Graph_Mat):
 						Cluster_Info_Dict[clust_k]._RemoveInEdge(clust_i)
 
 #-----------------------------------------------------
-""" this function creates one new cluster with the given index value
-also, it inserts one specified taxa in that cluster """
+""" 
+this function creates one new cluster with the given index value
+also, it inserts one specified taxa in that cluster 
+"""
 def Create_Cluster_Taxa_Label(target_clust_idx, target_taxa_label):
 	# create the cluster
 	Cluster_Info_Dict.setdefault(target_clust_idx, Cluster_node(target_taxa_label))
@@ -199,7 +229,9 @@ def Create_Cluster_Taxa_Label(target_clust_idx, target_taxa_label):
 	Taxa_Info_Dict[target_taxa_label]._Set_Clust_Idx_taxa_Part(target_clust_idx)
 
 #-----------------------------------------------------
-""" this function appends one specified taxon on a given cluster """
+""" 
+this function appends one specified taxon on a given cluster 
+"""
 def Append_Cluster_Taxa_Label(target_clust_idx, target_taxa_label):
 	if target_taxa_label not in Cluster_Info_Dict[target_clust_idx]._GetSpeciesList():
 		Cluster_Info_Dict[target_clust_idx]._Append_taxa(target_taxa_label)

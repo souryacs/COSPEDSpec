@@ -4,7 +4,9 @@ import Header
 from Header import *
   
 #------------------------------------------------------
-""" this code section implements the max priority queue """
+""" 
+this code section implements the max priority queue 
+"""
 #------------------------------------------------------
 # parent node of current node
 def Parent(idx):
@@ -21,11 +23,12 @@ def Right(idx):
 #------------------------------------------------------------------------
 # version 2 - this is the latest - sourya - 1st nov 2015
 #-------------------------
-# this function is used for cost based sorting of the inp_queue in the unweighted supertree
-# this function compares two elements of the heap
-# returns 1 if element in the i'th index is lower than element in the j'th index
-# that is, j'th index has higher priority than i'th index
-
+"""
+this function is used for cost based sorting of the inp_queue in the unweighted supertree
+this function compares two elements of the heap
+returns 1 if element in the i'th index is lower than element in the j'th index
+that is, j'th index has higher priority than i'th index
+"""
 def Lower_Score_Value(inp_queue, i, j):
 	key1 = (inp_queue[i][0], inp_queue[i][1])
 	reln1 = inp_queue[i][2]

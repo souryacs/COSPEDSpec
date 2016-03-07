@@ -53,23 +53,19 @@ CURRENT_CLUST_IDX_LIST = []
 # set for printing the necessary information
 DEBUG_LEVEL = 0
 
-MAJORITY_CONSENSUS_RATIO = 0.6
-LEVEL_COUNT_VAL_CONSENSUS_RATIO = 0.7
-
 # variables used to denote whether we use traditional NJ method
 # or use a variant of it, namely the agglomerative clustering
 TRADITIONAL_NJ = 1
 AGGLO_CLUST = 2
 
 # add - sourya
-MODE_PERCENT = 0.4	#0.35	#0.5	#0.25 
+MODE_PERCENT = 0.25	#0.4 #0.35	#0.5 
 MODE_BIN_COUNT = 40
 
 """
 this is a threshold corresponding to the selection of R1 or R2 relation
 for a non conflicting couplet with negative support score of the corresponding relation
 """
-#R1R2Reln_MAJ_THRS = 0.7
 R1R2Reln_MAJ_THRS_high = 0.75	#0.8
 R1R2Reln_MAJ_THRS_low = 0.65	#0.7	#0.8
 R1R2Reln_MAJ_THRS_very_low = 0.6	#0.65
@@ -79,7 +75,6 @@ this is a threshold corresponding to the selection of R3 relation
 for a non conflicting couplet with negative support score of the corresponding relation
 """
 R3Reln_MAJ_THRS = 0.2
-R3Reln_MAJ_THRS_LOW = 0.15
 
 """
 for a couplet, relations with frequency of this percentage of the max (consensus) frequency
@@ -88,22 +83,11 @@ will be included in the score queue
 # it should be fixed at 0.35 - sourya
 PERCENT_MAX_FREQ = 0.35	#0.5	#sourya
 
-#CONSENSUS_FREQ_RATIO_THR = 0.7	#0.8
-
-#PRIORITY_PERCENT = 0.1
-
 """
 this list contains the set of clusters 
 which need to be processed for setting at least one directed out edge to another cluster
 """
 Candidate_Out_Edge_Cluster_List = []
-
-"""
-this threshold is applied at the last stage
-when a sibling is broken in R1 / R2 relations 
-based on the XL value distribution
-"""
-#VARIATION_XL_THR = 0.08	#0.25
 
 #-----------------------------------------------------
 """ 
@@ -289,17 +273,16 @@ class Reln_TaxaPair(object):
 	"""
 	def CheckHigherPriority(self, target_reln):
 		if (target_reln == RELATION_R1):
-			if (self.freq_count[RELATION_R1] > self.freq_count[RELATION_R2]) and \
-				(self.ALL_Reln_Level_Diff_Info_Count[0] >= self.ALL_Reln_Level_Diff_Info_Count[1]) and \
-					(self.ALL_Reln_Level_Diff_Info_Count[0] > self.ALL_Reln_Level_Diff_Info_Count[2]) and \
-					(self.ALL_Reln_Level_Diff_Val_Count[0] > self.ALL_Reln_Level_Diff_Val_Count[1]):
-				return 1
+			if (self._CheckTargetRelnConsensus(RELATION_R1) == True):
+				if (self.ALL_Reln_Level_Diff_Info_Count[0] == max(self.ALL_Reln_Level_Diff_Info_Count)):
+					if (self.ALL_Reln_Level_Diff_Val_Count[0] > self.ALL_Reln_Level_Diff_Val_Count[1]):
+						return 1
+
 		if (target_reln == RELATION_R2):
-			if (self.freq_count[RELATION_R2] > self.freq_count[RELATION_R1]) and \
-				(self.ALL_Reln_Level_Diff_Info_Count[1] >= self.ALL_Reln_Level_Diff_Info_Count[0]) and \
-					(self.ALL_Reln_Level_Diff_Info_Count[1] > self.ALL_Reln_Level_Diff_Info_Count[2]) and \
-					(self.ALL_Reln_Level_Diff_Val_Count[1] > self.ALL_Reln_Level_Diff_Val_Count[0]):
-				return 1
+			if (self._CheckTargetRelnConsensus(RELATION_R2) == True):
+				if (self.ALL_Reln_Level_Diff_Info_Count[1] == max(self.ALL_Reln_Level_Diff_Info_Count)):
+					if (self.ALL_Reln_Level_Diff_Val_Count[1] > self.ALL_Reln_Level_Diff_Val_Count[0]):
+						return 1
 	
 		return 0
 	
@@ -370,20 +353,15 @@ class Reln_TaxaPair(object):
 			return True
 		return False
 	
-	def _CheckTargetRelnLevelConsensus(self, src_reln, only_cons=0):
+	def _CheckTargetRelnLevelConsensus(self, src_reln):
 		reln_array = [RELATION_R1, RELATION_R2, RELATION_R3]
 		src_reln_idx = reln_array.index(src_reln)
 		sum_level_count = sum(self.ALL_Reln_Level_Diff_Info_Count)
 		sum_level_val = self.ALL_Reln_Level_Diff_Val_Count[0] + self.ALL_Reln_Level_Diff_Val_Count[1]
 		if (src_reln_idx == 0) or (src_reln_idx == 1):
-			if (only_cons == 0):
-				if (self.ALL_Reln_Level_Diff_Info_Count[src_reln_idx] >= (MAJORITY_CONSENSUS_RATIO * sum_level_count)) and \
-					(self.ALL_Reln_Level_Diff_Val_Count[src_reln_idx] >= (LEVEL_COUNT_VAL_CONSENSUS_RATIO * sum_level_val)):
-					return 1
-			else:
-				if (self.ALL_Reln_Level_Diff_Info_Count[src_reln_idx] > (0.5 * sum_level_count)) and \
-					(self.ALL_Reln_Level_Diff_Val_Count[src_reln_idx] > (0.5 * sum_level_val)):
-					return 1
+			if (self.ALL_Reln_Level_Diff_Info_Count[src_reln_idx] > (0.5 * sum_level_count)) and \
+				(self.ALL_Reln_Level_Diff_Val_Count[src_reln_idx] > (0.5 * sum_level_val)):
+				return 1
 		else:
 			if (self.ALL_Reln_Level_Diff_Info_Count[2] > (self.ALL_Reln_Level_Diff_Info_Count[0] + self.ALL_Reln_Level_Diff_Info_Count[1])):
 				return 1
@@ -421,11 +399,11 @@ class Reln_TaxaPair(object):
 		#return (self.XL_sum_gene_trees * 1.0) / self.supporting_trees
 		return (sum(self.XL_sum_gene_trees) * 1.0) / self.supporting_trees	# modified - sourya
 	
-	"""
-	this function computes the median of XL measures
-	"""
-	def _GetMedianXLGeneTrees(self):
-		return numpy.median(numpy.array(self.XL_sum_gene_trees)) # modified - sourya
+	#"""
+	#this function computes the median of XL measures
+	#"""
+	#def _GetMedianXLGeneTrees(self):
+		#return numpy.median(numpy.array(self.XL_sum_gene_trees)) # modified - sourya
 
 	"""
 	function to return the average of XL values for this couplet
@@ -434,20 +412,20 @@ class Reln_TaxaPair(object):
 	def _GetNormalizedXLSumGeneTrees(self, dist_type):
 		if (dist_type == 1):
 			return self._GetAvgXLGeneTrees()
+		#elif (dist_type == 2):
+			#return self._GetMedianXLGeneTrees()
+		#elif (dist_type == 3):
+			#return self._GetMultiModeXLVal()
+		#elif (dist_type == 4):
+			#return min(self._GetAvgXLGeneTrees(), self._GetMedianXLGeneTrees())
 		elif (dist_type == 2):
-			return self._GetMedianXLGeneTrees()
-		elif (dist_type == 3):
-			return self._GetMultiModeXLVal()
-		elif (dist_type == 4):
-			return min(self._GetAvgXLGeneTrees(), self._GetMedianXLGeneTrees())
-		elif (dist_type == 5):
 			# we return average of these three quantities
 			#return (self._GetAvgXLGeneTrees() + self._GetMedianXLGeneTrees() + self._GetMultiModeXLVal()) / 3.0
 			# modified - sourya
 			# average of mean and mode
 			return (self._GetAvgXLGeneTrees() + self._GetMultiModeXLVal()) / 2.0
-		elif (dist_type == 6):
-			return min(self._GetMedianXLGeneTrees(), self._GetMultiModeXLVal())
+		#elif (dist_type == 6):
+			#return min(self._GetMedianXLGeneTrees(), self._GetMultiModeXLVal())
 		
 	"""
 	this function computes the binned average of XL values associated for this couplet
@@ -534,11 +512,7 @@ class Reln_TaxaPair(object):
 	corresponding to the relation specified by the variable 'reln_type'
 	"""
 	def _AddEdgeCount(self, reln_type, r=1):
-		# modified - sourya
-		if 0:	#(reln_type == RELATION_R3):
-			self.freq_count[reln_type] = self.freq_count[reln_type] + (2 * r)
-		else:
-			self.freq_count[reln_type] = self.freq_count[reln_type] + r
+		self.freq_count[reln_type] = self.freq_count[reln_type] + r
 	#------------------------------------------
 	"""
 	this function returns the support score of the input relation
@@ -577,7 +551,7 @@ class Reln_TaxaPair(object):
 			for i in range(4):
 				fp.write('\n [' + str(i) + '/' + str(self.freq_count[i]) + '/' + str(self.priority_reln[i]) + '/' + str(self.support_score[i]) + ']')
 			fp.write('\n AVERAGE Sum of extra lineage **** : ' + str(self._GetAvgXLGeneTrees()))
-			fp.write('\n MEDIAN Sum of extra lineage **** : ' + str(self._GetMedianXLGeneTrees()))
+			#fp.write('\n MEDIAN Sum of extra lineage **** : ' + str(self._GetMedianXLGeneTrees()))
 			fp.write('\n Mode Sum of extra lineage **** : ' + str(self._GetMultiModeXLVal()))
 			fp.write('\n Mean(Avg + Median + Mode) of extra lineage **** : ' \
 				+ str((self._GetAvgXLGeneTrees() + self._GetMedianXLGeneTrees() + self._GetMultiModeXLVal()) / 3.0))
@@ -599,7 +573,7 @@ class Reln_TaxaPair(object):
 			for i in range(4):
 				sys.stdout.write('\n [' + str(i) + '/' + str(self.freq_count[i]) + '/' + str(self.priority_reln[i]) + '/' + str(self.support_score[i]) + ']')
 			sys.stdout.write('\n AVERAGE Sum of extra lineage **** : ' + str(self._GetAvgXLGeneTrees()))
-			sys.stdout.write('\n MEDIAN Sum of extra lineage **** : ' + str(self._GetMedianXLGeneTrees()))
+			#sys.stdout.write('\n MEDIAN Sum of extra lineage **** : ' + str(self._GetMedianXLGeneTrees()))
 			sys.stdout.write('\n Mode Sum of extra lineage **** : ' + str(self._GetMultiModeXLVal()))
 			sys.stdout.write('\n No of supporting trees : ' + str(self.supporting_trees))
 			sys.stdout.write('\n ALL relation based Level diff info count (r1/r2/r3): ' + str(self.ALL_Reln_Level_Diff_Info_Count))

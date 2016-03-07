@@ -12,8 +12,8 @@ from Header import *
 
 #-------------------------------------------------------
 """
-this function checks whether the given couplet has a connection already
-in terms of the Reachability_Graph_Mat entries
+this function checks whether the given couplet is already connected
+such connection is indicated by the entries in Reachability_Graph_Mat
 which are filled by the transitive connection
 """
 def CheckExistingConn(clust1, clust2, Reachability_Graph_Mat, target_reln, Output_Text_File):
@@ -24,8 +24,10 @@ def CheckExistingConn(clust1, clust2, Reachability_Graph_Mat, target_reln, Outpu
 		src_taxa_clust_idx = clust1
 		dest_taxa_clust_idx = clust2
 
-	# check whether the taxa pairs are already resolved
-		
+	"""
+	check whether the couplet is already resolved
+	"""
+	
 	# if the taxa pair is already part of the same cluster
 	# that is, they are already related via equivalence partition 
 	# then return
@@ -46,11 +48,17 @@ def CheckExistingConn(clust1, clust2, Reachability_Graph_Mat, target_reln, Outpu
 		if (DEBUG_LEVEL >= 2):
 			fp = open(Output_Text_File, 'a')
 			if (Reachability_Graph_Mat[reach_mat_src_taxa_clust_idx][reach_mat_dest_taxa_clust_idx] == 1):
-				fp.write('\n src cluster: ' + str(src_taxa_clust_idx) + '  dest cluster: ' + str(dest_taxa_clust_idx) + ' target_reln: ' + str(target_reln) + ' already related via relation r1')
+				fp.write('\n src cluster: ' + str(src_taxa_clust_idx) \
+					+ '  dest cluster: ' + str(dest_taxa_clust_idx) \
+						+ ' target_reln: ' + str(target_reln) + ' already related via relation r1')
 			elif (Reachability_Graph_Mat[reach_mat_src_taxa_clust_idx][reach_mat_dest_taxa_clust_idx] == 2):
-				fp.write('\n src cluster: ' + str(src_taxa_clust_idx) + '  dest cluster: ' + str(dest_taxa_clust_idx) + ' target_reln: ' + str(target_reln) + ' already related via relation r4')
+				fp.write('\n src cluster: ' + str(src_taxa_clust_idx) \
+					+ '  dest cluster: ' + str(dest_taxa_clust_idx) \
+						+ ' target_reln: ' + str(target_reln) + ' already related via relation r4')
 			elif (Reachability_Graph_Mat[reach_mat_dest_taxa_clust_idx][reach_mat_src_taxa_clust_idx] == 1):
-				fp.write('\n src cluster: ' + str(src_taxa_clust_idx) + '  dest cluster: ' + str(dest_taxa_clust_idx) + ' target_reln: ' + str(target_reln) + ' already related via relation r2')
+				fp.write('\n src cluster: ' + str(src_taxa_clust_idx) \
+					+ '  dest cluster: ' + str(dest_taxa_clust_idx) \
+						+ ' target_reln: ' + str(target_reln) + ' already related via relation r2')
 			fp.close()
 		return 1
 
@@ -128,21 +136,6 @@ def CheckTransitiveConflict(clust1, clust2, Reachability_Graph_Mat, target_reln,
 					fp.write('\n Conflict  - condition 4')
 					fp.close()
 				return 1
-	
-		#"""
-		#if A->B is to be established
-		#and there exists D><A
-		#then for all B->E
-		#so if E->D or D=E then return a conflict  
-		#"""
-		#for x in Cluster_Info_Dict[src_taxa_clust_idx]._GetNoEdgeList():
-			#for y in Cluster_Info_Dict[dest_taxa_clust_idx]._GetOutEdgeList():
-				#if (x == y) or (Reachability_Graph_Mat[CURRENT_CLUST_IDX_LIST.index(y)][CURRENT_CLUST_IDX_LIST.index(x)] == 1):
-					#if (DEBUG_LEVEL >= 2):
-						#fp = open(Output_Text_File, 'a')
-						#fp.write('\n Conflict  - condition 5')
-						#fp.close()
-					#return 1
 	
 	elif (target_reln == RELATION_R3):
 		"""

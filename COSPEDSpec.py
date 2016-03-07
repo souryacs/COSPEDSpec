@@ -15,9 +15,11 @@ V3.0 - 05.09.2014 - incorporated binary supertree (fully resolved)
 V4.0 - 07.11.2014 - storage space clean, cost update stop, code clean
 V5.0 - 14.04.2015 - 1) phylogenetic header library use for coding, 2) optimization in tree reading procedures
 V6.0 - 01.09.2015 - code clean and comments
+V7.0 - 07.03.2016 - modification of the algorithm, with DAG based species tree formation 
+										and excess gene leaf based updated refinement strategy
 ''' 
 
-## Copyright 2014, 2015 Sourya Bhattacharyya and Jayanta Mukherjee.
+## Copyright 2014, 2015, 2016 Sourya Bhattacharyya and Jayanta Mukherjee.
 ## All rights reserved.
 ##
 ## See "LICENSE.txt" for terms and conditions of usage.
@@ -39,8 +41,10 @@ from RefineSpeciesTree import *
 import Cluster_Manage
 from Cluster_Manage import *
 
-##-----------------------------------------------------
-# this function is useful to parse various options for input data processing
+#-----------------------------------------------------
+"""
+this function is useful to parse various options for input data processing
+"""
 def parse_options():  
 	parser = OptionParser()
 		
@@ -71,37 +75,33 @@ def parse_options():
 				action="store", \
 				dest="dist_mat_type", \
 				default=1, \
-				help="1 - Average of XL \
-				2 - median of XL \
-				3 - mode of XL \
-				4 - min(avg, median) of XL \
-				5 - min(avg , median, mode) of XL \
-				6 - min(median, mode) of XL")     
+				help="1 - Mean of XL \
+				2 - Mean(Average, Mode based Avg) of XL")     
 	
-	parser.add_option("-u", "--update", \
-				type="int", \
-				action="store", \
-				dest="dist_mat_update", \
-				default=1, \
-				help="1 - Use divide by 2 \
-				2 - Use MAX operator \
-				3 - Single XL (preorder)")     
+	#parser.add_option("-u", "--update", \
+				#type="int", \
+				#action="store", \
+				#dest="dist_mat_update", \
+				#default=1, \
+				#help="1 - Use divide by 2 \
+				#2 - Use MAX operator \
+				#3 - Single XL (preorder)")     
 	
-	parser.add_option("-n", "--njmerge", \
-				type="int", \
-				action="store", \
-				dest="nj_merge_clust", \
-				default=2, \
-				help="1 - Use earlier cluster merge\
-				2 - Use new cluster merge")     
+	#parser.add_option("-n", "--njmerge", \
+				#type="int", \
+				#action="store", \
+				#dest="nj_merge_clust", \
+				#default=2, \
+				#help="1 - Use earlier cluster merge\
+				#2 - Use new cluster merge")     
 
-	parser.add_option("-x", "--mppsolvemetric", \
-				type="int", \
-				action="store", \
-				dest="MPP_solve_metric", \
-				default=2, \
-				help="1 - Use priority measure based selection (higher value)\
-				2 - Use XL based selection (lower value)")     
+	#parser.add_option("-x", "--mppsolvemetric", \
+				#type="int", \
+				#action="store", \
+				#dest="MPP_solve_metric", \
+				#default=2, \
+				#help="1 - Use priority measure based selection (higher value)\
+				#2 - Use XL based selection (lower value)")     
 
 	parser.add_option("-r", "--ROOT", \
 			type="string", \
@@ -114,7 +114,9 @@ def parse_options():
 	return opts, args
   
 #-----------------------------------------------------
-# main function
+"""
+main function
+"""
 def main():  
 	opts, args = parse_options()
 
@@ -128,14 +130,14 @@ def main():
 	NO_OF_QUEUES = 1	#opts.no_of_queues  
 	OUTPUT_FILENAME = opts.OUT_FILENAME
 	
-	NJ_RULE_USED = AGGLO_CLUST	#sourya
+	NJ_RULE_USED = AGGLO_CLUST
 	
 	DIST_MAT_TYPE = opts.dist_mat_type
-	DIST_MAT_UPDATE = opts.dist_mat_update
-	NJ_MERGE_CLUST = opts.nj_merge_clust
+	DIST_MAT_UPDATE = 1	#opts.dist_mat_update
+	NJ_MERGE_CLUST = 2	#opts.nj_merge_clust
 	OUTGROUP_TAXON_NAME = opts.outgroup_taxon_name
 	
-	MPP_SOLVE_METRIC = opts.MPP_solve_metric
+	MPP_SOLVE_METRIC = 2	#opts.MPP_solve_metric
 	
 	if (INPUT_FILENAME == ""):
 		print '******** THERE IS NO INPUT FILE SPECIFIED - RETURN **********'
@@ -156,13 +158,15 @@ def main():
 	#if (DEBUG_LEVEL > 1):
 		#print 'dir_of_inp_file: ', dir_of_inp_file  
 	
-	# debug - sourya
-	print '\n\n dir_of_inp_file: ', dir_of_inp_file
-	# end debug - sourya
+	## debug - sourya
+	#print '\n\n dir_of_inp_file: ', dir_of_inp_file
+	## end debug - sourya
 	
 	if (OUTPUT_FILENAME == ""):
-		dir_of_curr_exec = dir_of_inp_file + 'COSPEDSpec' + '_D' + str(DIST_MAT_TYPE) \
-			+ '_U' + str(DIST_MAT_UPDATE) + '_N' + str(NJ_MERGE_CLUST) + '_Bin40Mode0.4_New'
+		#dir_of_curr_exec = dir_of_inp_file + 'COSPEDSpec' + '_D' + str(DIST_MAT_TYPE) + '_U' + str(DIST_MAT_UPDATE) + '_N' + str(NJ_MERGE_CLUST) + '_Bin40Mode0.25_New'
+		dir_of_curr_exec = dir_of_inp_file + 'COSPEDSpec' + '_D' + str(DIST_MAT_TYPE)
+		#if (DIST_MAT_TYPE == 5):
+			#dir_of_curr_exec = dir_of_curr_exec + '_Bin40Mode0.4_New'
 		# create the directory
 		if (os.path.isdir(dir_of_curr_exec) == False):
 			mkdr_cmd = 'mkdir ' + dir_of_curr_exec
@@ -242,42 +246,10 @@ def main():
 
 	data_read_timestamp = time.time()	# note the timestamp
 	#------------------------------------------------------------
-	## add - sourya
-	#"""
-	#here we compute a distance matrix composed of all the average XL values between individual couplets
-	#"""
-	#""" 
-	#allocate a 2D square matrix of dimension N X N
-	#where N = total number of taxa
-	#"""
-	#XL_DistMat = numpy.zeros((number_of_taxa, number_of_taxa), dtype=numpy.float)
-	#for i in range(number_of_taxa - 1):
-		#taxa_clust1 = []
-		#taxa_clust1.append(COMPLETE_INPUT_TAXA_LIST[i])
-		#for j in range(i+1, number_of_taxa):
-			#taxa_clust2 = []
-			#taxa_clust2.append(COMPLETE_INPUT_TAXA_LIST[j])
-			#entry = FindAvgXL(taxa_clust1, taxa_clust2, DIST_MAT_TYPE, 0)
-			#XL_DistMat[j][i] = XL_DistMat[i][j] = entry
-	
-	## end add - sourya
-	#------------------------------------------------------------
 	""" 
 	here, we process all the couplets to extract couplet statistics
 	"""  
 	for l in TaxaPair_Reln_Dict:
-		
-		## debug - sourya
-		#if ((l[0] == 'TUP') and (l[1] == 'OTO')) or ((l[1] == 'TUP') and (l[0] == 'OTO')):
-			#print 'The couplet : (', l[0], ',', l[1], ') and the XL list: ', TaxaPair_Reln_Dict[l]._GetXLList()
-
-		#if ((l[0] == 'TUP') and (l[1] == 'ORY')) or ((l[1] == 'TUP') and (l[0] == 'ORY')):
-			#print 'The couplet : (', l[0], ',', l[1], ') and the XL list: ', TaxaPair_Reln_Dict[l]._GetXLList()
-
-		#if ((l[0] == 'OTO') and (l[1] == 'ORY')) or ((l[1] == 'OTO') and (l[0] == 'ORY')):
-			#print 'The couplet : (', l[0], ',', l[1], ') and the XL list: ', TaxaPair_Reln_Dict[l]._GetXLList()
-		## end debug - sourya
-		
 		"""
 		here we first normalize the R1 and R2 relation based level difference count
 		computed for individual gene trees
@@ -329,11 +301,6 @@ def main():
 		for l in TaxaPair_Reln_Dict:
 			#print 'printing info for the TaxaPair_Reln_Dict key: ', l
 			TaxaPair_Reln_Dict[l]._PrintRelnInfo(l, Output_Text_File)
-	
-			## debug - sourya
-			#if ((l[0] == 'Amborella') and (l[1] == 'Nuphar')) or ((l[1] == 'Amborella') and (l[0] == 'Nuphar')):
-				#TaxaPair_Reln_Dict[l]._PrintRelnInfo(l)
-			## end debug - sourya
 
 	""" 
 	Here we allocate the list / storage space of taxa clusters
@@ -376,7 +343,6 @@ def main():
 
 	data_initialize_timestamp = time.time()	# note the timestamp
 	#------------------------------------------------------------
-	# add - sourya
 	"""
 	here, we first process all couplets which will have R3 relation (sibling)
 	apply the sibling relation
@@ -387,21 +353,6 @@ def main():
 
 		if RELATION_R3 in reln_list:
 			if (TaxaPair_Reln_Dict[l]._Check_Reln_R3_Majority(Output_Text_File) == True):
-				#"""
-				#first check the XL statistics of individual taxon of this couplet
-				#"""
-				#idx1 = COMPLETE_INPUT_TAXA_LIST.index(l[0])
-				#idx2 = COMPLETE_INPUT_TAXA_LIST.index(l[1])
-				#taxon1_XL_list = XL_DistMat[idx1,:]
-				#taxon2_XL_list = XL_DistMat[idx2,:]
-				#mean_taxon1_XL = numpy.mean(taxon1_XL_list)
-				#mean_taxon2_XL = numpy.mean(taxon2_XL_list)
-				##if (DEBUG_LEVEL >= 2):
-					##fp = open(Output_Text_File, 'a')
-					##fp.write('\n Couplet 1st taxon : ' + str(l[0]) + ' XL list: ' + str(taxon1_XL_list) + '  ITS MEAN: ' + str(mean_taxon1_XL))
-					##fp.write('\n Couplet 2nd taxon : ' + str(l[1]) + ' XL list: ' + str(taxon2_XL_list) + '  ITS MEAN: ' + str(mean_taxon2_XL))
-					##fp.close()
-						
 				"""
 				the couplet can related with the 'RELATION_R3' 
 				provided the relation is not established earlier
@@ -592,10 +543,9 @@ def main():
 	outfile.write(Supertree_without_branch_len.as_newick_string())
 	outfile.close()
 
-	# debug - sourya
-	print '\n\n original supertree as newick string: ', Supertree_without_branch_len.as_newick_string()
-	# end debug - sourya
-
+	## debug - sourya
+	#print '\n\n original supertree as newick string: ', Supertree_without_branch_len.as_newick_string()
+	## end debug - sourya
 	#--------------------------------------------------------------
 	fp = open(Output_Text_File, 'a')
 	fp.write('\n --- user provided option for producing strict binary supertree')
@@ -613,23 +563,6 @@ def main():
 		Supertree_without_branch_len.as_newick_string())    
 	fp.close()
 	
-	## add - sourya
-	
-	#"""
-	#before finalizing the species tree, first we check whether there exist an internal node 
-	#consisting of two leaf children
-	#in such a case, we check whether the sibling relation can be broken or not (if required)
-	#"""
-	#Supertree_without_branch_len = Refine_Species_Tree_Siblings(Supertree_without_branch_len, XL_DistMat, Output_Text_File)
-	#Supertree_without_branch_len.update_splits(delete_outdegree_one=True)
-
-	#fp = open(Output_Text_File, 'a')
-	#fp.write('\n --- after refinement of siblings --- output tree without branch length (in newick format): ' + \
-		#Supertree_without_branch_len.as_newick_string())    
-	#fp.close()
-	
-	## end add - sourya
-
 	# final timestamp
 	binary_refinement_timestamp = time.time()      
 
@@ -664,10 +597,10 @@ def main():
 		outfile.close()
 	# end add  -sourya
 
-	# debug - sourya
-	print '\n\n Final species tree: ', Supertree_without_branch_len.as_newick_string()
-	print '\n\n'
-	# end debug - sourya
+	## debug - sourya
+	#print '\n\n Final species tree: ', Supertree_without_branch_len.as_newick_string()
+	#print '\n\n'
+	## end debug - sourya
 
 	# we write the time associated with the execution of this method
 	time_info_filename = dir_of_curr_exec + '/' + 'timing_info.txt'
@@ -697,23 +630,14 @@ def main():
 	# clear the lists associated
 	if (len(Cost_List_Taxa_Pair_Multi_Reln) > 0):
 		Cost_List_Taxa_Pair_Multi_Reln[:] = []
-	#if (len(Cost_List_Taxa_Pair_Single_Reln) > 0):
-		#Cost_List_Taxa_Pair_Single_Reln[:] = []
 	if (len(COMPLETE_INPUT_TAXA_LIST) > 0):
 		COMPLETE_INPUT_TAXA_LIST[:] = []
 	if (len(CURRENT_CLUST_IDX_LIST) > 0):
 		CURRENT_CLUST_IDX_LIST[:] = []
-	#if (len(Sibling_Couplet_List) > 0):
-		#Sibling_Couplet_List[:] = []
 
 	# free the reachability graph (numpy array)
 	del Reachability_Graph_Mat
 	
-	## add - sourya
-	## free the XL_DistMat as well
-	#del XL_DistMat
-	## end add - sourya
-    
 #-----------------------------------------------------
 if __name__ == "__main__":
 	main() 

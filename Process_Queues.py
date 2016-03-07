@@ -387,7 +387,7 @@ def Check_Consensus_R1Reln(clust1_spec_list, clust2_spec_list):
 
 				# comment - sourya
 				#if (((r1_freq + 2 * (pseudo_r1_freq - pseudo_r2_freq)) >= r4_freq) \
-					#or (TaxaPair_Reln_Dict[key1]._CheckTargetRelnLevelConsensus(RELATION_R1, 1))) and (RELATION_R1 in allowed_reln_list):
+					#or (TaxaPair_Reln_Dict[key1]._CheckTargetRelnLevelConsensus(RELATION_R1))) and (RELATION_R1 in allowed_reln_list):
 					#if (round(r1_level_val_ratio, 2) >= R1R2Reln_MAJ_THRS_very_low):	# R1R2Reln_MAJ_THRS_low):	#sourya
 						#return 1
 				# end comment - sourya
@@ -407,7 +407,7 @@ def Check_Consensus_R1Reln(clust1_spec_list, clust2_spec_list):
 
 				# comment - sourya
 				#if (((r2_freq + 2 * (pseudo_r2_freq - pseudo_r1_freq)) >= r4_freq) \
-					#or (TaxaPair_Reln_Dict[key2]._CheckTargetRelnLevelConsensus(RELATION_R2, 1))) and (RELATION_R2 in allowed_reln_list):
+					#or (TaxaPair_Reln_Dict[key2]._CheckTargetRelnLevelConsensus(RELATION_R2))) and (RELATION_R2 in allowed_reln_list):
 					#if (round(r2_level_val_ratio, 2) >= R1R2Reln_MAJ_THRS_very_low):	# R1R2Reln_MAJ_THRS_low):	#sourya
 						#return 1
 				# end comment - sourya
@@ -573,7 +573,7 @@ def CheckHiddenR1R2Reln(Reachability_Graph_Mat, src_taxa_clust_idx, dest_taxa_cl
 this function checks whether R1 relation from clust1_taxa_list to clust2_taxa_list 
 can be established or not, when the consensus relation is R4
 """
-def CheckR1Reln(clust1_spec_list, clust2_spec_list):
+def CheckR1Reln(clust1_spec_list, clust2_spec_list, allowed_reln_check=True):
 	# this value will be returned
 	res = 0
 	# explore all taxa pairs of the cluster pair
@@ -590,7 +590,8 @@ def CheckR1Reln(clust1_spec_list, clust2_spec_list):
 				pseudo_r2_freq = TaxaPair_Reln_Dict[key1]._GetFreqPseudoR1(1)
 				
 				if (((r1_freq + 2 * (pseudo_r1_freq - pseudo_r2_freq)) >= r4_freq) \
-					or (TaxaPair_Reln_Dict[key1]._CheckTargetRelnLevelConsensus(RELATION_R1, 1))) and (RELATION_R1 in allowed_reln_list):
+					or (TaxaPair_Reln_Dict[key1]._CheckTargetRelnLevelConsensus(RELATION_R1))) \
+						and ((RELATION_R1 in allowed_reln_list) or (allowed_reln_check == False)):
 					if (round(r1_level_val_ratio, 2) >= R1R2Reln_MAJ_THRS_low):
 						res = 1
 					elif (round(r1_level_val_ratio, 2) >= R1R2Reln_MAJ_THRS_very_low) and (round(r1_level_val_ratio, 2) < R1R2Reln_MAJ_THRS_low):
@@ -610,7 +611,8 @@ def CheckR1Reln(clust1_spec_list, clust2_spec_list):
 				pseudo_r2_freq = TaxaPair_Reln_Dict[key2]._GetFreqPseudoR1(1)
 
 				if (((r2_freq + 2 * (pseudo_r2_freq - pseudo_r1_freq)) >= r4_freq) \
-					or (TaxaPair_Reln_Dict[key2]._CheckTargetRelnLevelConsensus(RELATION_R2, 1))) and (RELATION_R2 in allowed_reln_list):
+					or (TaxaPair_Reln_Dict[key2]._CheckTargetRelnLevelConsensus(RELATION_R2))) \
+						and ((RELATION_R2 in allowed_reln_list) or (allowed_reln_check == False)):
 					if (round(r2_level_val_ratio, 2) >= R1R2Reln_MAJ_THRS_low):
 						res = 1
 					elif (round(r2_level_val_ratio, 2) >= R1R2Reln_MAJ_THRS_very_low) and (round(r2_level_val_ratio, 2) < R1R2Reln_MAJ_THRS_low):
@@ -652,7 +654,7 @@ def CheckCandidateR1R2Reln(clust1_spec_list, clust2_spec_list):
 					## in the following condition, a strict R1 relation will be established
 					#if (RELATION_R1 in allowed_reln_list):
 						#if ((r1_freq + pseudo_r1_freq - pseudo_r2_freq) >= r4_freq):
-							#if (TaxaPair_Reln_Dict[key1]._CheckTargetRelnLevelConsensus(RELATION_R1, 1)):
+							#if (TaxaPair_Reln_Dict[key1]._CheckTargetRelnLevelConsensus(RELATION_R1)):
 								#if (round(r1_level_val_ratio, 2) >= R1R2Reln_MAJ_THRS_very_low):
 									#return 2
 					### otherwise, if the support score is positive for the relation R4, then 
@@ -664,13 +666,13 @@ def CheckCandidateR1R2Reln(clust1_spec_list, clust2_spec_list):
 				if (RELATION_R1 in allowed_reln_list):
 					if (round(r1_level_val_ratio, 2) >= R1R2Reln_MAJ_THRS_low):
 						return 1
-					if (TaxaPair_Reln_Dict[key1]._CheckTargetRelnLevelConsensus(RELATION_R1, 1)) \
+					if (TaxaPair_Reln_Dict[key1]._CheckTargetRelnLevelConsensus(RELATION_R1)) \
 						and (round(r1_level_val_ratio, 2) >= R1R2Reln_MAJ_THRS_very_low):
 						return 1
 				
 				## add - sourya
 				#if (((r1_freq + 2 * (pseudo_r1_freq - pseudo_r2_freq)) >= r4_freq) \
-					#or (TaxaPair_Reln_Dict[key1]._CheckTargetRelnLevelConsensus(RELATION_R1, 1))) and (RELATION_R1 in allowed_reln_list):
+					#or (TaxaPair_Reln_Dict[key1]._CheckTargetRelnLevelConsensus(RELATION_R1))) and (RELATION_R1 in allowed_reln_list):
 					#if (round(r1_level_val_ratio, 2) >= R1R2Reln_MAJ_THRS_low):
 						#res = 1
 					#else:
@@ -694,7 +696,7 @@ def CheckCandidateR1R2Reln(clust1_spec_list, clust2_spec_list):
 					## in the following condition, a strict R1 relation will be established
 					#if (RELATION_R2 in allowed_reln_list):
 						#if ((r2_freq + pseudo_r2_freq - pseudo_r1_freq) >= r4_freq):
-							#if (TaxaPair_Reln_Dict[key2]._CheckTargetRelnLevelConsensus(RELATION_R2, 1)):
+							#if (TaxaPair_Reln_Dict[key2]._CheckTargetRelnLevelConsensus(RELATION_R2)):
 								#if (round(r2_level_val_ratio, 2) >= R1R2Reln_MAJ_THRS_very_low):
 									#return 2
 					### otherwise, if the support score is positive for the relation R4, then 
@@ -707,14 +709,14 @@ def CheckCandidateR1R2Reln(clust1_spec_list, clust2_spec_list):
 					if (round(r2_level_val_ratio, 2) >= R1R2Reln_MAJ_THRS_low):
 						return 1
 
-					if (TaxaPair_Reln_Dict[key2]._CheckTargetRelnLevelConsensus(RELATION_R2, 1)) \
+					if (TaxaPair_Reln_Dict[key2]._CheckTargetRelnLevelConsensus(RELATION_R2)) \
 						and (round(r2_level_val_ratio, 2) >= R1R2Reln_MAJ_THRS_very_low):
 						return 1
 				# end modify - sourya
 
 				## add - sourya
 				#if (((r2_freq + 2 * (pseudo_r2_freq - pseudo_r1_freq)) >= r4_freq) \
-					#or (TaxaPair_Reln_Dict[key2]._CheckTargetRelnLevelConsensus(RELATION_R2, 1))) and (RELATION_R2 in allowed_reln_list):
+					#or (TaxaPair_Reln_Dict[key2]._CheckTargetRelnLevelConsensus(RELATION_R2))) and (RELATION_R2 in allowed_reln_list):
 					#if (round(r2_level_val_ratio, 2) >= R1R2Reln_MAJ_THRS_low):
 						#res = 1
 					#else:
