@@ -543,9 +543,9 @@ def main():
 	outfile.write(Supertree_without_branch_len.as_newick_string())
 	outfile.close()
 
-	## debug - sourya
-	#print '\n\n original supertree as newick string: ', Supertree_without_branch_len.as_newick_string()
-	## end debug - sourya
+	# debug - sourya
+	print '\n\n original supertree as newick string: ', Supertree_without_branch_len.as_newick_string()
+	# end debug - sourya
 	#--------------------------------------------------------------
 	fp = open(Output_Text_File, 'a')
 	fp.write('\n --- user provided option for producing strict binary supertree')
@@ -597,10 +597,10 @@ def main():
 		outfile.close()
 	# end add  -sourya
 
-	## debug - sourya
-	#print '\n\n Final species tree: ', Supertree_without_branch_len.as_newick_string()
-	#print '\n\n'
-	## end debug - sourya
+	# debug - sourya
+	print '\n\n Final species tree: ', Supertree_without_branch_len.as_newick_string()
+	print '\n\n'
+	# end debug - sourya
 
 	# we write the time associated with the execution of this method
 	time_info_filename = dir_of_curr_exec + '/' + 'timing_info.txt'

@@ -11,6 +11,19 @@ from Conflict_Detect import *
 
 #---------------------------------------------
 """
+this function establishes the R1 relation from the src cluster to the dest cluster
+"""
+def EstablishR1Reln(src_clust, dest_clust, Reachability_Graph_Mat, Output_Text_File):
+	if (DEBUG_LEVEL >= 2):
+		fp = open(Output_Text_File, 'a')
+		fp.write('\n New directed R1 edge from the cluster ' + str(src_clust) + '  to the cluster : ' + str(dest_clust))
+		fp.close()
+	# update the reachability graph
+	Reachability_Graph_Mat = AdjustReachGraph(Reachability_Graph_Mat, src_clust, dest_clust, RELATION_R1)
+	return Reachability_Graph_Mat
+
+#---------------------------------------------
+"""
 this function processes all clusters having candidate out edge information
 """
 def Process_Candidate_Out_Edge_Cluster_List(Reachability_Graph_Mat, DIST_MAT_TYPE, Output_Text_File):
@@ -25,129 +38,172 @@ def Process_Candidate_Out_Edge_Cluster_List(Reachability_Graph_Mat, DIST_MAT_TYP
 		otherwise, place all its candidate R1 clusters as a child to its parent node
 		"""
 		if (Cluster_Info_Dict[cl]._Get_Outdegree() == 0):
+			
+			## comment - sourya
+			#"""
+			#for each cluster Y in the possible candidate R1 cluster list of the cluster cl
+			#check the in edge list 'In' of Y
+			#construct a list "Y_In" which contains all the clusters p in 'In'
+			#such that p and cl are not related by any means
+			#if the size of list "Y_In" is > 0, compute minXL = XL(p, Y) for any p in "Y_In"
+			#if minXL > XL(cl, Y) then add Y as a descendant of cl
+			#else (or even if len("Y_In") == 0), add Y as a child to individual parent clusters of cl
+			#"""
+			#for Y in Cluster_Info_Dict[cl]._GetPossibleR1List():
+				#"""
+				#analyze Y only if there is no already existing connection between cl and Y
+				#"""
+				#if (CheckExistingConn(cl, Y, Reachability_Graph_Mat, RELATION_R1, Output_Text_File) == 0):
+					#if (CheckTransitiveConflict(cl, Y, Reachability_Graph_Mat, RELATION_R1, Output_Text_File) == 0):
+						#if (DEBUG_LEVEL >= 2):
+							#fp = open(Output_Text_File, 'a')
+							#fp.write('\n Processing possible R1 cluster : ' + str(Y)) 
+							#fp.close()
+						#"""
+						#construct "Y_In", as mentioned above
+						#also construct a list to contain XL(p, Y) values
+						#"""
+						#Y_In_Clust_List = []
+						#XL_Y_In_Clust_List = []
+						#for p in Cluster_Info_Dict[Y]._GetInEdgeList():
+							#if (CheckExistingConn(cl, p, Reachability_Graph_Mat, RELATION_R1, Output_Text_File) == 0):
+								#"""
+								#update "Y_In" and the XL list
+								#"""
+								#Y_In_Clust_List.append(p)
+								#XL_Y_In_Clust_List.append(FindAvgXL(Cluster_Info_Dict[p]._GetSpeciesList(), \
+									#Cluster_Info_Dict[Y]._GetSpeciesList(), DIST_MAT_TYPE, 1))
+							
+								#if (len(Y_In_Clust_List) > 0):
+									#"""
+									#minimum of XL values within min_XL_Y_In_Clust_List
+									#"""
+									#min_XL_Y_In_Clust_List = min(XL_Y_In_Clust_List)
+									#"""
+									#excess gene count between the cluster Y and the cluster cl
+									#"""
+									#xl_cl_Y = FindAvgXL(Cluster_Info_Dict[cl]._GetSpeciesList(), \
+										#Cluster_Info_Dict[Y]._GetSpeciesList(), DIST_MAT_TYPE, 1)
+									
+									#if (xl_cl_Y < min_XL_Y_In_Clust_List):
+										## add Y as a descendant of cl
+										#Reachability_Graph_Mat = EstablishR1Reln(cl, Y, Reachability_Graph_Mat, Output_Text_File)
+									#else:
+										#"""
+										#here, assign out edge from all the parent clusters of cl to this cluster Y
+										#"""
+										#for parent_cl in Cluster_Info_Dict[cl]._GetInEdgeList():
+											#if (CheckExistingConn(parent_cl, Y, Reachability_Graph_Mat, RELATION_R1, Output_Text_File) == 0):
+												#if (CheckTransitiveConflict(parent_cl, Y, Reachability_Graph_Mat, RELATION_R1, Output_Text_File) == 0):
+													#Reachability_Graph_Mat = EstablishR1Reln(parent_cl, Y, Reachability_Graph_Mat, Output_Text_File)
+								#else:
+									#"""
+									#here, assign out edge from all the parent clusters of cl to this cluster Y
+									#"""
+									#for parent_cl in Cluster_Info_Dict[cl]._GetInEdgeList():
+										#if (CheckExistingConn(parent_cl, Y, Reachability_Graph_Mat, RELATION_R1, Output_Text_File) == 0):
+											#if (CheckTransitiveConflict(parent_cl, Y, Reachability_Graph_Mat, RELATION_R1, Output_Text_File) == 0):
+												#Reachability_Graph_Mat = EstablishR1Reln(parent_cl, Y, Reachability_Graph_Mat, Output_Text_File)
+			
+			## end comment - sourya
+
 			"""
-			here, assign out edge from the parent cluster of cl to the candidate R1 clusters
+			here, assign out edge from all the parent clusters of cl to this cluster Y
 			"""
 			for parent_cl in Cluster_Info_Dict[cl]._GetInEdgeList():
-				parent_cl_reach_mat_idx = CURRENT_CLUST_IDX_LIST.index(parent_cl)
-				for x in Cluster_Info_Dict[cl]._GetPossibleR1List():
-					x_reach_mat_idx = CURRENT_CLUST_IDX_LIST.index(x)
-					if (CheckExistingConn(parent_cl, x, Reachability_Graph_Mat, RELATION_R1, Output_Text_File) == 0):
-						if (CheckTransitiveConflict(parent_cl, x, Reachability_Graph_Mat, RELATION_R1, Output_Text_File) == 0):
-							if (DEBUG_LEVEL >= 2):
-								fp = open(Output_Text_File, 'a')
-								fp.write('\n The cluster ' + str(cl) + ' has 0 out edge - \
-								 Directed edge from (parent) : ' + str(parent_cl) + '  to the cluster : ' + str(x)) 
-								fp.close()
-							# update the reachability graph
-							Reachability_Graph_Mat = AdjustReachGraph(Reachability_Graph_Mat, parent_cl, x, RELATION_R1)
+				for Y in Cluster_Info_Dict[cl]._GetPossibleR1List():
+					if (CheckExistingConn(parent_cl, Y, Reachability_Graph_Mat, RELATION_R1, Output_Text_File) == 0):
+						if (CheckTransitiveConflict(parent_cl, Y, Reachability_Graph_Mat, RELATION_R1, Output_Text_File) == 0):
+							Reachability_Graph_Mat = EstablishR1Reln(parent_cl, Y, Reachability_Graph_Mat, Output_Text_File)
+			
 		else:
 			"""
-			explore individual children Y of the cluster cl
-			and compute XL of Y with the candidate R1 cluster
+			for each Y belonging to the candidate R1 list of the cluster cl
+			1) compute XL(cl, Y)
+			explore individual children "child_cl" of the cluster cl
+			compute XL(Y, child_cl)
+			and also compute XL(cl, child_cl)
 			"""
-			cl_reach_mat_idx = CURRENT_CLUST_IDX_LIST.index(cl)
-			for x in Cluster_Info_Dict[cl]._GetPossibleR1List():
+			for Y in Cluster_Info_Dict[cl]._GetPossibleR1List():
 				"""
-				analyze x only if there is no already existing connection between cl and x 
+				analyze Y only if there is no already existing connection between cl and Y
 				"""
-				if (CheckExistingConn(cl, x, Reachability_Graph_Mat, RELATION_R1, Output_Text_File) == 0):
-					if (CheckTransitiveConflict(cl, x, Reachability_Graph_Mat, RELATION_R1, Output_Text_File) == 0):
-				
+				if (CheckExistingConn(cl, Y, Reachability_Graph_Mat, RELATION_R1, Output_Text_File) == 0):
+					if (CheckTransitiveConflict(cl, Y, Reachability_Graph_Mat, RELATION_R1, Output_Text_File) == 0):
+
 						if (DEBUG_LEVEL >= 2):
 							fp = open(Output_Text_File, 'a')
-							fp.write('\n Processing possible R1 cluster : ' + str(x)) 
+							fp.write('\n Processing possible R1 cluster : ' + str(Y)) 
 							fp.close()
 						
-						x_reach_mat_idx = CURRENT_CLUST_IDX_LIST.index(x)
 						"""
-						excess gene count between the cluster x and the cluster cl
+						excess gene count between the cluster Y and the cluster cl
 						"""
-						xl_cl_x = FindAvgXL(Cluster_Info_Dict[cl]._GetSpeciesList(), Cluster_Info_Dict[x]._GetSpeciesList(), DIST_MAT_TYPE, 1)
+						xl_cl_Y = FindAvgXL(Cluster_Info_Dict[cl]._GetSpeciesList(),\
+							Cluster_Info_Dict[Y]._GetSpeciesList(), DIST_MAT_TYPE, 1)
 						
 						if (DEBUG_LEVEL >= 2):
 							fp = open(Output_Text_File, 'a')
 							fp.write('\n FINAL Average excess gene count between ' + str(cl) \
-								+ '  and the cluster ' + str(x) + ' is: ' + str(xl_cl_x)) 
+								+ '  and the cluster ' + str(Y) + ' is: ' + str(xl_cl_Y)) 
 							fp.close()
 						
 						"""
-						this is the average of excess gene count between x and every child of cl
+						this is the average of excess gene count between Y and every child of cl
 						"""
-						xl_x_childcl = 0
-						#xl_x_childcl_list = []	# modify - sourya
+						xl_Y_childcl = 0
 						"""
 						this is the average of excess gene count between cl and every child of cl
 						"""
 						xl_cl_childcl = 0
-						#xl_cl_childcl_list = []	# modify - sourya
 						
 						for child_cl in Cluster_Info_Dict[cl]._GetOutEdgeList():
-							curr_xl_x_childcl = FindAvgXL(Cluster_Info_Dict[child_cl]._GetSpeciesList(), \
-								Cluster_Info_Dict[x]._GetSpeciesList(), DIST_MAT_TYPE, 1)
-							# modify - sourya
-							xl_x_childcl = xl_x_childcl + curr_xl_x_childcl
-							#xl_x_childcl_list.append(curr_xl_x_childcl)
+							curr_xl_Y_childcl = FindAvgXL(Cluster_Info_Dict[child_cl]._GetSpeciesList(), \
+								Cluster_Info_Dict[Y]._GetSpeciesList(), DIST_MAT_TYPE, 1)
+							xl_Y_childcl = xl_Y_childcl + curr_xl_Y_childcl
 							
 							curr_xl_cl_childcl = FindAvgXL(Cluster_Info_Dict[child_cl]._GetSpeciesList(), \
 								Cluster_Info_Dict[cl]._GetSpeciesList(), DIST_MAT_TYPE, 1)
-							# modify - sourya
 							xl_cl_childcl = xl_cl_childcl + curr_xl_cl_childcl
-							#xl_cl_childcl_list.append(curr_xl_cl_childcl)
 							
 							if (DEBUG_LEVEL >= 2):
 								fp = open(Output_Text_File, 'a')
 								fp.write('\n excess gene count between (child) ' + str(child_cl) \
-									+ '  and the cluster ' + str(x) + ' is: ' + str(curr_xl_x_childcl)) 
+									+ '  and the cluster ' + str(Y) + ' is: ' + str(curr_xl_Y_childcl)) 
 								fp.write('\n excess gene count between (child) ' + str(child_cl) \
 									+ '  and the cluster ' + str(cl) + ' is: ' + str(curr_xl_cl_childcl)) 
 								fp.close()
-							
-						# modify - sourya
-						xl_x_childcl = (xl_x_childcl * 1.0) / len(Cluster_Info_Dict[cl]._GetOutEdgeList())
+						
+						"""
+						we average the XL measures with respect to all the clusters
+						"""
+						xl_Y_childcl = (xl_Y_childcl * 1.0) / len(Cluster_Info_Dict[cl]._GetOutEdgeList())
 						xl_cl_childcl = (xl_cl_childcl * 1.0) / len(Cluster_Info_Dict[cl]._GetOutEdgeList())
-						## instead of taking the average, we take the minimum
-						#xl_x_childcl = min(xl_x_childcl_list)
-						#xl_cl_childcl = min(xl_cl_childcl_list)
 
 						if (DEBUG_LEVEL >= 2):
 							fp = open(Output_Text_File, 'a')
-							fp.write('\n FINAL Avg excess gene count between (child) clusters and the cluster ' + str(x) + ' is: ' + str(xl_x_childcl)) 
-							fp.write('\n FINAL Avg excess gene count between clusters and the cluster ' + str(cl) + ' is: ' + str(xl_cl_childcl)) 
+							fp.write('\n FINAL Avg excess gene count between (child) clusters and the cluster ' \
+								+ str(Y) + ' is: ' + str(xl_Y_childcl)) 
+							fp.write('\n FINAL Avg excess gene count between clusters and the cluster ' \
+								+ str(cl) + ' is: ' + str(xl_cl_childcl)) 
 							fp.close()
-						
-						# comment - sourya
-						#if (xl_x_childcl < ((xl_cl_x + xl_cl_childcl) / 2.0)):
-						# add - sourya
-						if (xl_x_childcl < xl_cl_x) and (xl_x_childcl < xl_cl_childcl):
+
+						"""
+						the condition for topology (A,(B,C)) is that XL(B,C) should be less than both XL(A,B) and XL(A,C)
+						"""
+						if (xl_Y_childcl < xl_cl_Y) and (xl_Y_childcl < xl_cl_childcl):
 							"""
-							the condition for topology (A,(B,C)) is that XL(B,C) should be less than both XL(A,B) and XL(A,C)
+							Y can be placed as the child of cl
 							"""
-							"""
-							x can be placed as the child of cl
-							"""
-							if (DEBUG_LEVEL >= 2):
-								fp = open(Output_Text_File, 'a')
-								fp.write('\n New directed R1 edge from the cluster ' + str(cl) \
-									+ '  to the cluster : ' + str(x))
-								fp.close()
-							# update the reachability graph
-							Reachability_Graph_Mat = AdjustReachGraph(Reachability_Graph_Mat, cl, x, RELATION_R1)
+							Reachability_Graph_Mat = EstablishR1Reln(cl, Y, Reachability_Graph_Mat, Output_Text_File)
 						else:
 							"""
-							here, assign out edge from all the parent clusters of cl to this cluster x
+							here, assign out edge from all the parent clusters of cl to this cluster Y
 							"""
 							for parent_cl in Cluster_Info_Dict[cl]._GetInEdgeList():
-								parent_cl_reach_mat_idx = CURRENT_CLUST_IDX_LIST.index(parent_cl)
-								if (CheckExistingConn(parent_cl, x, Reachability_Graph_Mat, RELATION_R1, Output_Text_File) == 0):
-									if (CheckTransitiveConflict(parent_cl, x, Reachability_Graph_Mat, RELATION_R1, Output_Text_File) == 0):
-										if (DEBUG_LEVEL >= 2):
-											fp = open(Output_Text_File, 'a')
-											fp.write('\n New directed R1 edge from the (parent) cluster ' \
-												+ str(parent_cl) + '  to the cluster : ' + str(x))
-											fp.close()
-										# update the reachability graph
-										Reachability_Graph_Mat = AdjustReachGraph(Reachability_Graph_Mat, parent_cl, x, RELATION_R1)
+								if (CheckExistingConn(parent_cl, Y, Reachability_Graph_Mat, RELATION_R1, Output_Text_File) == 0):
+									if (CheckTransitiveConflict(parent_cl, Y, Reachability_Graph_Mat, RELATION_R1, Output_Text_File) == 0):
+										Reachability_Graph_Mat = EstablishR1Reln(parent_cl, Y, Reachability_Graph_Mat, Output_Text_File)
 					
 	return Reachability_Graph_Mat
 
