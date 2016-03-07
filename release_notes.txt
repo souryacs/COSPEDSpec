@@ -15,3 +15,13 @@ here, normalized extra gene count (MNEGC criterion) is used for binary refinemen
 also we have modified newick string representation, DFS based parent assignment, etc.
 
 this corresponds to the communicated manuscript in TCBB 2015
+
+
+Version 3.0 
+-------------
+
+The algorithm is completely updated. Here, the supertree construction part is thoroughly modified, 
+in order to apply couplet based relations selectively, between individual cluster pairs. The 
+clusters are used to form a DAG, which subsequently generates the final supertree. The supertree 
+is then refined, using our proposed novel excess gene leaf count measure (computed for individual couplets), 
+to generate the final species tree.
