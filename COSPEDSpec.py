@@ -74,7 +74,7 @@ def parse_options():
 				type="int", \
 				action="store", \
 				dest="dist_mat_type", \
-				default=1, \
+				default=2, \
 				help="1 - Mean of XL \
 				2 - Mean(Average, Mode based Avg) of XL")     
 	
@@ -163,10 +163,21 @@ def main():
 	## end debug - sourya
 	
 	if (OUTPUT_FILENAME == ""):
-		#dir_of_curr_exec = dir_of_inp_file + 'COSPEDSpec' + '_D' + str(DIST_MAT_TYPE) + '_U' + str(DIST_MAT_UPDATE) + '_N' + str(NJ_MERGE_CLUST) + '_Bin40Mode0.25_New'
-		dir_of_curr_exec = dir_of_inp_file + 'COSPEDSpec' + '_D' + str(DIST_MAT_TYPE)
-		#if (DIST_MAT_TYPE == 5):
-			#dir_of_curr_exec = dir_of_curr_exec + '_Bin40Mode0.4_New'
+		# add - sourya
+		if (DIST_MAT_TYPE == 1):
+			dir_of_curr_exec = dir_of_inp_file + 'COSPEDSpec_A'
+		else:
+			dir_of_curr_exec = dir_of_inp_file + 'COSPEDSpec_F'
+		# end add - sourya
+		
+		# comment - sourya
+		#dir_of_curr_exec = dir_of_inp_file + 'COSPEDSpec' + '_D' + str(DIST_MAT_TYPE) \
+			#+ '_U' + str(DIST_MAT_UPDATE) + '_N' + str(NJ_MERGE_CLUST) 
+		#dir_of_curr_exec = dir_of_inp_file + 'COSPEDSpec' + '_D' + str(DIST_MAT_TYPE)
+		#if (DIST_MAT_TYPE == 2):
+			#dir_of_curr_exec = dir_of_curr_exec + '_Bin40Mode0.25_New'
+		# end comment - sourya
+		
 		# create the directory
 		if (os.path.isdir(dir_of_curr_exec) == False):
 			mkdr_cmd = 'mkdir ' + dir_of_curr_exec

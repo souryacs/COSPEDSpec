@@ -568,12 +568,6 @@ def CheckHiddenR1R2Reln(Reachability_Graph_Mat, src_taxa_clust_idx, dest_taxa_cl
 	"""
 	if (len(src_cluster_taxa_list) == 1) and (len(dest_cluster_taxa_list) == 1):
 		res = CheckCandidateR1R2Reln(src_cluster_taxa_list, dest_cluster_taxa_list)
-		
-		## add - sourya
-		#if (res == 2):
-			#return 1, RELATION_R1
-		## end add - sourya
-		
 		if (res == 1):
 			Cluster_Info_Dict[src_taxa_clust_idx]._AddPossibleR1(dest_taxa_clust_idx)
 			if src_taxa_clust_idx not in Candidate_Out_Edge_Cluster_List:
@@ -581,12 +575,6 @@ def CheckHiddenR1R2Reln(Reachability_Graph_Mat, src_taxa_clust_idx, dest_taxa_cl
 			return 0, RELATION_R4
 		
 		res = CheckCandidateR1R2Reln(dest_cluster_taxa_list, src_cluster_taxa_list)
-		
-		## add - sourya
-		#if (res == 2):
-			#return 1, RELATION_R2
-		## end add - sourya
-		
 		if (res == 1):
 			Cluster_Info_Dict[dest_taxa_clust_idx]._AddPossibleR1(src_taxa_clust_idx)
 			if dest_taxa_clust_idx not in Candidate_Out_Edge_Cluster_List:
