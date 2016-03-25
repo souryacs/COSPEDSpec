@@ -165,17 +165,17 @@ def main():
 	if (OUTPUT_FILENAME == ""):
 		# add - sourya
 		if (DIST_MAT_TYPE == 1):
-			dir_of_curr_exec = dir_of_inp_file + 'COSPEDSpec_A'
+			dir_of_curr_exec = dir_of_inp_file + 'COSPEDSpec_A2'
 		else:
-			dir_of_curr_exec = dir_of_inp_file + 'COSPEDSpec_F'
+			dir_of_curr_exec = dir_of_inp_file + 'COSPEDSpec_F2_Bin40Mode0.25'
 		# end add - sourya
 		
 		# comment - sourya
 		#dir_of_curr_exec = dir_of_inp_file + 'COSPEDSpec' + '_D' + str(DIST_MAT_TYPE) \
 			#+ '_U' + str(DIST_MAT_UPDATE) + '_N' + str(NJ_MERGE_CLUST) 
-		#dir_of_curr_exec = dir_of_inp_file + 'COSPEDSpec' + '_D' + str(DIST_MAT_TYPE)
+		##dir_of_curr_exec = dir_of_inp_file + 'COSPEDSpec' + '_D' + str(DIST_MAT_TYPE)
 		#if (DIST_MAT_TYPE == 2):
-			#dir_of_curr_exec = dir_of_curr_exec + '_Bin40Mode0.25_New'
+			#dir_of_curr_exec = dir_of_curr_exec + '_Bin40Mode0.5_New'
 		# end comment - sourya
 		
 		# create the directory
@@ -555,7 +555,8 @@ def main():
 	outfile.close()
 
 	# debug - sourya
-	print '\n\n original supertree as newick string: ', Supertree_without_branch_len.as_newick_string()
+	if 0:
+		print '\n\n original supertree as newick string: ', Supertree_without_branch_len.as_newick_string()
 	# end debug - sourya
 	#--------------------------------------------------------------
 	fp = open(Output_Text_File, 'a')
@@ -609,8 +610,9 @@ def main():
 	# end add  -sourya
 
 	# debug - sourya
-	print '\n\n Final species tree: ', Supertree_without_branch_len.as_newick_string()
-	print '\n\n'
+	if 0:
+		print '\n\n Final species tree: ', Supertree_without_branch_len.as_newick_string()
+		print '\n\n'
 	# end debug - sourya
 
 	# we write the time associated with the execution of this method

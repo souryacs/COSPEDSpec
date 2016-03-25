@@ -52,11 +52,15 @@ def Fill_DistMat_AvgEntry(DistMat, no_of_clust, clust_species_list, DIST_MAT_TYP
 
 #-------------------------------------------
 """
-following function checks if we are merging two leaves 
-which do not have R3 as their consensus relation
-in such a case, the function returns FALSE
+following function checks if we are merging two taxa clusters 
+which should not be merged
 """
-def CheckMergeImproperLeaves(clust_species_list, i, j):
+def CheckMergeImproperClusters(clust_species_list, i, j):
+	"""
+	if both the taxa clusters are leaves
+	which do not have R3 as their consensus relation
+	in such a case, the function returns True
+	"""
 	if (IsLeafCluster(clust_species_list, i) == True) and (IsLeafCluster(clust_species_list, j) == True):
 		key1 = (clust_species_list[i][0], clust_species_list[j][0])
 		key2 = (clust_species_list[j][0], clust_species_list[i][0])
@@ -74,7 +78,7 @@ def CheckMergeImproperLeaves(clust_species_list, i, j):
 this function finds a single minimum from the input matrix
 """
 def Find_Unique_Min(Norm_DistMat, no_of_clust, clust_species_list):
-	# initialize
+	# initialize the values
 	min_val = Norm_DistMat[0][1]
 	min_idx_i = 0
 	min_idx_j = 1
@@ -85,12 +89,12 @@ def Find_Unique_Min(Norm_DistMat, no_of_clust, clust_species_list):
 				continue
 			
 			if (Norm_DistMat[i][j] < min_val):
-				if (CheckMergeImproperLeaves(clust_species_list, i, j) == False):
+				if (CheckMergeImproperClusters(clust_species_list, i, j) == False):
 					min_val = Norm_DistMat[i][j]
 					min_idx_i = i
 					min_idx_j = j
 			elif (Norm_DistMat[i][j] == min_val):
-				if (CheckMergeImproperLeaves(clust_species_list, i, j) == False):
+				if (CheckMergeImproperClusters(clust_species_list, i, j) == False):
 					if (GetR3RelnLevelConsVal(clust_species_list[i][0], clust_species_list[j][0]) > \
 						GetR3RelnLevelConsVal(clust_species_list[min_idx_i][0], clust_species_list[min_idx_j][0])):
 						min_idx_i = i
@@ -330,6 +334,74 @@ def Freq_Level_Higher(taxa1, taxa2, target_reln):
 
 	return 0
 
+##-------------------------------------------
+#"""
+#this function is added - sourya
+#when no of clusters = 3, this function helps to find out the pair of clusters which need to be merged
+#@param: i, j are indices whose clusters are prime contenders for merging
+				#k: other index
+				#clust_species_list: list containing the clusters (single or group of taxa)
+#"""
+#def GetClusterPairMergeIdx_ThreeClusters(i, j, k, clust_species_list, DIST_MAT_TYPE, outfile=None):
+	#"""
+	#Note: A is the external cluster
+	#(B,C) is the existing cluster
+	
+	#default configuration is (A,(B,C)) 
+	#however, we explore other options as well
+	#"""
+	## construct single element lists from each representative class
+	#A_Single_Taxa_List = []
+	#A_Single_Taxa_List.append(clust_species_list[k][0])
+	#B_Single_Taxa_List = []
+	#B_Single_Taxa_List.append(clust_species_list[i][0])
+	#C_Single_Taxa_List = []
+	#C_Single_Taxa_List.append(clust_species_list[j][0])
+	
+	#A_Taxa_List = clust_species_list[k]
+	#B_Taxa_List = clust_species_list[i]
+	#C_Taxa_List = clust_species_list[j]
+	
+	#XL_B_C = FindAvgXL(B_Taxa_List, C_Taxa_List, DIST_MAT_TYPE, 1)
+	#XL_B_A = FindAvgXL(B_Taxa_List, A_Taxa_List, DIST_MAT_TYPE, 1)
+	#XL_C_A = FindAvgXL(C_Taxa_List, A_Taxa_List, DIST_MAT_TYPE, 1)
+	
+	#if (DEBUG_LEVEL >= 2):
+		#if outfile is not None:
+			#fp = open(outfile, 'a')
+			#fp.write('\n ---- A_Taxa_List: ' + str(A_Taxa_List))
+			#fp.write('\n ---- B_Taxa_List: ' + str(B_Taxa_List))
+			#fp.write('\n ---- C_Taxa_List: ' + str(C_Taxa_List))
+			#fp.write('\n ---- XL_B_C: ' + str(XL_B_C))
+			#fp.write('\n ---- XL_B_A: ' + str(XL_B_A))
+			#fp.write('\n ---- XL_C_A: ' + str(XL_C_A))
+			#fp.close()
+	
+	## of course XL(B,C) is minimum
+	## but we check from the XL_B_A and XL_C_A values
+	#if (XL_C_A < XL_B_A):
+		#if (len(C_Taxa_List) > 1):
+			#if ((len(B_Taxa_List) > 1) and (CheckR1Reln(B_Single_Taxa_List, A_Single_Taxa_List) > 0)) \
+				#or ((len(B_Taxa_List) == 1) and (Freq_Level_Higher(B_Single_Taxa_List[0], A_Single_Taxa_List[0], RELATION_R1) == 1)):
+				## the configuration (B, (A,C)) can be employed
+				#if (k < j):
+					#return k, j
+				#else:
+					#return j, k
+	
+	#if (XL_C_A > XL_B_A):
+		#if (len(B_Taxa_List) > 1):
+			#if ((len(C_Taxa_List) > 1) and (CheckR1Reln(C_Single_Taxa_List, A_Single_Taxa_List) > 0)) \
+				#or ((len(C_Taxa_List) == 1) and (Freq_Level_Higher(C_Single_Taxa_List[0], A_Single_Taxa_List[0], RELATION_R1) == 1)):
+				## the configuration (C, (A,B)) can be employed
+				#if (k < i):
+					#return k, i
+				#else:
+					#return i, k
+	
+	## default condition
+	#return i, j
+
 #-------------------------------------------
 """
 this function merges one leaf node and another non leaf node (taxa cluster)
@@ -415,16 +487,14 @@ def Merge_Leaf_NonLeaf(Curr_tree, clust_species_list, leaf_idx, non_leaf_idx, ta
 	C_Single_Taxa_List = []
 	C_Single_Taxa_List.append(clust2_child2_taxa_list[0])
 	
+	#---------------------------------------------------
 	"""
 	case 1.1 - check if B can be placed externally, and (A,C) together can be placed as siblings
 	this can be done only if C is not a leaf
 	"""
-	# modified - sourya
 	if (len(clust2_child2_taxa_list) > 1):
 		if ((len(clust2_child1_taxa_list) > 1) and (CheckR1Reln(B_Single_Taxa_List, A_Single_Taxa_List) > 0)) \
 			or ((len(clust2_child1_taxa_list) == 1) and (Freq_Level_Higher(B_Single_Taxa_List[0], A_Single_Taxa_List[0], RELATION_R1) == 1)):
-				
-	#if (len(clust2_child2_taxa_list) > 1) and (CheckR1Reln(B_Single_Taxa_List, A_Single_Taxa_List) > 0):	# comment - sourya
 			"""
 			if R1(B,A) will be predominant compared to R1(A,B)
 			then the configuration (B, (A,C)) can be employed
@@ -442,12 +512,9 @@ def Merge_Leaf_NonLeaf(Curr_tree, clust_species_list, leaf_idx, non_leaf_idx, ta
 	case 1.2 - check if C can be placed externally, and (A,B) together can be placed as siblings
 	this can be done only if B is not a leaf
 	"""
-	# modified - sourya
 	if (len(clust2_child1_taxa_list) > 1):
 		if ((len(clust2_child2_taxa_list) > 1) and (CheckR1Reln(C_Single_Taxa_List, A_Single_Taxa_List) > 0)) \
 			or ((len(clust2_child2_taxa_list) == 1) and (Freq_Level_Higher(C_Single_Taxa_List[0], A_Single_Taxa_List[0], RELATION_R1) == 1)):
-				
-	#if (len(clust2_child1_taxa_list) > 1) and (CheckR1Reln(C_Single_Taxa_List, A_Single_Taxa_List) > 0):	# comment - sourya
 			"""
 			if R1(C,A) will be predominant compared to R1(A,C)
 			then the configuration (C, (A,B)) can be employed
@@ -897,17 +964,33 @@ def ResolveMultifurcation(Curr_tree, clust_species_list, no_of_input_clusters, O
 		fp.close()      
 
 	#---------------------------------------
-	## using single taxon as a representative of the taxa cluster
-	#Fill_DistMat_SingleEntry(DistMat, no_of_clust, clust_species_list, DIST_MAT_TYPE)
+	# using single taxon as a representative of the taxa cluster
+	Fill_DistMat_SingleEntry(DistMat, no_of_clust, clust_species_list, DIST_MAT_TYPE)
 
 	# using average information from a taxa cluster
-	Fill_DistMat_AvgEntry(DistMat, no_of_clust, clust_species_list, DIST_MAT_TYPE)
+	#Fill_DistMat_AvgEntry(DistMat, no_of_clust, clust_species_list, DIST_MAT_TYPE)
 	#---------------------------------------
 
 	# loop to execute the agglomerative clustering
 	while(no_of_clust > 2):
 		min_idx_i, min_idx_j = Get_NJ_Based_Min_Pair_Idx(DistMat, Norm_DistMat, \
 			no_of_clust, clust_species_list, NJ_RULE_USED, Output_Text_File)
+		
+		##-----------------------------------
+		## add - sourya
+		## special condition when the number of clusters = 3
+		#if (no_of_clust == 3):
+			#if (DEBUG_LEVEL >= 2):
+				#fp = open(Output_Text_File, 'a')
+				#fp.write('\n **** For 3 clusters *** initial ---  min_idx_i ' + str(min_idx_i) + ' min_idx_j : ' + str(min_idx_j))
+				#fp.close()
+			#for idx in range(3):
+				#if (idx != min_idx_i) and (idx != min_idx_j):
+					#other_idx = idx
+					#break
+			#min_idx_i, min_idx_j = GetClusterPairMergeIdx_ThreeClusters(min_idx_i, min_idx_j, other_idx, \
+				#clust_species_list, DIST_MAT_TYPE, Output_Text_File)
+		##-----------------------------------
 
 		# note down the taxa list in these two indices of the clust_species_list
 		taxa_list = []
@@ -930,8 +1013,7 @@ def ResolveMultifurcation(Curr_tree, clust_species_list, no_of_input_clusters, O
 		if (NJ_MERGE_CLUST == 1):
 			Curr_tree = Merge_Cluster_Pair(Curr_tree, clust_species_list, min_idx_i, min_idx_j, taxa_list, Output_Text_File)
 		else:
-			Curr_tree = Merge_Cluster_Pair_New(Curr_tree, clust_species_list, min_idx_i, min_idx_j, taxa_list, \
-				Output_Text_File, DIST_MAT_TYPE)
+			Curr_tree = Merge_Cluster_Pair_New(Curr_tree, clust_species_list, min_idx_i, min_idx_j, taxa_list, Output_Text_File, DIST_MAT_TYPE)
 		#---------------------------------------------------------      
 		# remove individual clusters' taxa information from the clust_species_list
 		# and add taxa_list as a new element

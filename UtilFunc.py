@@ -356,5 +356,26 @@ def GetPreorderTaxaList(inp_node, taxa_list, inp_set_of_taxa):
 	
 	return taxa_list
 
+#-----------------------------------------------------------------
+"""
+this function checks whether R1 relation from the first to the second taxa is allowed
+with respect to the configuration of the input gene trees
+if the couplet is not existing in the gene trees, then we return True by default
+"""
+def R1RelnAllowed(taxa1, taxa2):
+	key1 = (taxa1, taxa2)
+	key2 = (taxa2, taxa1)
+	if key1 in TaxaPair_Reln_Dict:
+		if RELATION_R1 in TaxaPair_Reln_Dict[key1]._GetAllowedRelnList():
+			return True
+		else:
+			return False
+	
+	if key2 in TaxaPair_Reln_Dict:
+		if RELATION_R2 in TaxaPair_Reln_Dict[key2]._GetAllowedRelnList():
+			return True
+		else:
+			return False
 
+	return True
 

@@ -59,7 +59,7 @@ TRADITIONAL_NJ = 1
 AGGLO_CLUST = 2
 
 # add - sourya
-MODE_PERCENT = 0.25	#0.4 #0.35	#0.5 
+MODE_PERCENT = 0.25	#0.5	#0.4 #0.35	 
 MODE_BIN_COUNT = 40
 
 """
@@ -209,7 +209,7 @@ class Reln_TaxaPair(object):
 	this function checks whether for a conflicting taxa pair with negative support score
 	R3 relation can be applied between this couplet
 	"""
-	def _Check_Reln_R3_Majority(self, outfile):
+	def _Check_Reln_R3_Majority(self, outfile=None):
 		level_val_r1 = self.ALL_Reln_Level_Diff_Val_Count[0]
 		level_val_r2 = self.ALL_Reln_Level_Diff_Val_Count[1]
 		lev_diff = math.fabs((level_val_r2 - level_val_r1) * 1.0)
@@ -220,21 +220,56 @@ class Reln_TaxaPair(object):
 		level_count_r3 = self.ALL_Reln_Level_Diff_Info_Count[2]
 		
 		if (DEBUG_LEVEL >= 2):
-			fp = open(outfile, 'a')
-			fp.write('\n fr3: ' + str(fr3) + ' supporting trees : ' + str(self.supporting_trees))
-			if ((level_val_r2 + level_val_r1) > 0):
-				fp.write(' Ratio: ' + str(round((lev_diff / (level_val_r2 + level_val_r1)), 2)))  
-			fp.close()
+			if outfile is not None:
+				fp = open(outfile, 'a')
+				fp.write('\n fr3: ' + str(fr3) + ' supporting trees : ' + str(self.supporting_trees))
+				if ((level_val_r2 + level_val_r1) > 0):
+					fp.write(' Ratio: ' + str(round((lev_diff / (level_val_r2 + level_val_r1)), 2)))  
+				fp.close()
 		
 		"""
 		if R3 relation is consensus then we impose R3 relation between this couplet
 		"""
 		if (self._CheckTargetRelnConsensus(RELATION_R3) == True):
 			if (DEBUG_LEVEL >= 2):
-				fp = open(outfile, 'a')
-				fp.write('\n *** R3 RELATI0N IS THE MAJORITY *** ')  
-				fp.close()
+				if outfile is not None:
+					fp = open(outfile, 'a')
+					fp.write('\n *** R3 RELATI0N IS THE MAJORITY *** ')  
+					fp.close()
 			return True
+		
+		#------------------------------------
+		# add - sourya
+		""" 
+		we check whether R3 relation has at least second highest count
+		and the R3 level ratio is very low 
+		"""
+		temp_freq_list = list(self.freq_count)
+		temp_freq_list.sort()
+		"""
+		the list is sorted in default ascending order
+		so highest and second highest values are in indices 2 and 3
+		"""
+		if (fr3 == temp_freq_list[2]) or (fr3 == temp_freq_list[3]):
+			if ((level_val_r2 + level_val_r1) > 0):
+				if ((round((lev_diff / (level_val_r2 + level_val_r1)), 2)) <= (R3Reln_MAJ_THRS / 4.0)):
+					# the level difference should be very small
+					if (DEBUG_LEVEL >= 2):
+						if outfile is not None:
+							fp = open(outfile, 'a')
+							fp.write('\n *** R3 RELATI0N IS THE MAJORITY *** ')  
+							fp.close()
+					return True
+			else:	#if ((level_val_r2 + level_val_r1) == 0):
+				if (DEBUG_LEVEL >= 2):
+					if outfile is not None:
+						fp = open(outfile, 'a')
+						fp.write('\n *** R3 RELATI0N IS THE MAJORITY *** ')  
+						fp.close()
+				return True
+			
+		# end add - sourya
+		#------------------------------------
 		
 		"""
 		R3 relation should not be the relation with minimum frequency among all constituent relations
@@ -248,21 +283,24 @@ class Reln_TaxaPair(object):
 					if ((round((lev_diff / (level_val_r2 + level_val_r1)), 2)) <= R3Reln_MAJ_THRS):
 						# the level difference should be very small
 						if (DEBUG_LEVEL >= 2):
-							fp = open(outfile, 'a')
-							fp.write('\n *** R3 RELATI0N IS THE MAJORITY *** ')  
-							fp.close()
+							if outfile is not None:
+								fp = open(outfile, 'a')
+								fp.write('\n *** R3 RELATI0N IS THE MAJORITY *** ')  
+								fp.close()
 						return True
 				else:	#if ((level_val_r2 + level_val_r1) == 0):
 					if (DEBUG_LEVEL >= 2):
-						fp = open(outfile, 'a')
-						fp.write('\n *** R3 RELATI0N IS THE MAJORITY *** ')  
-						fp.close()
+						if outfile is not None:
+							fp = open(outfile, 'a')
+							fp.write('\n *** R3 RELATI0N IS THE MAJORITY *** ')  
+							fp.close()
 					return True
 
 		if (DEBUG_LEVEL >= 2):
-			fp = open(outfile, 'a')
-			fp.write('\n R3 RELATI0N IS NOT THE MAJORITY')  
-			fp.close()
+			if outfile is not None:
+				fp = open(outfile, 'a')
+				fp.write('\n R3 RELATI0N IS NOT THE MAJORITY')  
+				fp.close()
 		
 		return False
 		
@@ -423,6 +461,11 @@ class Reln_TaxaPair(object):
 			# modified - sourya
 			# average of mean and mode
 			return (self._GetAvgXLGeneTrees() + self._GetMultiModeXLVal()) / 2.0
+			#"""
+			#minimum of mean and mode based mean
+			#"""
+			#return min(self._GetAvgXLGeneTrees(), self._GetMultiModeXLVal())
+			
 		#elif (dist_type == 6):
 			#return min(self._GetMedianXLGeneTrees(), self._GetMultiModeXLVal())
 		
