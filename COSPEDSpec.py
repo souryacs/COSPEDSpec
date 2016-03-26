@@ -155,15 +155,15 @@ def main():
 	else:
 		dir_of_inp_file = INPUT_FILENAME[:(k+1)]
 	
-	#if (DEBUG_LEVEL > 1):
-		#print 'dir_of_inp_file: ', dir_of_inp_file  
-	
-	## debug - sourya
-	#print '\n\n dir_of_inp_file: ', dir_of_inp_file
-	## end debug - sourya
+	if (DEBUG_LEVEL > 1):
+		print 'dir_of_inp_file: ', dir_of_inp_file  
+		
+	# debug - sourya
+	if 1:
+		print 'dir_of_inp_file: ', dir_of_inp_file  
+	# end debug - sourya
 	
 	if (OUTPUT_FILENAME == ""):
-		# add - sourya
 		if (DIST_MAT_TYPE == 1):
 			dir_of_curr_exec = dir_of_inp_file + 'COSPEDSpec_A2'
 		else:
@@ -399,7 +399,7 @@ def main():
 	corresponding to the relations R1, R2, and R4
 	first we process the couplets and relations having positive support score
 	"""
-	Reachability_Graph_Mat = Proc_Queue_Pos_Score_R1R2(Reachability_Graph_Mat, Output_Text_File)
+	Reachability_Graph_Mat = Proc_Queue(Reachability_Graph_Mat, Output_Text_File)
 	#------------------------------------------------------------
 	# we print the final connection status for all the tree nodes
 	if (DEBUG_LEVEL > 2):
@@ -422,12 +422,10 @@ def main():
 	# note the timestamp
 	reachability_graph_form_timestamp = time.time()  
 	
-	# add - sourya
 	if (DEBUG_LEVEL >= 2):
 		fp = open(Output_Text_File, 'a')
 		fp.write('\n\n\n Contents of Candidate_Out_Edge_Cluster_List: ' + str(Candidate_Out_Edge_Cluster_List)) 
 		fp.close()
-	# end add - sourya
 	#------------------------------------------------------------
 	"""
 	now we process all the elements of the Candidate_Out_Edge_Cluster_List one by one
@@ -543,11 +541,9 @@ def main():
 	Supertree_without_branch_len = dendropy.Tree.get_from_string(Final_Supertree_Str, schema="newick", \
 								preserve_underscores=PRESERVE_UNDERSCORE, default_as_rooted=True)          
 
-	# add - sourya
 	Supertree_without_branch_len.update_splits(delete_outdegree_one=True)
 	fp.write('\n --- after update splits -- supertree : ' + Supertree_without_branch_len.as_newick_string())
 	fp.close()
-	# end add - sourya
 	
 	supertree_filename = dir_of_curr_exec + '/' + 'supertree.tre'
 	outfile = open(supertree_filename, 'w')
@@ -555,7 +551,7 @@ def main():
 	outfile.close()
 
 	# debug - sourya
-	if 0:
+	if 1:
 		print '\n\n original supertree as newick string: ', Supertree_without_branch_len.as_newick_string()
 	# end debug - sourya
 	#--------------------------------------------------------------
@@ -590,7 +586,6 @@ def main():
 	outfile.write(Supertree_without_branch_len.as_newick_string())
 	outfile.close()
 
-	# add  -sourya
 	"""
 	if user specifies one outgroup taxon name for rooting the tree, 
 	we should reroot the tree and save it
@@ -607,10 +602,9 @@ def main():
 		outfile = open(out_treefilename, 'w')
 		outfile.write(Supertree_without_branch_len.as_newick_string())
 		outfile.close()
-	# end add  -sourya
 
 	# debug - sourya
-	if 0:
+	if 1:
 		print '\n\n Final species tree: ', Supertree_without_branch_len.as_newick_string()
 		print '\n\n'
 	# end debug - sourya

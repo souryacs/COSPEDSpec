@@ -58,7 +58,6 @@ DEBUG_LEVEL = 2
 TRADITIONAL_NJ = 1
 AGGLO_CLUST = 2
 
-# add - sourya
 MODE_PERCENT = 0.25	#0.5	#0.4 #0.35	 
 MODE_BIN_COUNT = 40
 
@@ -80,8 +79,8 @@ R3Reln_MAJ_THRS = 0.2
 for a couplet, relations with frequency of this percentage of the max (consensus) frequency
 will be included in the score queue
 """
-# it should be fixed at 0.35 - sourya
-PERCENT_MAX_FREQ = 0.35	#0.5	#sourya
+# it should be fixed at 0.35 
+PERCENT_MAX_FREQ = 0.35	#0.5
 
 """
 this list contains the set of clusters 

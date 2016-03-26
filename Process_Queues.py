@@ -156,192 +156,6 @@ def Process_Candidate_Out_Edge_Cluster_List(Reachability_Graph_Mat, DIST_MAT_TYP
 					
 	return Reachability_Graph_Mat
 
-
-##---------------------------------------------
-#"""
-#this function processes all clusters having candidate out edge information
-#"""
-#def Process_Candidate_Out_Edge_Cluster_List(Reachability_Graph_Mat, DIST_MAT_TYPE, Output_Text_File):
-	#for cl in Candidate_Out_Edge_Cluster_List:
-		#if (DEBUG_LEVEL >= 2):
-			#fp = open(Output_Text_File, 'a')
-			#fp.write('\n ********** current cl no: ' + str(cl)) 
-			#fp.close()
-		
-		#"""
-		#check if the cluster cl has any directed out edge already
-		#otherwise, place all its candidate R1 clusters as a child to its parent node
-		#"""
-		#if (Cluster_Info_Dict[cl]._Get_Outdegree() == 0):
-			
-			### comment - sourya
-			##"""
-			##for each cluster Y in the possible candidate R1 cluster list of the cluster cl
-			##check the in edge list 'In' of Y
-			##construct a list "Y_In" which contains all the clusters p in 'In'
-			##such that p and cl are not related by any means
-			##if the size of list "Y_In" is > 0, compute minXL = XL(p, Y) for any p in "Y_In"
-			##if minXL > XL(cl, Y) then add Y as a descendant of cl
-			##else (or even if len("Y_In") == 0), add Y as a child to individual parent clusters of cl
-			##"""
-			##for Y in Cluster_Info_Dict[cl]._GetPossibleR1List():
-				##"""
-				##analyze Y only if there is no already existing connection between cl and Y
-				##"""
-				##if (CheckExistingConn(cl, Y, Reachability_Graph_Mat, RELATION_R1, Output_Text_File) == 0):
-					##if (CheckTransitiveConflict(cl, Y, Reachability_Graph_Mat, RELATION_R1, Output_Text_File) == 0):
-						##if (DEBUG_LEVEL >= 2):
-							##fp = open(Output_Text_File, 'a')
-							##fp.write('\n Processing possible R1 cluster : ' + str(Y)) 
-							##fp.close()
-						##"""
-						##construct "Y_In", as mentioned above
-						##also construct a list to contain XL(p, Y) values
-						##"""
-						##Y_In_Clust_List = []
-						##XL_Y_In_Clust_List = []
-						##for p in Cluster_Info_Dict[Y]._GetInEdgeList():
-							##if (CheckExistingConn(cl, p, Reachability_Graph_Mat, RELATION_R1, Output_Text_File) == 0):
-								##"""
-								##update "Y_In" and the XL list
-								##"""
-								##Y_In_Clust_List.append(p)
-								##XL_Y_In_Clust_List.append(FindAvgXL(Cluster_Info_Dict[p]._GetSpeciesList(), \
-									##Cluster_Info_Dict[Y]._GetSpeciesList(), DIST_MAT_TYPE, 1))
-							
-								##if (len(Y_In_Clust_List) > 0):
-									##"""
-									##minimum of XL values within min_XL_Y_In_Clust_List
-									##"""
-									##min_XL_Y_In_Clust_List = min(XL_Y_In_Clust_List)
-									##"""
-									##excess gene count between the cluster Y and the cluster cl
-									##"""
-									##xl_cl_Y = FindAvgXL(Cluster_Info_Dict[cl]._GetSpeciesList(), \
-										##Cluster_Info_Dict[Y]._GetSpeciesList(), DIST_MAT_TYPE, 1)
-									
-									##if (xl_cl_Y < min_XL_Y_In_Clust_List):
-										### add Y as a descendant of cl
-										##Reachability_Graph_Mat = EstablishR1Reln(cl, Y, Reachability_Graph_Mat, Output_Text_File)
-									##else:
-										##"""
-										##here, assign out edge from all the parent clusters of cl to this cluster Y
-										##"""
-										##for parent_cl in Cluster_Info_Dict[cl]._GetInEdgeList():
-											##if (CheckExistingConn(parent_cl, Y, Reachability_Graph_Mat, RELATION_R1, Output_Text_File) == 0):
-												##if (CheckTransitiveConflict(parent_cl, Y, Reachability_Graph_Mat, RELATION_R1, Output_Text_File) == 0):
-													##Reachability_Graph_Mat = EstablishR1Reln(parent_cl, Y, Reachability_Graph_Mat, Output_Text_File)
-								##else:
-									##"""
-									##here, assign out edge from all the parent clusters of cl to this cluster Y
-									##"""
-									##for parent_cl in Cluster_Info_Dict[cl]._GetInEdgeList():
-										##if (CheckExistingConn(parent_cl, Y, Reachability_Graph_Mat, RELATION_R1, Output_Text_File) == 0):
-											##if (CheckTransitiveConflict(parent_cl, Y, Reachability_Graph_Mat, RELATION_R1, Output_Text_File) == 0):
-												##Reachability_Graph_Mat = EstablishR1Reln(parent_cl, Y, Reachability_Graph_Mat, Output_Text_File)
-			
-			### end comment - sourya
-
-			#"""
-			#here, assign out edge from all the parent clusters of cl to this cluster Y
-			#"""
-			#for parent_cl in Cluster_Info_Dict[cl]._GetInEdgeList():
-				#for Y in Cluster_Info_Dict[cl]._GetPossibleR1List():
-					#if (CheckExistingConn(parent_cl, Y, Reachability_Graph_Mat, RELATION_R1, Output_Text_File) == 0):
-						#if (CheckTransitiveConflict(parent_cl, Y, Reachability_Graph_Mat, RELATION_R1, Output_Text_File) == 0):
-							#Reachability_Graph_Mat = EstablishR1Reln(parent_cl, Y, Reachability_Graph_Mat, Output_Text_File)
-			
-		#else:
-			#"""
-			#for each Y belonging to the candidate R1 list of the cluster cl
-			#1) compute XL(cl, Y)
-			#explore individual children "child_cl" of the cluster cl
-			#compute XL(Y, child_cl)
-			#and also compute XL(cl, child_cl)
-			#"""
-			#for Y in Cluster_Info_Dict[cl]._GetPossibleR1List():
-				#"""
-				#analyze Y only if there is no already existing connection between cl and Y
-				#"""
-				#if (CheckExistingConn(cl, Y, Reachability_Graph_Mat, RELATION_R1, Output_Text_File) == 0):
-					#if (CheckTransitiveConflict(cl, Y, Reachability_Graph_Mat, RELATION_R1, Output_Text_File) == 0):
-
-						#if (DEBUG_LEVEL >= 2):
-							#fp = open(Output_Text_File, 'a')
-							#fp.write('\n Processing possible R1 cluster : ' + str(Y)) 
-							#fp.close()
-						
-						#"""
-						#excess gene count between the cluster Y and the cluster cl
-						#"""
-						#xl_cl_Y = FindAvgXL(Cluster_Info_Dict[cl]._GetSpeciesList(),\
-							#Cluster_Info_Dict[Y]._GetSpeciesList(), DIST_MAT_TYPE, 1)
-						
-						#if (DEBUG_LEVEL >= 2):
-							#fp = open(Output_Text_File, 'a')
-							#fp.write('\n FINAL Average excess gene count between ' + str(cl) \
-								#+ '  and the cluster ' + str(Y) + ' is: ' + str(xl_cl_Y)) 
-							#fp.close()
-						
-						#"""
-						#this is the average of excess gene count between Y and every child of cl
-						#"""
-						#xl_Y_childcl = 0
-						#"""
-						#this is the average of excess gene count between cl and every child of cl
-						#"""
-						#xl_cl_childcl = 0
-						
-						#for child_cl in Cluster_Info_Dict[cl]._GetOutEdgeList():
-							#curr_xl_Y_childcl = FindAvgXL(Cluster_Info_Dict[child_cl]._GetSpeciesList(), \
-								#Cluster_Info_Dict[Y]._GetSpeciesList(), DIST_MAT_TYPE, 1)
-							#xl_Y_childcl = xl_Y_childcl + curr_xl_Y_childcl
-							
-							#curr_xl_cl_childcl = FindAvgXL(Cluster_Info_Dict[child_cl]._GetSpeciesList(), \
-								#Cluster_Info_Dict[cl]._GetSpeciesList(), DIST_MAT_TYPE, 1)
-							#xl_cl_childcl = xl_cl_childcl + curr_xl_cl_childcl
-							
-							#if (DEBUG_LEVEL >= 2):
-								#fp = open(Output_Text_File, 'a')
-								#fp.write('\n excess gene count between (child) ' + str(child_cl) \
-									#+ '  and the cluster ' + str(Y) + ' is: ' + str(curr_xl_Y_childcl)) 
-								#fp.write('\n excess gene count between (child) ' + str(child_cl) \
-									#+ '  and the cluster ' + str(cl) + ' is: ' + str(curr_xl_cl_childcl)) 
-								#fp.close()
-						
-						#"""
-						#we average the XL measures with respect to all the clusters
-						#"""
-						#xl_Y_childcl = (xl_Y_childcl * 1.0) / len(Cluster_Info_Dict[cl]._GetOutEdgeList())
-						#xl_cl_childcl = (xl_cl_childcl * 1.0) / len(Cluster_Info_Dict[cl]._GetOutEdgeList())
-
-						#if (DEBUG_LEVEL >= 2):
-							#fp = open(Output_Text_File, 'a')
-							#fp.write('\n FINAL Avg excess gene count between (child) clusters and the cluster ' \
-								#+ str(Y) + ' is: ' + str(xl_Y_childcl)) 
-							#fp.write('\n FINAL Avg excess gene count between clusters and the cluster ' \
-								#+ str(cl) + ' is: ' + str(xl_cl_childcl)) 
-							#fp.close()
-
-						#"""
-						#the condition for topology (A,(B,C)) is that XL(B,C) should be less than both XL(A,B) and XL(A,C)
-						#"""
-						#if (xl_Y_childcl < xl_cl_Y) and (xl_Y_childcl < xl_cl_childcl):
-							#"""
-							#Y can be placed as the child of cl
-							#"""
-							#Reachability_Graph_Mat = EstablishR1Reln(cl, Y, Reachability_Graph_Mat, Output_Text_File)
-						#else:
-							#"""
-							#here, assign out edge from all the parent clusters of cl to this cluster Y
-							#"""
-							#for parent_cl in Cluster_Info_Dict[cl]._GetInEdgeList():
-								#if (CheckExistingConn(parent_cl, Y, Reachability_Graph_Mat, RELATION_R1, Output_Text_File) == 0):
-									#if (CheckTransitiveConflict(parent_cl, Y, Reachability_Graph_Mat, RELATION_R1, Output_Text_File) == 0):
-										#Reachability_Graph_Mat = EstablishR1Reln(parent_cl, Y, Reachability_Graph_Mat, Output_Text_File)
-					
-	#return Reachability_Graph_Mat
-
 #--------------------------------------------------------
 """
 this function processes the max priority queue
@@ -349,7 +163,7 @@ containing support score values for different couplets
 here, only positive support scores are processed
 also, establishment of only R1 / R2 relations are considered
 """
-def Proc_Queue_Pos_Score_R1R2(Reachability_Graph_Mat, Output_Text_File):
+def Proc_Queue(Reachability_Graph_Mat, Output_Text_File):
 	Inp_Queue = Cost_List_Taxa_Pair_Multi_Reln
 	while (0 < len(Inp_Queue)):
 		""" 
@@ -405,7 +219,6 @@ def Proc_Queue_Pos_Score_R1R2(Reachability_Graph_Mat, Output_Text_File):
 					if (conn_score <= 0):
 						conn_done, target_reln = CheckConsensusR1R2NegScoreCase(reln_type, Reachability_Graph_Mat, \
 							src_taxa_clust_idx, dest_taxa_clust_idx, Output_Text_File)
-						#conn_done, target_reln = CheckHiddenR1R2Reln(Reachability_Graph_Mat, src_taxa_clust_idx, dest_taxa_clust_idx, Output_Text_File)
 						if (conn_done == 1):
 							if (DEBUG_LEVEL >= 2):
 								fp = open(Output_Text_File, 'a')    
@@ -576,7 +389,7 @@ def Check_Consensus_R1Reln(clust1_spec_list, clust2_spec_list):
 				pseudo_r2_freq = TaxaPair_Reln_Dict[key1]._GetFreqPseudoR1(1)
 
 				if ((r1_freq + 2 * (pseudo_r1_freq - pseudo_r2_freq)) >= r4_freq) and (RELATION_R1 in allowed_reln_list):
-					if (round(r1_level_val_ratio, 2) >= R1R2Reln_MAJ_THRS_very_low):	# R1R2Reln_MAJ_THRS_low):	#sourya
+					if (round(r1_level_val_ratio, 2) >= R1R2Reln_MAJ_THRS_very_low):
 						return 1
 					 
 			if key2 in TaxaPair_Reln_Dict:
@@ -588,7 +401,7 @@ def Check_Consensus_R1Reln(clust1_spec_list, clust2_spec_list):
 				pseudo_r2_freq = TaxaPair_Reln_Dict[key2]._GetFreqPseudoR1(1)
 
 				if ((r2_freq + 2 * (pseudo_r2_freq - pseudo_r1_freq)) >= r4_freq) and (RELATION_R2 in allowed_reln_list):
-					if (round(r2_level_val_ratio, 2) >= R1R2Reln_MAJ_THRS_very_low):	# R1R2Reln_MAJ_THRS_low):	#sourya
+					if (round(r2_level_val_ratio, 2) >= R1R2Reln_MAJ_THRS_very_low):
 						return 1
 
 	return 0
@@ -798,25 +611,6 @@ def CheckCandidateR1R2Reln(clust1_spec_list, clust2_spec_list):
 			if key1 in TaxaPair_Reln_Dict:
 				r1_level_val_ratio = TaxaPair_Reln_Dict[key1]._GetLevelValRatio(0)
 				allowed_reln_list = TaxaPair_Reln_Dict[key1]._GetAllowedRelnList()
-				#r1_freq = TaxaPair_Reln_Dict[key1]._GetEdgeWeight(RELATION_R1)
-				#r4_freq = TaxaPair_Reln_Dict[key1]._GetEdgeWeight(RELATION_R4)
-				#pseudo_r1_freq = TaxaPair_Reln_Dict[key1]._GetFreqPseudoR1(0)
-				#pseudo_r2_freq = TaxaPair_Reln_Dict[key1]._GetFreqPseudoR1(1)
-				#r4_score = TaxaPair_Reln_Dict[key1]._GetEdgeCost_ConnReln(RELATION_R4)
-				
-				## add - sourya
-				#if (len(clust1_spec_list) == 1) and (len(clust2_spec_list) == 1):
-					## in the following condition, a strict R1 relation will be established
-					#if (RELATION_R1 in allowed_reln_list):
-						#if ((r1_freq + pseudo_r1_freq - pseudo_r2_freq) >= r4_freq):
-							#if (TaxaPair_Reln_Dict[key1]._CheckTargetRelnLevelConsensus(RELATION_R1)):
-								#if (round(r1_level_val_ratio, 2) >= R1R2Reln_MAJ_THRS_very_low):
-									#return 2
-					### otherwise, if the support score is positive for the relation R4, then 
-					### no R1 relation is possible
-					##if (r4_score > 0):
-						##return 0
-				## end add - sourya
 				
 				if (RELATION_R1 in allowed_reln_list):
 					if (round(r1_level_val_ratio, 2) >= R1R2Reln_MAJ_THRS_low):
@@ -825,40 +619,9 @@ def CheckCandidateR1R2Reln(clust1_spec_list, clust2_spec_list):
 						and (round(r1_level_val_ratio, 2) >= R1R2Reln_MAJ_THRS_very_low):
 						return 1
 				
-				## add - sourya
-				#if (((r1_freq + 2 * (pseudo_r1_freq - pseudo_r2_freq)) >= r4_freq) \
-					#or (TaxaPair_Reln_Dict[key1]._CheckTargetRelnLevelConsensus(RELATION_R1))) and (RELATION_R1 in allowed_reln_list):
-					#if (round(r1_level_val_ratio, 2) >= R1R2Reln_MAJ_THRS_low):
-						#res = 1
-					#else:
-						#return 0
-				#else:
-					#return 0
-				## end add - sourya
-
-
 			if key2 in TaxaPair_Reln_Dict:
 				r2_level_val_ratio = TaxaPair_Reln_Dict[key2]._GetLevelValRatio(1)
 				allowed_reln_list = TaxaPair_Reln_Dict[key2]._GetAllowedRelnList()
-				#r2_freq = TaxaPair_Reln_Dict[key2]._GetEdgeWeight(RELATION_R2)
-				#r4_freq = TaxaPair_Reln_Dict[key2]._GetEdgeWeight(RELATION_R4)
-				#pseudo_r1_freq = TaxaPair_Reln_Dict[key2]._GetFreqPseudoR1(0)
-				#pseudo_r2_freq = TaxaPair_Reln_Dict[key2]._GetFreqPseudoR1(1)
-				#r4_score = TaxaPair_Reln_Dict[key2]._GetEdgeCost_ConnReln(RELATION_R4)
-				
-				## add - sourya
-				#if (len(clust1_spec_list) == 1) and (len(clust2_spec_list) == 1):
-					## in the following condition, a strict R1 relation will be established
-					#if (RELATION_R2 in allowed_reln_list):
-						#if ((r2_freq + pseudo_r2_freq - pseudo_r1_freq) >= r4_freq):
-							#if (TaxaPair_Reln_Dict[key2]._CheckTargetRelnLevelConsensus(RELATION_R2)):
-								#if (round(r2_level_val_ratio, 2) >= R1R2Reln_MAJ_THRS_very_low):
-									#return 2
-					### otherwise, if the support score is positive for the relation R4, then 
-					### no R1 relation is possible
-					##if (r4_score > 0):
-						##return 0
-				## end add - sourya
 				
 				if (RELATION_R2 in allowed_reln_list):
 					if (round(r2_level_val_ratio, 2) >= R1R2Reln_MAJ_THRS_low):
@@ -867,18 +630,6 @@ def CheckCandidateR1R2Reln(clust1_spec_list, clust2_spec_list):
 					if (TaxaPair_Reln_Dict[key2]._CheckTargetRelnLevelConsensus(RELATION_R2)) \
 						and (round(r2_level_val_ratio, 2) >= R1R2Reln_MAJ_THRS_very_low):
 						return 1
-				# end modify - sourya
-
-				## add - sourya
-				#if (((r2_freq + 2 * (pseudo_r2_freq - pseudo_r1_freq)) >= r4_freq) \
-					#or (TaxaPair_Reln_Dict[key2]._CheckTargetRelnLevelConsensus(RELATION_R2))) and (RELATION_R2 in allowed_reln_list):
-					#if (round(r2_level_val_ratio, 2) >= R1R2Reln_MAJ_THRS_low):
-						#res = 1
-					#else:
-						#return 0
-				#else:
-					#return 0
-				## end add - sourya
 	
 	return 0
 

@@ -334,74 +334,6 @@ def Freq_Level_Higher(taxa1, taxa2, target_reln):
 
 	return 0
 
-##-------------------------------------------
-#"""
-#this function is added - sourya
-#when no of clusters = 3, this function helps to find out the pair of clusters which need to be merged
-#@param: i, j are indices whose clusters are prime contenders for merging
-				#k: other index
-				#clust_species_list: list containing the clusters (single or group of taxa)
-#"""
-#def GetClusterPairMergeIdx_ThreeClusters(i, j, k, clust_species_list, DIST_MAT_TYPE, outfile=None):
-	#"""
-	#Note: A is the external cluster
-	#(B,C) is the existing cluster
-	
-	#default configuration is (A,(B,C)) 
-	#however, we explore other options as well
-	#"""
-	## construct single element lists from each representative class
-	#A_Single_Taxa_List = []
-	#A_Single_Taxa_List.append(clust_species_list[k][0])
-	#B_Single_Taxa_List = []
-	#B_Single_Taxa_List.append(clust_species_list[i][0])
-	#C_Single_Taxa_List = []
-	#C_Single_Taxa_List.append(clust_species_list[j][0])
-	
-	#A_Taxa_List = clust_species_list[k]
-	#B_Taxa_List = clust_species_list[i]
-	#C_Taxa_List = clust_species_list[j]
-	
-	#XL_B_C = FindAvgXL(B_Taxa_List, C_Taxa_List, DIST_MAT_TYPE, 1)
-	#XL_B_A = FindAvgXL(B_Taxa_List, A_Taxa_List, DIST_MAT_TYPE, 1)
-	#XL_C_A = FindAvgXL(C_Taxa_List, A_Taxa_List, DIST_MAT_TYPE, 1)
-	
-	#if (DEBUG_LEVEL >= 2):
-		#if outfile is not None:
-			#fp = open(outfile, 'a')
-			#fp.write('\n ---- A_Taxa_List: ' + str(A_Taxa_List))
-			#fp.write('\n ---- B_Taxa_List: ' + str(B_Taxa_List))
-			#fp.write('\n ---- C_Taxa_List: ' + str(C_Taxa_List))
-			#fp.write('\n ---- XL_B_C: ' + str(XL_B_C))
-			#fp.write('\n ---- XL_B_A: ' + str(XL_B_A))
-			#fp.write('\n ---- XL_C_A: ' + str(XL_C_A))
-			#fp.close()
-	
-	## of course XL(B,C) is minimum
-	## but we check from the XL_B_A and XL_C_A values
-	#if (XL_C_A < XL_B_A):
-		#if (len(C_Taxa_List) > 1):
-			#if ((len(B_Taxa_List) > 1) and (CheckR1Reln(B_Single_Taxa_List, A_Single_Taxa_List) > 0)) \
-				#or ((len(B_Taxa_List) == 1) and (Freq_Level_Higher(B_Single_Taxa_List[0], A_Single_Taxa_List[0], RELATION_R1) == 1)):
-				## the configuration (B, (A,C)) can be employed
-				#if (k < j):
-					#return k, j
-				#else:
-					#return j, k
-	
-	#if (XL_C_A > XL_B_A):
-		#if (len(B_Taxa_List) > 1):
-			#if ((len(C_Taxa_List) > 1) and (CheckR1Reln(C_Single_Taxa_List, A_Single_Taxa_List) > 0)) \
-				#or ((len(C_Taxa_List) == 1) and (Freq_Level_Higher(C_Single_Taxa_List[0], A_Single_Taxa_List[0], RELATION_R1) == 1)):
-				## the configuration (C, (A,B)) can be employed
-				#if (k < i):
-					#return k, i
-				#else:
-					#return i, k
-	
-	## default condition
-	#return i, j
-
 #-------------------------------------------
 """
 this function merges one leaf node and another non leaf node (taxa cluster)
@@ -976,22 +908,6 @@ def ResolveMultifurcation(Curr_tree, clust_species_list, no_of_input_clusters, O
 		min_idx_i, min_idx_j = Get_NJ_Based_Min_Pair_Idx(DistMat, Norm_DistMat, \
 			no_of_clust, clust_species_list, NJ_RULE_USED, Output_Text_File)
 		
-		##-----------------------------------
-		## add - sourya
-		## special condition when the number of clusters = 3
-		#if (no_of_clust == 3):
-			#if (DEBUG_LEVEL >= 2):
-				#fp = open(Output_Text_File, 'a')
-				#fp.write('\n **** For 3 clusters *** initial ---  min_idx_i ' + str(min_idx_i) + ' min_idx_j : ' + str(min_idx_j))
-				#fp.close()
-			#for idx in range(3):
-				#if (idx != min_idx_i) and (idx != min_idx_j):
-					#other_idx = idx
-					#break
-			#min_idx_i, min_idx_j = GetClusterPairMergeIdx_ThreeClusters(min_idx_i, min_idx_j, other_idx, \
-				#clust_species_list, DIST_MAT_TYPE, Output_Text_File)
-		##-----------------------------------
-
 		# note down the taxa list in these two indices of the clust_species_list
 		taxa_list = []
 		for x in clust_species_list[min_idx_i]:
