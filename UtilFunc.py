@@ -89,19 +89,20 @@ def DefineLeafPairReln(xl_val, ratio_val, lca_level, node1, node2, reln_type, Cu
 		TaxaPair_Reln_Dict[key2]._AddSupportingTree()
 		TaxaPair_Reln_Dict[key2]._AddXLVal(xl_val)
 		TaxaPair_Reln_Dict[key2]._AddEdgeCount(Complementary_Reln(reln_type), ratio_val)
-		# modified - sourya
+		#-----------------------
 		if (node1_level < node2_level):
 			TaxaPair_Reln_Dict[key2]._IncrAllRelnLevelDiffInfoCount(1, ((node2_level - node1_level) * 1.0) / Curr_tree_taxa_count)
 		elif (node1_level > node2_level):
 			TaxaPair_Reln_Dict[key2]._IncrAllRelnLevelDiffInfoCount(0, ((node1_level - node2_level) * 1.0) / Curr_tree_taxa_count)
 		else:	#if (node1_level == node2_level):
 			TaxaPair_Reln_Dict[key2]._IncrAllRelnLevelDiffInfoCount(2, 0)
-		#-----------------------
+		
 		if (reln_type == RELATION_R4):
 			if ((node1_level - lca_level) == 2) and ((node2_level - lca_level) > 2):
 				TaxaPair_Reln_Dict[key2]._AddFreqPseudoR1(1, ratio_val)
 			elif ((node1_level - lca_level) > 2) and ((node2_level - lca_level) == 2):
 				TaxaPair_Reln_Dict[key2]._AddFreqPseudoR1(0, ratio_val)
+		#-----------------------
 		
 		# return after processing the couplet
 		return
@@ -118,19 +119,19 @@ def DefineLeafPairReln(xl_val, ratio_val, lca_level, node1, node2, reln_type, Cu
 	TaxaPair_Reln_Dict[key1]._AddSupportingTree()
 	TaxaPair_Reln_Dict[key1]._AddXLVal(xl_val)
 	TaxaPair_Reln_Dict[key1]._AddEdgeCount(reln_type, ratio_val)
+	#-----------------------
 	if (node1_level < node2_level):
 		TaxaPair_Reln_Dict[key1]._IncrAllRelnLevelDiffInfoCount(0, ((node2_level - node1_level) * 1.0) / Curr_tree_taxa_count)
 	elif (node1_level > node2_level):
 		TaxaPair_Reln_Dict[key1]._IncrAllRelnLevelDiffInfoCount(1, ((node1_level - node2_level) * 1.0) / Curr_tree_taxa_count)
 	else:	#if (node1_level == node2_level):
 		TaxaPair_Reln_Dict[key1]._IncrAllRelnLevelDiffInfoCount(2, 0)
-	#-----------------------
 	if (reln_type == RELATION_R4):
 		if ((node1_level - lca_level) == 2) and ((node2_level - lca_level) > 2):
 			TaxaPair_Reln_Dict[key1]._AddFreqPseudoR1(0, ratio_val)
 		elif ((node1_level - lca_level) > 2) and ((node2_level - lca_level) == 2):
 			TaxaPair_Reln_Dict[key1]._AddFreqPseudoR1(1, ratio_val)
-	
+	#-----------------------
 	
 	return
 

@@ -54,16 +54,12 @@ def Lower_Score_Value(inp_queue, i, j):
 			elif ((reln2 == RELATION_R4) and (reln1 == RELATION_R3)):
 				return 1
 			elif (TaxaPair_Reln_Dict[key1]._GetConnPrVal(reln1) < TaxaPair_Reln_Dict[key2]._GetConnPrVal(reln2)):
-				# higher edge priority have greater priority
 				return 1
 			elif (TaxaPair_Reln_Dict[key1]._GetConnPrVal(reln1) > TaxaPair_Reln_Dict[key2]._GetConnPrVal(reln2)):
-				# higher edge priority have greater priority
 				return 0    
 			elif (TaxaPair_Reln_Dict[key1]._GetEdgeWeight(reln1) < TaxaPair_Reln_Dict[key2]._GetEdgeWeight(reln2)):
-				# higher edge frequency have greater priority - add - sourya
 				return 1      
 			elif (TaxaPair_Reln_Dict[key1]._GetEdgeWeight(reln1) > TaxaPair_Reln_Dict[key2]._GetEdgeWeight(reln2)):
-				# higher edge frequency have greater priority - add - sourya
 				return 0
 	else:
 		# here both scores are either zero or negative
@@ -71,7 +67,6 @@ def Lower_Score_Value(inp_queue, i, j):
 			return 1      
 		elif (TaxaPair_Reln_Dict[key1]._GetEdgeWeight(reln1) > TaxaPair_Reln_Dict[key2]._GetEdgeWeight(reln2)):
 			return 0     
-		# these conditions are further added - sourya
 		elif (TaxaPair_Reln_Dict[key1]._GetConnPrVal(reln1) < TaxaPair_Reln_Dict[key2]._GetConnPrVal(reln2)):
 			return 1
 		elif (TaxaPair_Reln_Dict[key1]._GetConnPrVal(reln1) > TaxaPair_Reln_Dict[key2]._GetConnPrVal(reln2)):

@@ -168,16 +168,6 @@ def main():
 			dir_of_curr_exec = dir_of_inp_file + 'COSPEDSpec_A2'
 		else:
 			dir_of_curr_exec = dir_of_inp_file + 'COSPEDSpec_F2_Bin40Mode0.25'
-		# end add - sourya
-		
-		# comment - sourya
-		#dir_of_curr_exec = dir_of_inp_file + 'COSPEDSpec' + '_D' + str(DIST_MAT_TYPE) \
-			#+ '_U' + str(DIST_MAT_UPDATE) + '_N' + str(NJ_MERGE_CLUST) 
-		##dir_of_curr_exec = dir_of_inp_file + 'COSPEDSpec' + '_D' + str(DIST_MAT_TYPE)
-		#if (DIST_MAT_TYPE == 2):
-			#dir_of_curr_exec = dir_of_curr_exec + '_Bin40Mode0.5_New'
-		# end comment - sourya
-		
 		# create the directory
 		if (os.path.isdir(dir_of_curr_exec) == False):
 			mkdr_cmd = 'mkdir ' + dir_of_curr_exec
@@ -267,16 +257,16 @@ def main():
 		"""
 		TaxaPair_Reln_Dict[l]._NormalizeR1R2LevelDiff()
 
-		"""
-		single_edge_exist: if TRUE, means that only one type of relation 
-		is supported (with respect to input trees) between this couplet
-		detection of it during setting the priority values of different relations
-		basically, we are looking for the consensus relation
-		"""
-		single_edge_exist_list = TaxaPair_Reln_Dict[l]._CheckNonConflictingCouplet()
-		single_edge_exist = single_edge_exist_list[0]
-		reln_type = single_edge_exist_list[1]
-		#print 'taxa pair: ', l, '  single_edge_exist: ', single_edge_exist, ' consensus_reln_type: ', reln_type
+		#"""
+		#single_edge_exist: if TRUE, means that only one type of relation 
+		#is supported (with respect to input trees) between this couplet
+		#detection of it during setting the priority values of different relations
+		#basically, we are looking for the consensus relation
+		#"""
+		#single_edge_exist_list = TaxaPair_Reln_Dict[l]._CheckNonConflictingCouplet()
+		#single_edge_exist = single_edge_exist_list[0]
+		#reln_type = single_edge_exist_list[1]
+		##print 'taxa pair: ', l, '  single_edge_exist: ', single_edge_exist, ' consensus_reln_type: ', reln_type
 
 		"""
 		first set the priority values of this couplet

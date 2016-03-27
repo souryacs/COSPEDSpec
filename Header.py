@@ -150,8 +150,7 @@ class Reln_TaxaPair(object):
 		""" 
 		For this couplet, it stores the extra gene count with respect to all the gene trees
 		"""
-		# modified - sourya
-		self.XL_sum_gene_trees = []	#0
+		self.XL_sum_gene_trees = []
 		
 		"""
 		for a couplet xy, and for a relation r3, following array has 3 elements:
@@ -417,30 +416,21 @@ class Reln_TaxaPair(object):
 	to the list of XL values for this couplet
 	"""
 	def _AddXLVal(self, XL_val):
-		#self.XL_sum_gene_trees = self.XL_sum_gene_trees + XL_val
-		self.XL_sum_gene_trees.append(XL_val)	# modified - sourya
+		self.XL_sum_gene_trees.append(XL_val)
 		
 	"""
 	this function returns the list of XL values for this couplet
 	with respect to individual input trees
 	"""
 	def _GetXLSumGeneTrees(self):
-		#return self.XL_sum_gene_trees
-		return sum(self.XL_sum_gene_trees)	# modified - sourya
+		return sum(self.XL_sum_gene_trees)
 	
 	"""
 	this function computes the average of XL measures
 	"""
 	def _GetAvgXLGeneTrees(self):
-		#return (self.XL_sum_gene_trees * 1.0) / self.supporting_trees
-		return (sum(self.XL_sum_gene_trees) * 1.0) / self.supporting_trees	# modified - sourya
+		return (sum(self.XL_sum_gene_trees) * 1.0) / self.supporting_trees
 	
-	#"""
-	#this function computes the median of XL measures
-	#"""
-	#def _GetMedianXLGeneTrees(self):
-		#return numpy.median(numpy.array(self.XL_sum_gene_trees)) # modified - sourya
-
 	"""
 	function to return the average of XL values for this couplet
 	depending on the user parameters, average, median, or binned average XL is returned
@@ -448,25 +438,9 @@ class Reln_TaxaPair(object):
 	def _GetNormalizedXLSumGeneTrees(self, dist_type):
 		if (dist_type == 1):
 			return self._GetAvgXLGeneTrees()
-		#elif (dist_type == 2):
-			#return self._GetMedianXLGeneTrees()
-		#elif (dist_type == 3):
-			#return self._GetMultiModeXLVal()
-		#elif (dist_type == 4):
-			#return min(self._GetAvgXLGeneTrees(), self._GetMedianXLGeneTrees())
 		elif (dist_type == 2):
-			# we return average of these three quantities
-			#return (self._GetAvgXLGeneTrees() + self._GetMedianXLGeneTrees() + self._GetMultiModeXLVal()) / 3.0
-			# modified - sourya
 			# average of mean and mode
 			return (self._GetAvgXLGeneTrees() + self._GetMultiModeXLVal()) / 2.0
-			#"""
-			#minimum of mean and mode based mean
-			#"""
-			#return min(self._GetAvgXLGeneTrees(), self._GetMultiModeXLVal())
-			
-		#elif (dist_type == 6):
-			#return min(self._GetMedianXLGeneTrees(), self._GetMultiModeXLVal())
 		
 	"""
 	this function computes the binned average of XL values associated for this couplet
@@ -744,7 +718,6 @@ class Cluster_node(object):
 			self.no_edge_list.remove(dest_clust_idx)    
 			
 	#--------------------------------------------------------
-	# add - sourya
 	def _AddPossibleR1(self, dest_clust_idx):
 		if dest_clust_idx not in self.possible_R1_list:
 			self.possible_R1_list.append(dest_clust_idx)
@@ -765,6 +738,6 @@ class Cluster_node(object):
 		#print 'its outdegree: ', self.outdegree
 		fp.write('\n out edge list: ' + str(self.out_edge_list))
 		fp.write('\n in edge list: ' + str(self.in_edge_list))
-		fp.write('\n Possible R1 list: ' + str(self.possible_R1_list))	# add - sourya
+		fp.write('\n Possible R1 list: ' + str(self.possible_R1_list))
 		fp.close()    
     

@@ -47,7 +47,6 @@ def Process_Candidate_Out_Edge_Cluster_List(Reachability_Graph_Mat, DIST_MAT_TYP
 						if (CheckTransitiveConflict(parent_cl, Y, Reachability_Graph_Mat, RELATION_R1, Output_Text_File) == 0):
 							Reachability_Graph_Mat = EstablishR1Reln(parent_cl, Y, Reachability_Graph_Mat, Output_Text_File)
 		else:
-		
 			"""
 			create a list with individual elements having two fields
 			one is the cluster index
@@ -207,8 +206,7 @@ def Proc_Queue(Reachability_Graph_Mat, Output_Text_File):
 				if the couplet is already connected, as shown by the entries in Reachability_Graph_Mat
 				then there is no need for any connection
 				"""
-				if (CheckExistingConn(src_taxa_clust_idx, dest_taxa_clust_idx, \
-							Reachability_Graph_Mat, reln_type, Output_Text_File) == 0):
+				if (CheckExistingConn(src_taxa_clust_idx, dest_taxa_clust_idx, Reachability_Graph_Mat, reln_type, Output_Text_File) == 0):
 					"""
 					there is no apparent existing relationship between the couplet
 					"""
@@ -267,8 +265,7 @@ def Proc_Queue(Reachability_Graph_Mat, Output_Text_File):
 				if the couplet is already connected, as shown by the entries in Reachability_Graph_Mat
 				then there is no need for any connection
 				"""
-				if (CheckExistingConn(src_taxa_clust_idx, dest_taxa_clust_idx, \
-							Reachability_Graph_Mat, reln_type, Output_Text_File) == 0):
+				if (CheckExistingConn(src_taxa_clust_idx, dest_taxa_clust_idx, Reachability_Graph_Mat, reln_type, Output_Text_File) == 0):
 					"""
 					there is no apparent existing relationship between the couplet
 					"""
@@ -322,8 +319,7 @@ def CheckConsensusR1R2NegScoreCase(target_reln_type, Reachability_Graph_Mat, \
 					+ str(dest_cluster_taxa_list) + '  function Check_Consensus_R1Reln -- res: ' + str(res))
 				fp.close()
 			if (res == 1):
-				if (CheckTransitiveConflict(src_taxa_clust_idx, dest_taxa_clust_idx, \
-								Reachability_Graph_Mat, RELATION_R1, Output_Text_File) == 0):
+				if (CheckTransitiveConflict(src_taxa_clust_idx, dest_taxa_clust_idx, Reachability_Graph_Mat, RELATION_R1, Output_Text_File) == 0):
 					return 1, RELATION_R1
 
 			"""
@@ -345,8 +341,7 @@ def CheckConsensusR1R2NegScoreCase(target_reln_type, Reachability_Graph_Mat, \
 					+ str(src_cluster_taxa_list) + '  function Check_Consensus_R1Reln -- res: ' + str(res))
 				fp.close()
 			if (res == 1):
-				if (CheckTransitiveConflict(src_taxa_clust_idx, dest_taxa_clust_idx, \
-								Reachability_Graph_Mat, RELATION_R2, Output_Text_File) == 0):
+				if (CheckTransitiveConflict(src_taxa_clust_idx, dest_taxa_clust_idx, Reachability_Graph_Mat, RELATION_R2, Output_Text_File) == 0):
 					return 1, RELATION_R2
 		
 			"""
